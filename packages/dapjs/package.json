@@ -1,0 +1,15 @@
+{
+  "name": "@sdcfw/dapjs",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "devDependencies": {
+    "@types/node-hid": "^1.2.0",
+    "@types/usb": "^1.5.1",
+    "@types/node": "^20.11.20",
+    "node-hid": "^2.1.1",
+    "usb": "^2.11.0",
+    "@types/w3c-web-usb": "^1.0.10"
+  }
+}

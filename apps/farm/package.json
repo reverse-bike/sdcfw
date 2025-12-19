@@ -1,0 +1,14 @@
+{
+  "name": "@sdcfw/farm",
+  "bin": {
+    "farm": "./main.ts"
+  },
+  "version": "1.0.0",
+  "description": "CLI for developers to read and write firmware",
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@sdcfw/core": "workspace:*"
+  }
+}

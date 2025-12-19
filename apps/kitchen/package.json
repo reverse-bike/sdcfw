@@ -1,0 +1,11 @@
+{
+  "name": "@sdcfw/kitchen",
+  "version": "1.0.0",
+  "bin": {
+    "kitchen": "./main.ts"
+  },
+  "description": "CLI to modify/prepare firmware",
+  "author": "",
+  "license": "ISC",
+  "type": "module"
+}

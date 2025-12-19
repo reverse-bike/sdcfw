@@ -1,0 +1,15 @@
+{
+  "name": "sdcfw",
+  "private": true,
+  "scripts": {
+    "typecheck": "bunx tsc --noEmit"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "devDependencies": {
+    "@sdcfw/farm": "workspace:*",
+    "@sdcfw/kitchen": "workspace:*"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "exclude": ["node_modules", "dist", "build"],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@sdcfw/core": ["packages/core/index.ts"],
+      "@sdcfw/dapjs": ["packages/dapjs/index.ts"]
+    },
+    // Environment setup & latest features
+    "lib": ["ESNext", "dom"],
+    "target": "ESNext",
+    "module": "Preserve",
+    "moduleDetection": "force",
+    "allowJs": false,
+
+    // Bundler mode
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "noEmit": true,
+
+    // JSX setup for SolidJS
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
+
+    // Best practices
+    "strict": true,
+    "skipLibCheck": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+
+    // Some stricter flags (disabled by default)
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noPropertyAccessFromIndexSignature": false
+  }
+}

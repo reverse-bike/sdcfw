@@ -1,0 +1,18 @@
+{
+  "name": "@sdcfw/core",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@sdcfw/dapjs": "workspace:*",
+    "usb": "^2.16.0",
+    "crc-32": "^1.2.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/usb": "^2.0.4",
+    "crc-32": "^1.2.2",
+    "@types/w3c-web-usb": "^1.0.10"
+  }
+}
