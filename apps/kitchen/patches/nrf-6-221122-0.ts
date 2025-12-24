@@ -2,7 +2,6 @@ import type { PatchFile } from "./types";
 import { publicKeyBytes } from "../keys/public-key-patch";
 
 // Original DFU signing public key in the firmware
-// prettier-ignore
 const originalPublicKey = [
   0x12, 0xb4, 0xad, 0xa6, 0xaf, 0x80, 0xb9, 0x73,
   0x30, 0x80, 0xbd, 0xea, 0xda, 0x6a, 0x2a, 0xe8,
