@@ -1,17 +1,26 @@
 #!/usr/bin/env bun
 /**
- * nRF52 Firmware Patcher
+ * Kitchen - nRF52 Firmware Tools
  *
- * Patches application code and updates CRC32 checksums in bootloader settings.
+ * Commands:
+ *   patch <patch-file.ts>  - Apply patches to firmware
+ *   keygen <output-dir>    - Generate signing keys for nrfutil
  *
- * Usage: bun run main.ts <patch-file.ts>
- * Output: <firmware-dir>/<firmware-name><postfix>.bin
+ * Usage:
+ *   bun run main.ts patch ./patches/nrf-6-221122-0.ts
+ *   bun run main.ts keygen ./keys
  */
 
 import fs from "fs";
 import path from "path";
+import { execSync } from "child_process";
 import crc32 from "crc-32";
-import type { CleanRegion, Patch, PatchFile } from "./patches/types";
+import type {
+  CleanRegion,
+  Patch,
+  PatchFile,
+  PatchFindReplace,
+} from "./patches/types";
 
 // ============================================================================
 // TYPES
@@ -68,6 +77,24 @@ function readBootloaderSettings(flash: Buffer): BootloaderSettings {
 }
 
 /**
+ * Find all occurrences of a byte pattern in a buffer.
+ * Returns an array of offsets where the pattern was found.
+ */
+function findAllOccurrences(haystack: Buffer, needle: Buffer): number[] {
+  const offsets: number[] = [];
+  let pos = 0;
+
+  while (pos <= haystack.length - needle.length) {
+    const idx = haystack.indexOf(needle, pos);
+    if (idx === -1) break;
+    offsets.push(idx);
+    pos = idx + 1;
+  }
+
+  return offsets;
+}
+
+/**
  * Clean a firmware dump by filling with 0xFF and preserving only specified regions.
  */
 function cleanFirmware(
@@ -94,16 +121,46 @@ function cleanFirmware(
 /**
  * Verify that the original bytes at the patch address match what we expect.
  * Returns null if verification passes, or an error message if it fails.
+ * For find-replace patches, also returns the found address.
  */
-function verifyOriginal(flash: Buffer, patch: Patch): string | null {
-  const { address, type } = patch;
+function verifyOriginal(
+  flash: Buffer,
+  patch: Patch,
+): { error: string | null; foundAddress?: number } {
+  const { type } = patch;
+
+  // Handle find-replace separately since it doesn't have an address
+  if (type === "find-replace") {
+    const needle = Buffer.from(patch.find);
+    const offsets = findAllOccurrences(flash, needle);
+
+    if (offsets.length === 0) {
+      return { error: "Pattern not found in firmware" };
+    }
+    if (offsets.length > 1) {
+      return {
+        error: `Pattern found ${offsets.length} times (at ${offsets.map((o) => toHex(o)).join(", ")}), expected exactly 1`,
+      };
+    }
+    if (patch.find.length !== patch.replace.length) {
+      return {
+        error: `Find (${patch.find.length} bytes) and replace (${patch.replace.length} bytes) must be same length`,
+      };
+    }
+
+    return { error: null, foundAddress: offsets[0] };
+  }
+
+  const { address } = patch;
 
   switch (type) {
     case "string": {
       const buf = Buffer.from(patch.original, "ascii");
       const actual = flash.subarray(address, address + buf.length);
       if (!actual.equals(buf)) {
-        return `Expected "${patch.original}" but found "${actual.toString("ascii")}"`;
+        return {
+          error: `Expected "${patch.original}" but found "${actual.toString("ascii")}"`,
+        };
       }
       break;
     }
@@ -111,7 +168,9 @@ function verifyOriginal(flash: Buffer, patch: Patch): string | null {
     case "uint8": {
       const actual = flash.readUInt8(address);
       if (actual !== patch.original) {
-        return `Expected 0x${patch.original.toString(16).padStart(2, "0")} but found 0x${actual.toString(16).padStart(2, "0")}`;
+        return {
+          error: `Expected 0x${patch.original.toString(16).padStart(2, "0")} but found 0x${actual.toString(16).padStart(2, "0")}`,
+        };
       }
       break;
     }
@@ -119,7 +178,9 @@ function verifyOriginal(flash: Buffer, patch: Patch): string | null {
     case "uint16": {
       const actual = flash.readUInt16BE(address);
       if (actual !== patch.original) {
-        return `Expected 0x${patch.original.toString(16).padStart(4, "0")} but found 0x${actual.toString(16).padStart(4, "0")}`;
+        return {
+          error: `Expected 0x${patch.original.toString(16).padStart(4, "0")} but found 0x${actual.toString(16).padStart(4, "0")}`,
+        };
       }
       break;
     }
@@ -127,7 +188,9 @@ function verifyOriginal(flash: Buffer, patch: Patch): string | null {
     case "uint32": {
       const actual = flash.readUInt32BE(address);
       if (actual !== patch.original) {
-        return `Expected ${toHex(patch.original)} but found ${toHex(actual)}`;
+        return {
+          error: `Expected ${toHex(patch.original)} but found ${toHex(actual)}`,
+        };
       }
       break;
     }
@@ -136,53 +199,72 @@ function verifyOriginal(flash: Buffer, patch: Patch): string | null {
       const original = Buffer.from(patch.original);
       const actual = flash.subarray(address, address + original.length);
       if (!actual.equals(original)) {
-        return `Expected [${patch.original.map((b) => "0x" + b.toString(16).padStart(2, "0")).join(", ")}] but found [${Array.from(actual).map((b) => "0x" + b.toString(16).padStart(2, "0")).join(", ")}]`;
+        return {
+          error: `Expected [${patch.original.map((b) => "0x" + b.toString(16).padStart(2, "0")).join(", ")}] but found [${Array.from(actual).map((b) => "0x" + b.toString(16).padStart(2, "0")).join(", ")}]`,
+        };
       }
       break;
     }
   }
 
-  return null;
+  return { error: null };
 }
 
-function applyPatch(flash: Buffer, patch: Patch): void {
-  const { address, type, data, description } = patch;
+function applyPatch(
+  flash: Buffer,
+  patch: Patch,
+  foundAddress?: number,
+): void {
+  console.log(`  Applying: ${patch.description}`);
 
-  console.log(`  Applying: ${description}`);
-  console.log(`    Address: ${toHex(address)}`);
+  switch (patch.type) {
+    case "find-replace": {
+      if (foundAddress === undefined) {
+        throw new Error("find-replace patch requires foundAddress from verification");
+      }
+      console.log(`    Found at: ${toHex(foundAddress)}`);
+      const buf = Buffer.from(patch.replace);
+      console.log(`    Writing: ${buf.length} bytes`);
+      buf.copy(flash, foundAddress);
+      break;
+    }
 
-  switch (type) {
     case "string": {
-      const buf = Buffer.from(data, "ascii");
-      console.log(`    Writing: "${data}" (${buf.length} bytes)`);
-      buf.copy(flash, address);
+      console.log(`    Address: ${toHex(patch.address)}`);
+      const buf = Buffer.from(patch.data, "ascii");
+      console.log(`    Writing: "${patch.data}" (${buf.length} bytes)`);
+      buf.copy(flash, patch.address);
       break;
     }
 
     case "uint8": {
-      console.log(`    Writing: 0x${data.toString(16).padStart(2, "0")}`);
-      flash.writeUInt8(data, address);
+      console.log(`    Address: ${toHex(patch.address)}`);
+      console.log(`    Writing: 0x${patch.data.toString(16).padStart(2, "0")}`);
+      flash.writeUInt8(patch.data, patch.address);
       break;
     }
 
     case "uint16": {
+      console.log(`    Address: ${toHex(patch.address)}`);
       console.log(
-        `    Writing: 0x${(data & 0xffff).toString(16).padStart(4, "0")}`,
+        `    Writing: 0x${(patch.data & 0xffff).toString(16).padStart(4, "0")}`,
       );
-      flash.writeUInt16BE(data, address);
+      flash.writeUInt16BE(patch.data, patch.address);
       break;
     }
 
     case "uint32": {
-      console.log(`    Writing: ${toHex(data)}`);
-      flash.writeUInt32BE(data, address);
+      console.log(`    Address: ${toHex(patch.address)}`);
+      console.log(`    Writing: ${toHex(patch.data)}`);
+      flash.writeUInt32BE(patch.data, patch.address);
       break;
     }
 
     case "bytes": {
-      const buf = Buffer.from(data);
+      console.log(`    Address: ${toHex(patch.address)}`);
+      const buf = Buffer.from(patch.data);
       console.log(`    Writing: ${buf.length} bytes`);
-      buf.copy(flash, address);
+      buf.copy(flash, patch.address);
       break;
     }
 
@@ -192,30 +274,108 @@ function applyPatch(flash: Buffer, patch: Patch): void {
 }
 
 // ============================================================================
-// MAIN LOGIC
+// KEYGEN COMMAND
 // ============================================================================
 
-async function main(): Promise<void> {
-  // Parse arguments
-  const args = process.argv.slice(2);
+async function keygen(outputDir: string): Promise<void> {
+  console.log("Kitchen - Key Generator");
+  console.log("=======================\n");
 
-  if (args.length === 0) {
-    console.error("Usage: bun run main.ts <patch-file.ts>");
-    console.error("");
-    console.error("Example: bun run main.ts ./patches/nrf-6-221122-0.ts");
+  // Create output directory if it doesn't exist
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+  }
+
+  const privateKeyPath = path.join(outputDir, "private.pem");
+
+  // Generate key using nrfutil
+  console.log("Generating secp256k1 key pair using nrfutil...\n");
+  try {
+    execSync(`nrfutil keys generate ${privateKeyPath}`, { stdio: "inherit" });
+  } catch {
+    console.error("Error: Failed to generate keys. Make sure nrfutil is installed.");
+    console.error("Install with: pip install nrfutil");
     process.exit(1);
   }
 
-  const patchFilePath = args[0];
+  console.log(`\nPrivate key (PEM): ${privateKeyPath}`);
 
-  if (!patchFilePath || !fs.existsSync(patchFilePath)) {
+  // Extract public key using nrfutil
+  console.log("\nExtracting public key...");
+  const publicKeyOutput = execSync(`nrfutil keys display --key pk --format code ${privateKeyPath}`, {
+    encoding: "utf-8",
+  });
+
+  // Parse the public key from nrfutil output
+  // nrfutil outputs: "const uint8_t pk[64] =\n{\n    0x5f, 0x5a, ...\n};"
+  const pkMatch = publicKeyOutput.match(/pk\[\d+\]\s*=\s*\{([^}]+)\}/s);
+  if (!pkMatch) {
+    console.error("Error: Could not parse public key from nrfutil output");
+    console.error("Output was:", publicKeyOutput);
+    process.exit(1);
+  }
+
+  // Parse the hex bytes
+  const hexBytes = pkMatch[1]!
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s.startsWith("0x"))
+    .map((s) => parseInt(s, 16));
+
+  const rawPublicKey = Buffer.from(hexBytes);
+
+  // Write public key in hex format
+  const publicKeyHex = rawPublicKey.toString("hex");
+  const publicKeyHexPath = path.join(outputDir, "public.hex");
+  fs.writeFileSync(publicKeyHexPath, publicKeyHex);
+  console.log(`Public key (hex):  ${publicKeyHexPath}`);
+
+  // Generate the array format for patching
+  const hexArray = Array.from(rawPublicKey).map(
+    (b) => "0x" + b.toString(16).padStart(2, "0"),
+  );
+
+  // Format as 8 bytes per line for readability
+  const lines: string[] = [];
+  for (let i = 0; i < hexArray.length; i += 8) {
+    lines.push(hexArray.slice(i, i + 8).join(", "));
+  }
+
+  const patchSnippet = `// Public key for firmware patching (${rawPublicKey.length} bytes)
+// Generated: ${new Date().toISOString()}
+export const publicKeyBytes = [
+  ${lines.join(",\n  ")},
+];`;
+
+  const patchSnippetPath = path.join(outputDir, "public-key-patch.ts");
+  fs.writeFileSync(patchSnippetPath, patchSnippet);
+  console.log(`Patch snippet:     ${patchSnippetPath}`);
+
+  console.log("\n--- Public Key (hex) ---");
+  console.log(publicKeyHex);
+
+  console.log("\n--- Patch Array Format ---");
+  console.log(`[${hexArray.join(", ")}]`);
+
+  console.log("\n--- Usage with nrfutil ---");
+  console.log(`nrfutil pkg generate --hw-version 52 --sd-req 0xA5 --application app.hex --application-version 1 --key-file ${privateKeyPath} dfu_package.zip`);
+
+  console.log("\nKey generation complete!");
+}
+
+// ============================================================================
+// PATCH COMMAND
+// ============================================================================
+
+async function patch(patchFilePath: string): Promise<void> {
+  if (!fs.existsSync(patchFilePath)) {
     console.error(`Error: Patch file not found: ${patchFilePath}`);
     process.exit(1);
   }
 
   // Load patch file
-  console.log("nRF52 Firmware Patcher");
-  console.log("=====================\n");
+  console.log("Kitchen - Firmware Patcher");
+  console.log("==========================\n");
 
   console.log("Step 1: Loading patch file...");
   const patchModule = await import(path.resolve(patchFilePath));
@@ -302,14 +462,25 @@ async function main(): Promise<void> {
   // Verify original bytes before patching
   console.log("Step 6: Verifying original bytes...");
   let verificationFailed = false;
+  const foundAddresses: Map<Patch, number> = new Map();
+
   for (const patch of patchFile.patches) {
-    const error = verifyOriginal(flash, patch);
-    if (error) {
+    const result = verifyOriginal(flash, patch);
+    if (result.error) {
       console.log(`  FAIL: ${patch.description}`);
-      console.log(`    At ${toHex(patch.address)}: ${error}`);
+      if (patch.type === "find-replace") {
+        console.log(`    ${result.error}`);
+      } else {
+        console.log(`    At ${toHex(patch.address)}: ${result.error}`);
+      }
       verificationFailed = true;
     } else {
-      console.log(`  OK: ${patch.description}`);
+      if (result.foundAddress !== undefined) {
+        foundAddresses.set(patch, result.foundAddress);
+        console.log(`  OK: ${patch.description} (found at ${toHex(result.foundAddress)})`);
+      } else {
+        console.log(`  OK: ${patch.description}`);
+      }
     }
   }
 
@@ -330,7 +501,7 @@ async function main(): Promise<void> {
     console.log("  No patches defined.\n");
   } else {
     for (const patch of patchFile.patches) {
-      applyPatch(flash, patch);
+      applyPatch(flash, patch, foundAddresses.get(patch));
     }
     console.log();
   }
@@ -388,6 +559,53 @@ async function main(): Promise<void> {
   console.log(`To flash the patched firmware:`);
   console.log(`  bun run farm erase`);
   console.log(`  bun run farm restore ${outputPath} ./patched_backup/metadata.json`);
+}
+
+// ============================================================================
+// MAIN - COMMAND ROUTER
+// ============================================================================
+
+function showUsage(): void {
+  console.log("Kitchen - nRF52 Firmware Tools");
+  console.log("==============================\n");
+  console.log("Commands:");
+  console.log("  patch <patch-file.ts>  Apply patches to firmware");
+  console.log("  keygen <output-dir>    Generate signing keys for nrfutil\n");
+  console.log("Examples:");
+  console.log("  bun run main.ts patch ./patches/nrf-6-221122-0.ts");
+  console.log("  bun run main.ts keygen ./keys");
+}
+
+async function main(): Promise<void> {
+  const args = process.argv.slice(2);
+  const command = args[0];
+
+  switch (command) {
+    case "patch":
+      if (!args[1]) {
+        console.error("Error: Missing patch file argument");
+        console.error("Usage: bun run main.ts patch <patch-file.ts>");
+        process.exit(1);
+      }
+      await patch(args[1]);
+      break;
+
+    case "keygen":
+      if (!args[1]) {
+        console.error("Error: Missing output directory argument");
+        console.error("Usage: bun run main.ts keygen <output-dir>");
+        process.exit(1);
+      }
+      await keygen(args[1]);
+      break;
+
+    default:
+      showUsage();
+      if (command) {
+        console.error(`\nError: Unknown command '${command}'`);
+      }
+      process.exit(command ? 1 : 0);
+  }
 }
 
 main();

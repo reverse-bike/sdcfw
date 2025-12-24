@@ -52,12 +52,28 @@ export interface PatchBytes extends PatchBase {
   data: number[];
 }
 
+/**
+ * Find bytes in the firmware and replace them.
+ * Useful when the address may vary between firmware versions.
+ * Will error if the pattern is not found or found multiple times.
+ */
+export interface PatchFindReplace {
+  type: "find-replace";
+  /** Bytes to search for (will verify exactly one match exists) */
+  find: number[];
+  /** Bytes to replace with (must be same length as find) */
+  replace: number[];
+  /** Human-readable description of the patch */
+  description: string;
+}
+
 export type Patch =
   | PatchString
   | PatchUInt8
   | PatchUInt16
   | PatchUInt32
-  | PatchBytes;
+  | PatchBytes
+  | PatchFindReplace;
 
 /**
  * A region to preserve during cleaning.
