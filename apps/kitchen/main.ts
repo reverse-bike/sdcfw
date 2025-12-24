@@ -11,7 +11,7 @@
 import fs from "fs";
 import path from "path";
 import crc32 from "crc-32";
-import type { Patch, PatchFile } from "./patches/types";
+import type { CleanRegion, Patch, PatchFile } from "./patches/types";
 
 // ============================================================================
 // TYPES
@@ -65,6 +65,30 @@ function readBootloaderSettings(flash: Buffer): BootloaderSettings {
       bankCode: flash.readUInt32LE(offset + 32),
     },
   };
+}
+
+/**
+ * Clean a firmware dump by filling with 0xFF and preserving only specified regions.
+ */
+function cleanFirmware(
+  flash: Buffer,
+  regions: CleanRegion[],
+  appEnd: number,
+): Buffer {
+  const cleaned = Buffer.alloc(flash.length, 0xff);
+
+  for (const region of regions) {
+    const start = region.start;
+    const end = region.end === "appEnd" ? appEnd : region.end;
+
+    console.log(
+      `    ${region.description}: ${toHex(start)} - ${toHex(end)} (${end - start} bytes)`,
+    );
+
+    flash.copy(cleaned, start, start, end);
+  }
+
+  return cleaned;
 }
 
 /**
@@ -225,7 +249,7 @@ async function main(): Promise<void> {
 
   // Read input file
   console.log("Step 2: Reading input file...");
-  const flash = fs.readFileSync(firmwarePath);
+  let flash = fs.readFileSync(firmwarePath);
   console.log(
     `  Size: ${flash.length} bytes (${(flash.length / 1024).toFixed(1)} KB)\n`,
   );
@@ -243,8 +267,17 @@ async function main(): Promise<void> {
   console.log(`    Image CRC:  ${toHex(blSettings.bank0.imageCrc)}`);
   console.log(`    Bank Code:  ${toHex(blSettings.bank0.bankCode)}\n`);
 
+  // Clean firmware if cleanRegions is defined
+  const appEnd = APP_START + blSettings.bank0.imageSize;
+  if (patchFile.cleanRegions && patchFile.cleanRegions.length > 0) {
+    console.log("Step 4: Cleaning firmware dump...");
+    console.log("  Preserving regions:");
+    flash = cleanFirmware(flash, patchFile.cleanRegions, appEnd) as typeof flash;
+    console.log();
+  }
+
   // Calculate original CRC
-  console.log("Step 4: Calculating original app CRC...");
+  console.log("Step 5: Calculating original app CRC...");
   const appData = flash.subarray(
     APP_START,
     APP_START + blSettings.bank0.imageSize,
@@ -267,7 +300,7 @@ async function main(): Promise<void> {
   }
 
   // Verify original bytes before patching
-  console.log("Step 5: Verifying original bytes...");
+  console.log("Step 6: Verifying original bytes...");
   let verificationFailed = false;
   for (const patch of patchFile.patches) {
     const error = verifyOriginal(flash, patch);
@@ -292,7 +325,7 @@ async function main(): Promise<void> {
   console.log();
 
   // Apply patches
-  console.log("Step 6: Applying patches...");
+  console.log("Step 7: Applying patches...");
   if (patchFile.patches.length === 0) {
     console.log("  No patches defined.\n");
   } else {
@@ -303,7 +336,7 @@ async function main(): Promise<void> {
   }
 
   // Calculate new CRC
-  console.log("Step 7: Calculating new app CRC...");
+  console.log("Step 8: Calculating new app CRC...");
   const patchedAppData = flash.subarray(
     APP_START,
     APP_START + blSettings.bank0.imageSize,
@@ -313,7 +346,7 @@ async function main(): Promise<void> {
   console.log(`  New CRC: ${toHex(newCrc)}\n`);
 
   // Update Bank 0 Image CRC in bootloader settings
-  console.log("Step 8: Updating bootloader settings...");
+  console.log("Step 9: Updating bootloader settings...");
   const bank0CrcAddr = BL_SETTINGS_ADDR + BANK0_IMAGE_CRC_OFFSET;
 
   console.log(`  Bank 0 Image CRC address: ${toHex(bank0CrcAddr)}`);
@@ -324,7 +357,7 @@ async function main(): Promise<void> {
   console.log(`  New value: ${toHex(flash.readUInt32LE(bank0CrcAddr))}\n`);
 
   // Recalculate bootloader settings CRC
-  console.log("Step 9: Recalculating bootloader settings CRC...");
+  console.log("Step 10: Recalculating bootloader settings CRC...");
   const settingsData = flash.subarray(
     BL_SETTINGS_ADDR + 4,
     BL_SETTINGS_ADDR + 92,
@@ -340,7 +373,7 @@ async function main(): Promise<void> {
   console.log(`  Updated\n`);
 
   // Write output file
-  console.log("Step 10: Writing patched firmware...");
+  console.log("Step 11: Writing patched firmware...");
   fs.writeFileSync(outputPath, flash);
   console.log(`  Saved to: ${outputPath}\n`);
 

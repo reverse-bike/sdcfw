@@ -59,6 +59,19 @@ export type Patch =
   | PatchBytes;
 
 /**
+ * A region to preserve during cleaning.
+ * Everything outside these regions will be filled with 0xFF.
+ */
+export interface CleanRegion {
+  /** Start address (inclusive) */
+  start: number;
+  /** End address (exclusive), or "auto" to use app size from DFU settings */
+  end: number | "appEnd";
+  /** Description of this region */
+  description: string;
+}
+
+/**
  * A patch file defines all patches for a specific firmware version.
  */
 export interface PatchFile {
@@ -68,6 +81,12 @@ export interface PatchFile {
   firmwarePath: string;
   /** Postfix to add to output filename (e.g., ".patched" -> "flash.patched.bin") */
   outputPostfix: string;
+  /**
+   * Regions to preserve when cleaning the firmware dump.
+   * If defined, the output will be filled with 0xFF except for these regions.
+   * If undefined, no cleaning is performed.
+   */
+  cleanRegions?: CleanRegion[];
   /** List of patches to apply */
   patches: Patch[];
 }
