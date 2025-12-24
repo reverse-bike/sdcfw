@@ -1,7 +1,8 @@
 /**
  * Patch file types for firmware patching.
  *
- * All numeric values are little-endian to match the firmware format.
+ * Numeric values (uint16, uint32) are specified as they appear in a hex viewer.
+ * For example, if you see bytes "01 23" at an address, specify 0x0123.
  */
 
 interface PatchBase {
@@ -29,17 +30,17 @@ export interface PatchUInt8 extends PatchBase {
 
 export interface PatchUInt16 extends PatchBase {
   type: "uint16";
-  /** Original 16-bit value at this address (for verification, little-endian) */
+  /** Original 16-bit value at this address (as seen in hex viewer, e.g., 0x0123 for bytes "01 23") */
   original: number;
-  /** New 16-bit value to write (little-endian) */
+  /** New 16-bit value to write (as seen in hex viewer) */
   data: number;
 }
 
 export interface PatchUInt32 extends PatchBase {
   type: "uint32";
-  /** Original 32-bit value at this address (for verification, little-endian) */
+  /** Original 32-bit value at this address (as seen in hex viewer) */
   original: number;
-  /** New 32-bit value to write (little-endian) */
+  /** New 32-bit value to write (as seen in hex viewer) */
   data: number;
 }
 

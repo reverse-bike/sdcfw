@@ -117,7 +117,7 @@ function verifyOriginal(flash: Buffer, patch: Patch): string | null {
     }
 
     case "uint16": {
-      const actual = flash.readUInt16LE(address);
+      const actual = flash.readUInt16BE(address);
       if (actual !== patch.original) {
         return `Expected 0x${patch.original.toString(16).padStart(4, "0")} but found 0x${actual.toString(16).padStart(4, "0")}`;
       }
@@ -125,7 +125,7 @@ function verifyOriginal(flash: Buffer, patch: Patch): string | null {
     }
 
     case "uint32": {
-      const actual = flash.readUInt32LE(address);
+      const actual = flash.readUInt32BE(address);
       if (actual !== patch.original) {
         return `Expected ${toHex(patch.original)} but found ${toHex(actual)}`;
       }
@@ -167,15 +167,15 @@ function applyPatch(flash: Buffer, patch: Patch): void {
 
     case "uint16": {
       console.log(
-        `    Writing: 0x${(data & 0xffff).toString(16).padStart(4, "0")} (LE)`,
+        `    Writing: 0x${(data & 0xffff).toString(16).padStart(4, "0")}`,
       );
-      flash.writeUInt16LE(data, address);
+      flash.writeUInt16BE(data, address);
       break;
     }
 
     case "uint32": {
-      console.log(`    Writing: ${toHex(data)} (LE)`);
-      flash.writeUInt32LE(data, address);
+      console.log(`    Writing: ${toHex(data)}`);
+      flash.writeUInt32BE(data, address);
       break;
     }
 

@@ -35,8 +35,8 @@ const patchFile: PatchFile = {
     {
       address: 0x3050c,
       type: "uint16",
-      original: 0x2301,
-      data: 0x2303,
+      original: 0x0123,
+      data: 0x0323,
       description: "Load '3' as the initial mode, not '1'",
     },
   ],
