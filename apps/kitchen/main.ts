@@ -4,58 +4,18 @@
  *
  * Patches application code and updates CRC32 checksums in bootloader settings.
  *
- * Usage: tsx patch-firmware.ts <input.bin>
- * Output: <input>.patched.bin
+ * Usage: bun run main.ts <patch-file.ts>
+ * Output: <firmware-dir>/<firmware-name><postfix>.bin
  */
 
 import fs from "fs";
+import path from "path";
 import crc32 from "crc-32";
+import type { Patch, PatchFile } from "./patches/types";
 
 // ============================================================================
 // TYPES
 // ============================================================================
-
-interface PatchString {
-  address: number;
-  type: "string";
-  data: string;
-  description: string;
-}
-
-interface PatchUInt8 {
-  address: number;
-  type: "uint8";
-  data: number;
-  description: string;
-}
-
-interface PatchUInt16LE {
-  address: number;
-  type: "uint16le";
-  data: number;
-  description: string;
-}
-
-interface PatchUInt32LE {
-  address: number;
-  type: "uint32le";
-  data: number;
-  description: string;
-}
-
-interface PatchBytes {
-  address: number;
-  type: "bytes";
-  data: Buffer;
-  description: string;
-}
-
-type Patch =
-  | PatchString
-  | PatchUInt8
-  | PatchUInt16LE
-  | PatchUInt32LE
-  | PatchBytes;
 
 interface BootloaderBank {
   imageSize: number;
@@ -72,60 +32,6 @@ interface BootloaderSettings {
   bankCurrent: number;
   bank0: BootloaderBank;
 }
-
-// ============================================================================
-// PATCH DEFINITIONS - MODIFY THIS SECTION TO CHANGE WHAT GETS PATCHED
-// ============================================================================
-
-const patches: Patch[] = [
-  // Replace "versions" with "versionz"
-  {
-    address: 0x3af00,
-    type: "string",
-    data: "versionz",
-    description: 'Change "versions" to "versionz"',
-  },
-  {
-    address: 0x3050c,
-    type: "uint16le",
-    data: 0x2303,
-    description: "Load '3' as the initial mode, not '1'",
-  },
-
-  // // NOP out the "bl #update_setting" call at 0x3051c
-  // // Original: fff76cfd (bl instruction)
-  // // Replace with two Thumb NOPs: bf00 bf00
-  // {
-  //   address: 0x3051c,
-  //   type: "uint32le",
-  //   data: 0xbf00bf00,
-  //   description: 'NOP out bl #update_setting at 0x3051c',
-  // },
-
-  // Example: Write a single byte
-  // {
-  //   address: 0x30000,
-  //   type: 'uint8',
-  //   data: 0x42,
-  //   description: 'Write byte 0x42',
-  // },
-
-  // Example: Write a 32-bit value (little-endian)
-  // {
-  //   address: 0x30004,
-  //   type: 'uint32le',
-  //   data: 0xDEADBEEF,
-  //   description: 'Write 0xDEADBEEF',
-  // },
-
-  // Example: Write arbitrary bytes
-  // {
-  //   address: 0x30008,
-  //   type: 'bytes',
-  //   data: Buffer.from([0x01, 0x02, 0x03, 0x04]),
-  //   description: 'Write custom bytes',
-  // },
-];
 
 // ============================================================================
 // CONSTANTS
@@ -161,6 +67,60 @@ function readBootloaderSettings(flash: Buffer): BootloaderSettings {
   };
 }
 
+/**
+ * Verify that the original bytes at the patch address match what we expect.
+ * Returns null if verification passes, or an error message if it fails.
+ */
+function verifyOriginal(flash: Buffer, patch: Patch): string | null {
+  const { address, type } = patch;
+
+  switch (type) {
+    case "string": {
+      const buf = Buffer.from(patch.original, "ascii");
+      const actual = flash.subarray(address, address + buf.length);
+      if (!actual.equals(buf)) {
+        return `Expected "${patch.original}" but found "${actual.toString("ascii")}"`;
+      }
+      break;
+    }
+
+    case "uint8": {
+      const actual = flash.readUInt8(address);
+      if (actual !== patch.original) {
+        return `Expected 0x${patch.original.toString(16).padStart(2, "0")} but found 0x${actual.toString(16).padStart(2, "0")}`;
+      }
+      break;
+    }
+
+    case "uint16": {
+      const actual = flash.readUInt16LE(address);
+      if (actual !== patch.original) {
+        return `Expected 0x${patch.original.toString(16).padStart(4, "0")} but found 0x${actual.toString(16).padStart(4, "0")}`;
+      }
+      break;
+    }
+
+    case "uint32": {
+      const actual = flash.readUInt32LE(address);
+      if (actual !== patch.original) {
+        return `Expected ${toHex(patch.original)} but found ${toHex(actual)}`;
+      }
+      break;
+    }
+
+    case "bytes": {
+      const original = Buffer.from(patch.original);
+      const actual = flash.subarray(address, address + original.length);
+      if (!actual.equals(original)) {
+        return `Expected [${patch.original.map((b) => "0x" + b.toString(16).padStart(2, "0")).join(", ")}] but found [${Array.from(actual).map((b) => "0x" + b.toString(16).padStart(2, "0")).join(", ")}]`;
+      }
+      break;
+    }
+  }
+
+  return null;
+}
+
 function applyPatch(flash: Buffer, patch: Patch): void {
   const { address, type, data, description } = patch;
 
@@ -181,26 +141,29 @@ function applyPatch(flash: Buffer, patch: Patch): void {
       break;
     }
 
-    case "uint16le": {
-      console.log(`    Writing: ${toHex(data & 0xffff)} (LE)`);
+    case "uint16": {
+      console.log(
+        `    Writing: 0x${(data & 0xffff).toString(16).padStart(4, "0")} (LE)`,
+      );
       flash.writeUInt16LE(data, address);
       break;
     }
 
-    case "uint32le": {
+    case "uint32": {
       console.log(`    Writing: ${toHex(data)} (LE)`);
       flash.writeUInt32LE(data, address);
       break;
     }
 
     case "bytes": {
-      console.log(`    Writing: ${data.length} bytes`);
-      data.copy(flash, address);
+      const buf = Buffer.from(data);
+      console.log(`    Writing: ${buf.length} bytes`);
+      buf.copy(flash, address);
       break;
     }
 
     default:
-      throw new Error(`Unknown patch type: ${type}`);
+      throw new Error(`Unknown patch type: ${(patch as Patch).type}`);
   }
 }
 
@@ -208,38 +171,67 @@ function applyPatch(flash: Buffer, patch: Patch): void {
 // MAIN LOGIC
 // ============================================================================
 
-function main(): void {
+async function main(): Promise<void> {
   // Parse arguments
   const args = process.argv.slice(2);
 
   if (args.length === 0) {
-    console.error("Usage: tsx patch-firmware.ts <input.bin>");
+    console.error("Usage: bun run main.ts <patch-file.ts>");
+    console.error("");
+    console.error("Example: bun run main.ts ./patches/nrf-6-221122-0.ts");
     process.exit(1);
   }
 
-  const inputPath = args[0];
+  const patchFilePath = args[0];
 
-  if (!inputPath || !fs.existsSync(inputPath)) {
-    console.error(`Error: File not found: ${inputPath}`);
+  if (!patchFilePath || !fs.existsSync(patchFilePath)) {
+    console.error(`Error: Patch file not found: ${patchFilePath}`);
     process.exit(1);
   }
 
-  const outputPath = inputPath.replace(/\.bin$/, "") + ".patched.bin";
-
+  // Load patch file
   console.log("nRF52 Firmware Patcher");
   console.log("=====================\n");
-  console.log(`Input:  ${inputPath}`);
+
+  console.log("Step 1: Loading patch file...");
+  const patchModule = await import(path.resolve(patchFilePath));
+  const patchFile: PatchFile = patchModule.default;
+
+  console.log(`  Name: ${patchFile.name}`);
+  console.log(`  Firmware: ${patchFile.firmwarePath}`);
+  console.log(`  Output postfix: ${patchFile.outputPostfix}`);
+  console.log(`  Patches: ${patchFile.patches.length}\n`);
+
+  // Resolve firmware path relative to project root
+  const currentDir = path.dirname(new URL(import.meta.url).pathname);
+  const projectRoot = path.resolve(currentDir, "../..");
+  const firmwarePath = path.resolve(projectRoot, patchFile.firmwarePath);
+
+  if (!fs.existsSync(firmwarePath)) {
+    console.error(`Error: Firmware file not found: ${firmwarePath}`);
+    process.exit(1);
+  }
+
+  // Compute output path (same directory as firmware, with postfix)
+  const firmwareDir = path.dirname(firmwarePath);
+  const firmwareBasename = path.basename(firmwarePath, ".bin");
+  const outputPath = path.join(
+    firmwareDir,
+    `${firmwareBasename}${patchFile.outputPostfix}.bin`,
+  );
+
+  console.log(`Input:  ${firmwarePath}`);
   console.log(`Output: ${outputPath}\n`);
 
   // Read input file
-  console.log("Step 1: Reading input file...");
-  const flash = fs.readFileSync(inputPath);
+  console.log("Step 2: Reading input file...");
+  const flash = fs.readFileSync(firmwarePath);
   console.log(
     `  Size: ${flash.length} bytes (${(flash.length / 1024).toFixed(1)} KB)\n`,
   );
 
   // Read bootloader settings
-  console.log("Step 2: Reading bootloader settings...");
+  console.log("Step 3: Reading bootloader settings...");
   const blSettings = readBootloaderSettings(flash);
 
   console.log(`  Settings Version: ${blSettings.settingsVersion}`);
@@ -252,7 +244,7 @@ function main(): void {
   console.log(`    Bank Code:  ${toHex(blSettings.bank0.bankCode)}\n`);
 
   // Calculate original CRC
-  console.log("Step 3: Calculating original app CRC...");
+  console.log("Step 4: Calculating original app CRC...");
   const appData = flash.subarray(
     APP_START,
     APP_START + blSettings.bank0.imageSize,
@@ -267,26 +259,51 @@ function main(): void {
   console.log(`  Original CRC: ${toHex(originalCrc)}`);
 
   if (originalCrc !== blSettings.bank0.imageCrc) {
-    console.log(`  ⚠ Warning: CRC mismatch!`);
+    console.log(`  Warning: CRC mismatch!`);
     console.log(`    Expected: ${toHex(blSettings.bank0.imageCrc)}`);
     console.log(`    Got:      ${toHex(originalCrc)}`);
   } else {
-    console.log(`  ✓ CRC matches bootloader settings\n`);
+    console.log(`  CRC matches bootloader settings\n`);
   }
 
+  // Verify original bytes before patching
+  console.log("Step 5: Verifying original bytes...");
+  let verificationFailed = false;
+  for (const patch of patchFile.patches) {
+    const error = verifyOriginal(flash, patch);
+    if (error) {
+      console.log(`  FAIL: ${patch.description}`);
+      console.log(`    At ${toHex(patch.address)}: ${error}`);
+      verificationFailed = true;
+    } else {
+      console.log(`  OK: ${patch.description}`);
+    }
+  }
+
+  if (verificationFailed) {
+    console.error(
+      "\nError: Original byte verification failed. Aborting patch.",
+    );
+    console.error(
+      "This patch file may be for a different firmware version.\n",
+    );
+    process.exit(1);
+  }
+  console.log();
+
   // Apply patches
-  console.log("Step 4: Applying patches...");
-  if (patches.length === 0) {
+  console.log("Step 6: Applying patches...");
+  if (patchFile.patches.length === 0) {
     console.log("  No patches defined.\n");
   } else {
-    for (const patch of patches) {
+    for (const patch of patchFile.patches) {
       applyPatch(flash, patch);
     }
     console.log();
   }
 
   // Calculate new CRC
-  console.log("Step 5: Calculating new app CRC...");
+  console.log("Step 7: Calculating new app CRC...");
   const patchedAppData = flash.subarray(
     APP_START,
     APP_START + blSettings.bank0.imageSize,
@@ -296,7 +313,7 @@ function main(): void {
   console.log(`  New CRC: ${toHex(newCrc)}\n`);
 
   // Update Bank 0 Image CRC in bootloader settings
-  console.log("Step 6: Updating bootloader settings...");
+  console.log("Step 8: Updating bootloader settings...");
   const bank0CrcAddr = BL_SETTINGS_ADDR + BANK0_IMAGE_CRC_OFFSET;
 
   console.log(`  Bank 0 Image CRC address: ${toHex(bank0CrcAddr)}`);
@@ -307,7 +324,7 @@ function main(): void {
   console.log(`  New value: ${toHex(flash.readUInt32LE(bank0CrcAddr))}\n`);
 
   // Recalculate bootloader settings CRC
-  console.log("Step 7: Recalculating bootloader settings CRC...");
+  console.log("Step 9: Recalculating bootloader settings CRC...");
   const settingsData = flash.subarray(
     BL_SETTINGS_ADDR + 4,
     BL_SETTINGS_ADDR + 92,
@@ -320,26 +337,24 @@ function main(): void {
   console.log(`  New settings CRC: ${toHex(settingsCrc)}`);
 
   flash.writeUInt32LE(settingsCrc, BL_SETTINGS_ADDR);
-  console.log(`  ✓ Updated\n`);
+  console.log(`  Updated\n`);
 
   // Write output file
-  console.log("Step 8: Writing patched firmware...");
+  console.log("Step 10: Writing patched firmware...");
   fs.writeFileSync(outputPath, flash);
-  console.log(`  ✓ Saved to: ${outputPath}\n`);
+  console.log(`  Saved to: ${outputPath}\n`);
 
   // Summary
   console.log("Summary:");
   console.log("========");
-  console.log(`  Patches applied:     ${patches.length}`);
+  console.log(`  Patches applied:     ${patchFile.patches.length}`);
   console.log(`  Original app CRC:    ${toHex(originalCrc)}`);
   console.log(`  Patched app CRC:     ${toHex(newCrc)}`);
   console.log(`  Settings CRC:        ${toHex(settingsCrc)}`);
-  console.log(`\n✓✓✓ Patching complete! ✓✓✓\n`);
+  console.log(`\nPatching complete!\n`);
   console.log(`To flash the patched firmware:`);
-  console.log(`  tsx main.ts erase`);
-  console.log(
-    `  tsx main.ts restore ${outputPath} ./patched_backup/metadata.json`,
-  );
+  console.log(`  bun run farm erase`);
+  console.log(`  bun run farm restore ${outputPath} ./patched_backup/metadata.json`);
 }
 
 main();

@@ -1,0 +1,73 @@
+/**
+ * Patch file types for firmware patching.
+ *
+ * All numeric values are little-endian to match the firmware format.
+ */
+
+interface PatchBase {
+  /** Memory address to patch */
+  address: number;
+  /** Human-readable description of the patch */
+  description: string;
+}
+
+export interface PatchString extends PatchBase {
+  type: "string";
+  /** Original string at this address (for verification) */
+  original: string;
+  /** New string to write */
+  data: string;
+}
+
+export interface PatchUInt8 extends PatchBase {
+  type: "uint8";
+  /** Original byte at this address (for verification) */
+  original: number;
+  /** New byte to write */
+  data: number;
+}
+
+export interface PatchUInt16 extends PatchBase {
+  type: "uint16";
+  /** Original 16-bit value at this address (for verification, little-endian) */
+  original: number;
+  /** New 16-bit value to write (little-endian) */
+  data: number;
+}
+
+export interface PatchUInt32 extends PatchBase {
+  type: "uint32";
+  /** Original 32-bit value at this address (for verification, little-endian) */
+  original: number;
+  /** New 32-bit value to write (little-endian) */
+  data: number;
+}
+
+export interface PatchBytes extends PatchBase {
+  type: "bytes";
+  /** Original bytes at this address (for verification) */
+  original: number[];
+  /** New bytes to write */
+  data: number[];
+}
+
+export type Patch =
+  | PatchString
+  | PatchUInt8
+  | PatchUInt16
+  | PatchUInt32
+  | PatchBytes;
+
+/**
+ * A patch file defines all patches for a specific firmware version.
+ */
+export interface PatchFile {
+  /** Name/identifier for this patch set */
+  name: string;
+  /** Path to the firmware bin file (relative to project root) */
+  firmwarePath: string;
+  /** Postfix to add to output filename (e.g., ".patched" -> "flash.patched.bin") */
+  outputPostfix: string;
+  /** List of patches to apply */
+  patches: Patch[];
+}

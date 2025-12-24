@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(bun run typecheck:*)",
-      "Bash(bun run build:*)"
+      "Bash(bun run build:*)",
+      "Bash(mkdir:*)",
+      "Bash(xxd:*)",
+      "Bash(bun run:*)"
     ]
   }
 }
