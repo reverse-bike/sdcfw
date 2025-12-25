@@ -96,8 +96,8 @@ export default function GuidedTutorial() {
 			{/* Step 5: Restore */}
 			<ToolStep
 				number={5}
-				title="Restore When Needed"
-				description="If something goes wrong, select your backup ZIP file, arm the tool, then press and hold the wires to the test points until the restore completes. Keep your backup files safe!"
+				title="Restore or Flash Custom Firmware"
+				description="Use this tool to restore your original backup if something goes wrong, or to flash custom firmware. Select your ZIP file, arm the tool, then press and hold the wires to the test points until complete."
 			>
 				<Restore selectedDevice={selectedDevice()} lastBackup={lastBackup()} inline={true} />
 			</ToolStep>

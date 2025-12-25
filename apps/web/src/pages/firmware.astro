@@ -1,0 +1,145 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout>
+	<div class="container mx-auto px-4 py-8 max-w-4xl">
+		<!-- Header -->
+		<div class="mb-8">
+			<a href="/" class="text-blue-500 hover:underline text-sm">&larr; Back to guide</a>
+			<h1 class="text-4xl font-bold mt-4 mb-4">Custom Firmware</h1>
+			<p class="text-xl text-gray-600">
+				Download custom firmware packages to unlock new features on your Super73 ebike.
+			</p>
+		</div>
+
+		<!-- Coming Soon Notice -->
+		<div class="bg-blue-50 border-l-4 border-blue-400 p-6 mb-8">
+			<div class="flex">
+				<div class="shrink-0">
+					<svg class="h-6 w-6 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+						<path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+					</svg>
+				</div>
+				<div class="ml-4">
+					<h2 class="text-lg font-semibold text-blue-800">Coming Soon</h2>
+					<p class="text-blue-700 mt-1">
+						Custom firmware packages are currently in development. Check back later for downloadable firmware with enhanced features.
+					</p>
+				</div>
+			</div>
+		</div>
+
+		<!-- What to Expect -->
+		<section class="mb-12">
+			<h2 class="text-2xl font-bold mb-4">What to Expect</h2>
+			<div class="bg-white border border-gray-200 rounded-lg p-6">
+				<p class="text-gray-600 mb-4">
+					Custom firmware will allow you to modify and enhance your ebike's behavior. Planned features include:
+				</p>
+				<ul class="space-y-3">
+					<li class="flex items-start">
+						<span class="text-green-500 mr-3 mt-1">
+							<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+								<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+							</svg>
+						</span>
+						<div>
+							<strong class="text-gray-900">Speed limit adjustments</strong>
+							<p class="text-gray-600 text-sm">Customize top speed settings for different riding modes.</p>
+						</div>
+					</li>
+					<li class="flex items-start">
+						<span class="text-green-500 mr-3 mt-1">
+							<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+								<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+							</svg>
+						</span>
+						<div>
+							<strong class="text-gray-900">Pedal assist tuning</strong>
+							<p class="text-gray-600 text-sm">Fine-tune pedal assist sensitivity and power curves.</p>
+						</div>
+					</li>
+					<li class="flex items-start">
+						<span class="text-green-500 mr-3 mt-1">
+							<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+								<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+							</svg>
+						</span>
+						<div>
+							<strong class="text-gray-900">Display customization</strong>
+							<p class="text-gray-600 text-sm">Modify what information is shown on your Diamond display.</p>
+						</div>
+					</li>
+				</ul>
+			</div>
+		</section>
+
+		<!-- How It Works -->
+		<section class="mb-12">
+			<h2 class="text-2xl font-bold mb-4">How It Works</h2>
+			<div class="bg-white border border-gray-200 rounded-lg p-6">
+				<ol class="space-y-4">
+					<li class="flex items-start">
+						<span class="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold mr-4">1</span>
+						<div>
+							<strong class="text-gray-900">Backup your original firmware</strong>
+							<p class="text-gray-600 text-sm">Always create a backup first using the <a href="/" class="text-blue-500 hover:underline">guided tutorial</a>.</p>
+						</div>
+					</li>
+					<li class="flex items-start">
+						<span class="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold mr-4">2</span>
+						<div>
+							<strong class="text-gray-900">Download custom firmware</strong>
+							<p class="text-gray-600 text-sm">Choose and download a firmware package from this page.</p>
+						</div>
+					</li>
+					<li class="flex items-start">
+						<span class="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold mr-4">3</span>
+						<div>
+							<strong class="text-gray-900">Flash using the Restore tool</strong>
+							<p class="text-gray-600 text-sm">Use the <a href="/advanced" class="text-blue-500 hover:underline">Restore tool</a> to flash the custom firmware to your device.</p>
+						</div>
+					</li>
+				</ol>
+			</div>
+		</section>
+
+		<!-- Important Warning -->
+		<section class="mb-12">
+			<div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+				<div class="flex">
+					<div class="shrink-0">
+						<svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+							<path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+						</svg>
+					</div>
+					<div class="ml-3">
+						<h3 class="text-sm font-medium text-yellow-800">Important</h3>
+						<p class="text-sm text-yellow-700 mt-1">
+							Custom firmware is provided as-is. Always keep your original backup safe so you can restore your device if needed. Modifying your ebike's firmware may void your warranty and could affect compliance with local regulations.
+						</p>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- Stay Updated -->
+		<section>
+			<div class="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+				<h2 class="text-xl font-semibold mb-2">Stay Updated</h2>
+				<p class="text-gray-600 mb-4">
+					Join the community to get notified when custom firmware is available.
+				</p>
+				<a
+					href="https://reverse.bike"
+					target="_blank"
+					rel="noopener"
+					class="inline-block px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+				>
+					Visit reverse.bike
+				</a>
+			</div>
+		</section>
+	</div>
+</Layout>

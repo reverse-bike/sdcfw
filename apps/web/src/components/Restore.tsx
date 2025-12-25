@@ -460,37 +460,37 @@ export default function Restore(props: RestoreProps) {
 			<Show when={props.selectedDevice}>
 				<div class="mb-4">
 					<p class="text-sm text-gray-600 mb-3">
-						Restore firmware from a backup file. This will overwrite the device's flash and UICR.
+						Restore firmware from a backup file or flash <a href="/firmware" class="text-blue-500 hover:underline">custom firmware</a>. This will overwrite the device's flash and UICR.
 					</p>
 
 					<div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
 						<p class="text-sm text-yellow-800">
-							<strong>Warning:</strong> Restoring will erase and overwrite all data on the target device.
-							Make sure you have selected the correct backup file.
+							<strong>Warning:</strong> This will erase and overwrite all data on the target device.
+							Make sure you have selected the correct file and have a backup of your original firmware.
 						</p>
 					</div>
 
 					<details class="mb-4 text-sm">
 						<summary class="cursor-pointer text-gray-600 hover:text-gray-800 select-none">
-							Backup file format details
+							File format details
 						</summary>
 						<div class="mt-2 p-3 bg-gray-50 rounded border border-gray-200 text-gray-700">
 							<p class="mb-2">
-								The backup file must be a <code class="bg-gray-200 px-1 rounded">.zip</code> archive containing:
+								The firmware file must be a <code class="bg-gray-200 px-1 rounded">.zip</code> archive containing:
 							</p>
 							<ul class="list-disc list-inside space-y-1 ml-2">
 								<li>
-									<code class="bg-gray-200 px-1 rounded">flash.bin</code> — Raw flash memory dump (required)
+									<code class="bg-gray-200 px-1 rounded">flash.bin</code> — Flash memory image (required)
 								</li>
 								<li>
-									<code class="bg-gray-200 px-1 rounded">uicr.bin</code> — UICR region dump (required)
+									<code class="bg-gray-200 px-1 rounded">uicr.bin</code> — UICR configuration (required)
 								</li>
 								<li>
-									<code class="bg-gray-200 px-1 rounded">metadata.json</code> — Backup metadata (optional)
+									<code class="bg-gray-200 px-1 rounded">metadata.json</code> — Firmware metadata (optional)
 								</li>
 							</ul>
 							<p class="mt-2 text-gray-500">
-								Backups created by this tool are automatically in the correct format.
+								Backups and custom firmware from this site are in the correct format.
 							</p>
 						</div>
 					</details>
