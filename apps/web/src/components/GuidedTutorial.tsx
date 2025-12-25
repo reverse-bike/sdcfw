@@ -28,7 +28,7 @@ function StepCard(props: StepCardProps) {
 interface ToolStepProps {
 	number: number;
 	title: string;
-	description: string;
+	description: any;
 	children: any;
 }
 
@@ -97,7 +97,7 @@ export default function GuidedTutorial() {
 			<ToolStep
 				number={5}
 				title="Restore or Flash Custom Firmware"
-				description="Use this tool to restore your original backup if something goes wrong, or to flash custom firmware. Select your ZIP file, arm the tool, then press and hold the wires to the test points until complete."
+				description={<>Use this tool to restore your original backup if something goes wrong, or to flash <a href="/firmware" target="_blank" class="text-blue-500 hover:underline">custom firmware</a>. Select your ZIP file, arm the tool, then press and hold the wires to the test points until complete.</>}
 			>
 				<Restore selectedDevice={selectedDevice()} lastBackup={lastBackup()} inline={true} />
 			</ToolStep>

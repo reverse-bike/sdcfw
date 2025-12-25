@@ -1,6 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getCollection, type CollectionEntry } from 'astro:content';
+import { getCollection } from 'astro:content';
 
 // Get all firmware entries, excluding files starting with underscore (drafts/examples)
 const allFirmware = await getCollection('firmware', ({ id }) => !id.startsWith('_'));
@@ -116,24 +116,17 @@ const firmware = allFirmware.sort((a, b) => b.data.date.getTime() - a.data.date.
 			<div class="bg-white border border-gray-200 rounded-lg p-6">
 				<ol class="space-y-4">
 					<li class="flex items-start">
-						<span class="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold mr-4">1</span>
-						<div>
-							<strong class="text-gray-900">Backup your original firmware</strong>
-							<p class="text-gray-600 text-sm">Always create a backup first using the <a href="/" class="text-blue-500 hover:underline">guided tutorial</a>. Keep this file safe!</p>
-						</div>
-					</li>
-					<li class="flex items-start">
-						<span class="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold mr-4">2</span>
+						<span class="shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold mr-4">1</span>
 						<div>
 							<strong class="text-gray-900">Download custom firmware</strong>
 							<p class="text-gray-600 text-sm">Choose and download a firmware package from above.</p>
 						</div>
 					</li>
 					<li class="flex items-start">
-						<span class="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold mr-4">3</span>
+						<span class="shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold mr-4">2</span>
 						<div>
-							<strong class="text-gray-900">Flash using the Restore tool</strong>
-							<p class="text-gray-600 text-sm">Use the <a href="/advanced" class="text-blue-500 hover:underline">Restore tool</a> to flash the custom firmware to your device.</p>
+							<strong class="text-gray-900">Follow the guide</strong>
+							<p class="text-gray-600 text-sm">Use the <a href="/" class="text-blue-500 hover:underline">step-by-step guide</a> to backup your original firmware and flash the custom firmware using the Restore tool.</p>
 						</div>
 					</li>
 				</ol>
