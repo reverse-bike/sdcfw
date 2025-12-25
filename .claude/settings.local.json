@@ -10,7 +10,8 @@
       "Bash(python3:*)",
       "Bash(bun -e:*)",
       "Bash(nrfutil keys display:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(ls:*)"
     ]
   }
 }

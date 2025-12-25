@@ -1,11 +1,153 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import GuidedTutorial from '../components/GuidedTutorial';
 ---
 
 <Layout>
 	<div class="container mx-auto px-4 py-8 max-w-4xl">
-		<h1 class="text-4xl font-bold mb-4">Reverse.bike Custom Firmware Tools</h1>
-		<p class="text-gray-600 mb-4">Custom firmware development for Super73 ebikes. Nothing on this page yet: </p>
-		<a href="/advanced" class="text-blue-500 hover:underline">Go to Advanced Tools</a>
+		<!-- Hero Section -->
+		<div class="text-center mb-12">
+			<img
+				src="/sd-sk-logo.webp"
+				alt="Skeleton Key Logo"
+				class="mx-auto mb-6 max-w-xs"
+			/>
+			<h1 class="text-4xl font-bold mb-4">Reverse.bike Firmware Tools</h1>
+			<p class="text-xl text-gray-600 mb-6">
+				Backup, restore, and customize Super73 ebike firmware directly from your browser.
+			</p>
+			<p class="text-sm text-gray-500">
+				Already familiar with the process? <a href="/advanced" class="text-blue-500 hover:underline">Skip to tools</a>
+			</p>
+		</div>
+
+		<!-- Browser Support Warning -->
+		<div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-8">
+			<div class="flex">
+				<div class="shrink-0">
+					<svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+						<path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+					</svg>
+				</div>
+				<div class="ml-3">
+					<p class="text-sm text-blue-700">
+						<strong>Browser requirement:</strong> This tool requires Chrome, Edge, or another Chromium-based browser for WebUSB support.
+					</p>
+				</div>
+			</div>
+		</div>
+
+		<!-- What You'll Need -->
+		<section class="mb-12">
+			<h2 class="text-2xl font-bold mb-4">What You'll Need</h2>
+			<div class="bg-white border border-gray-200 rounded-lg p-6">
+				<ul class="space-y-4">
+					<li class="flex items-start">
+						<span class="text-green-500 mr-3 mt-1">
+							<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+								<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+							</svg>
+						</span>
+						<div>
+							<strong class="text-gray-900">Raspberry Pi Debug Probe</strong>
+							<span class="text-sm text-gray-500 ml-2">(Recommended)</span>
+							<p class="text-gray-600 text-sm mt-1">
+								A low-cost SWD debug probe that works perfectly with this tool. Available from the
+								<a href="https://www.raspberrypi.com/products/debug-probe/" target="_blank" rel="noopener" class="text-blue-500 hover:underline">Raspberry Pi store</a>
+								or major electronics retailers.
+							</p>
+						</div>
+					</li>
+					<li class="flex items-start">
+						<span class="text-green-500 mr-3 mt-1">
+							<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+								<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+							</svg>
+						</span>
+						<div>
+							<strong class="text-gray-900">Jumper wires</strong>
+							<p class="text-gray-600 text-sm mt-1">
+								Two female-to-female jumper wires to connect the debug probe to the test points.
+								You only need to connect SWDIO and SWCLK - no ground wire required.
+							</p>
+						</div>
+					</li>
+					<li class="flex items-start">
+						<span class="text-green-500 mr-3 mt-1">
+							<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+								<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+							</svg>
+						</span>
+						<div>
+							<strong class="text-gray-900">Access to test points</strong>
+							<p class="text-gray-600 text-sm mt-1">
+								You'll need to open your ebike controller enclosure to access the test points on the PCB.
+							</p>
+						</div>
+					</li>
+				</ul>
+			</div>
+		</section>
+
+		<!-- Wiring Guide -->
+		<section class="mb-12">
+			<h2 class="text-2xl font-bold mb-4">Wiring Guide</h2>
+			<div class="bg-white border border-gray-200 rounded-lg p-6">
+				<p class="text-gray-600 mb-4">
+					Connect your Raspberry Pi Debug Probe to the test points on the controller board:
+				</p>
+
+				<div class="bg-gray-50 rounded-lg p-4 mb-6">
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+						<div class="flex items-center space-x-3">
+							<span class="w-24 font-mono text-sm bg-gray-200 px-2 py-1 rounded">TP10</span>
+							<span class="text-gray-400">&rarr;</span>
+							<span class="font-semibold">SWDIO (SD)</span>
+						</div>
+						<div class="flex items-center space-x-3">
+							<span class="w-24 font-mono text-sm bg-gray-200 px-2 py-1 rounded">TP11</span>
+							<span class="text-gray-400">&rarr;</span>
+							<span class="font-semibold">SWCLK (SC)</span>
+						</div>
+					</div>
+					<p class="text-sm text-gray-500 mt-4">
+						<strong>Note:</strong> No ground connection is required - the probe shares ground through USB.
+					</p>
+				</div>
+
+				<figure class="mt-4">
+					<img
+						src="/test-points.webp"
+						alt="Test points on the Super73 controller board showing TP10 (SWDIO) and TP11 (SWCLK)"
+						class="w-full rounded-lg border border-gray-200"
+					/>
+					<figcaption class="text-sm text-gray-500 mt-2 text-center">
+						Test point locations on the Super73 controller PCB
+					</figcaption>
+				</figure>
+			</div>
+		</section>
+
+		<!-- Step-by-Step Tutorial with Inline Tools -->
+		<section class="mb-12">
+			<h2 class="text-2xl font-bold mb-4">Step-by-Step Guide</h2>
+
+			<div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+				<div class="flex">
+					<div class="shrink-0">
+						<svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+							<path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+						</svg>
+					</div>
+					<div class="ml-3">
+						<p class="text-sm text-yellow-700">
+							<strong>Warning:</strong> These tools provide low-level access to your device firmware. Always backup before making changes.
+						</p>
+					</div>
+				</div>
+			</div>
+
+			<GuidedTutorial client:only="solid-js" />
+		</section>
 	</div>
 </Layout>
