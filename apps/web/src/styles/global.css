@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 /* Indeterminate progress bar animation */
 @keyframes progress-indeterminate {
