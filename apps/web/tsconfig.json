@@ -8,6 +8,7 @@
     "dist"
   ],
   "compilerOptions": {
+    "strictNullChecks": true,
     "jsx": "preserve",
     "jsxImportSource": "solid-js"
   }
