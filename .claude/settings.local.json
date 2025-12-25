@@ -11,7 +11,8 @@
       "Bash(bun -e:*)",
       "Bash(nrfutil keys display:*)",
       "Bash(cat:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(bunx astro check:*)"
     ]
   }
 }

@@ -418,7 +418,7 @@ export default function Restore(props: RestoreProps) {
 					<div class="p-4 bg-green-50 border border-green-200 rounded">
 						<h3 class="font-semibold text-green-800 mb-2">Restore Complete!</h3>
 						<p class="text-sm text-green-700">
-							The device has been restored and reset. You can now disconnect the target.
+							The device has been restored and reset. You can now power cycle the device.
 						</p>
 					</div>
 					<button
