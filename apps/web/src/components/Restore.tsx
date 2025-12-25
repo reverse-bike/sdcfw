@@ -22,6 +22,7 @@ function parsePercent(message: string): number | undefined {
 interface RestoreProps {
 	selectedDevice: USBDevice | null;
 	lastBackup?: CompletedBackup | null;
+	inline?: boolean;
 }
 
 type RestoreState = 'idle' | 'file-selected' | 'armed' | 'erasing' | 'restoring' | 'complete' | 'error';
@@ -278,6 +279,174 @@ export default function Restore(props: RestoreProps) {
 		return `${bytes} bytes`;
 	};
 
+	const content = (
+		<>
+			<Show when={error()}>
+				<div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
+					<p class="text-sm text-red-700">{error()}</p>
+				</div>
+			</Show>
+
+			<Show when={progress()}>
+				<div class="mb-4">
+					<ProgressBar
+						message={progress()}
+						percent={progressPercent()}
+						variant="orange"
+					/>
+				</div>
+			</Show>
+
+			<Show when={state() === 'idle'}>
+				<div class="space-y-4">
+					<Show when={props.lastBackup}>
+						<div class="p-4 bg-green-50 border border-green-200 rounded">
+							<h3 class="font-semibold text-green-800 mb-2">Previous Backup Available</h3>
+							<div class="text-sm space-y-1 mb-3">
+								<div class="flex justify-between">
+									<span class="text-gray-600">Device:</span>
+									<span class="font-mono">{formatDeviceInfo(props.lastBackup!.deviceInfo).part}</span>
+								</div>
+								<div class="flex justify-between">
+									<span class="text-gray-600">Flash Size:</span>
+									<span class="font-mono">{formatSize(props.lastBackup!.flashData.length)}</span>
+								</div>
+								<div class="flex justify-between">
+									<span class="text-gray-600">Backup Time:</span>
+									<span class="font-mono text-xs">{props.lastBackup!.timestamp.toLocaleString()}</span>
+								</div>
+							</div>
+							<button
+								onClick={usePreviousBackup}
+								class="w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+							>
+								Use Previous Backup
+							</button>
+						</div>
+						<div class="text-center text-sm text-gray-500">— or —</div>
+					</Show>
+					<div>
+						<label class="block text-sm font-medium text-gray-700 mb-2">
+							Select Backup File (.zip)
+						</label>
+						<input
+							type="file"
+							accept=".zip"
+							onChange={handleFileSelect}
+							class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+						/>
+					</div>
+				</div>
+			</Show>
+
+			<Show when={state() === 'file-selected' && backupFiles()}>
+				<div class="space-y-4">
+					<div class="p-4 bg-gray-50 rounded">
+						<h3 class="font-semibold mb-2">Backup File</h3>
+						<div class="text-sm space-y-1">
+							<div class="flex justify-between">
+								<span class="text-gray-600">File:</span>
+								<span class="font-mono">{fileName()}</span>
+							</div>
+							<div class="flex justify-between">
+								<span class="text-gray-600">Flash Size:</span>
+								<span class="font-mono">{formatSize(backupFiles()!.flashData.length)}</span>
+							</div>
+							<div class="flex justify-between">
+								<span class="text-gray-600">UICR Size:</span>
+								<span class="font-mono">{formatSize(backupFiles()!.uicrData.length)}</span>
+							</div>
+							<Show when={backupFiles()?.metadata?.timestamp}>
+								<div class="flex justify-between">
+									<span class="text-gray-600">Backup Date:</span>
+									<span class="font-mono text-xs">
+										{new Date(backupFiles()!.metadata!.timestamp!).toLocaleString()}
+									</span>
+								</div>
+							</Show>
+							<Show when={backupFiles()?.metadata?.device?.part}>
+								<div class="flex justify-between">
+									<span class="text-gray-600">Device:</span>
+									<span class="font-mono">{backupFiles()!.metadata!.device!.part}</span>
+								</div>
+							</Show>
+						</div>
+					</div>
+
+					<div class="flex items-center gap-2">
+						<input
+							type="checkbox"
+							id="verify-checkbox"
+							checked={verifyEnabled()}
+							onChange={(e) => setVerifyEnabled(e.target.checked)}
+							class="h-4 w-4 text-blue-600 rounded border-gray-300"
+						/>
+						<label for="verify-checkbox" class="text-sm text-gray-700">
+							Verify after writing (recommended)
+						</label>
+					</div>
+
+					<div class="flex gap-2">
+						<button
+							onClick={arm}
+							disabled={isDisabled()}
+							class="flex-1 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+						>
+							Arm Restore
+						</button>
+						<button
+							onClick={reset}
+							class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+						>
+							Clear
+						</button>
+					</div>
+				</div>
+			</Show>
+
+			<Show when={state() === 'armed' || state() === 'erasing' || state() === 'restoring'}>
+				<button
+					onClick={unarm}
+					class="w-full px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+				>
+					Cancel / Unarm
+				</button>
+			</Show>
+
+			<Show when={state() === 'complete'}>
+				<div class="space-y-4">
+					<div class="p-4 bg-green-50 border border-green-200 rounded">
+						<h3 class="font-semibold text-green-800 mb-2">Restore Complete!</h3>
+						<p class="text-sm text-green-700">
+							The device has been restored and reset. You can now disconnect the target.
+						</p>
+					</div>
+					<button
+						onClick={reset}
+						class="w-full px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+					>
+						Reset
+					</button>
+				</div>
+			</Show>
+
+			<Show when={state() === 'error'}>
+				<div class="mt-4">
+					<button
+						onClick={reset}
+						class="w-full px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+					>
+						Reset
+					</button>
+				</div>
+			</Show>
+		</>
+	);
+
+	if (props.inline) {
+		return <div>{content}</div>;
+	}
+
 	return (
 		<div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
 			<h2 class="text-2xl font-semibold mb-4">Restore Tool</h2>
@@ -326,165 +495,7 @@ export default function Restore(props: RestoreProps) {
 						</div>
 					</details>
 
-					<Show when={error()}>
-						<div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
-							<p class="text-sm text-red-700">{error()}</p>
-						</div>
-					</Show>
-
-					<Show when={progress()}>
-						<div class="mb-4">
-							<ProgressBar
-								message={progress()}
-								percent={progressPercent()}
-								variant="orange"
-							/>
-						</div>
-					</Show>
-
-					<Show when={state() === 'idle'}>
-						<div class="space-y-4">
-							<Show when={props.lastBackup}>
-								<div class="p-4 bg-green-50 border border-green-200 rounded">
-									<h3 class="font-semibold text-green-800 mb-2">Previous Backup Available</h3>
-									<div class="text-sm space-y-1 mb-3">
-										<div class="flex justify-between">
-											<span class="text-gray-600">Device:</span>
-											<span class="font-mono">{formatDeviceInfo(props.lastBackup!.deviceInfo).part}</span>
-										</div>
-										<div class="flex justify-between">
-											<span class="text-gray-600">Flash Size:</span>
-											<span class="font-mono">{formatSize(props.lastBackup!.flashData.length)}</span>
-										</div>
-										<div class="flex justify-between">
-											<span class="text-gray-600">Backup Time:</span>
-											<span class="font-mono text-xs">{props.lastBackup!.timestamp.toLocaleString()}</span>
-										</div>
-									</div>
-									<button
-										onClick={usePreviousBackup}
-										class="w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
-									>
-										Use Previous Backup
-									</button>
-								</div>
-								<div class="text-center text-sm text-gray-500">— or —</div>
-							</Show>
-							<div>
-								<label class="block text-sm font-medium text-gray-700 mb-2">
-									Select Backup File (.zip)
-								</label>
-								<input
-									type="file"
-									accept=".zip"
-									onChange={handleFileSelect}
-									class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-								/>
-							</div>
-						</div>
-					</Show>
-
-					<Show when={state() === 'file-selected' && backupFiles()}>
-						<div class="space-y-4">
-							<div class="p-4 bg-gray-50 rounded">
-								<h3 class="font-semibold mb-2">Backup File</h3>
-								<div class="text-sm space-y-1">
-									<div class="flex justify-between">
-										<span class="text-gray-600">File:</span>
-										<span class="font-mono">{fileName()}</span>
-									</div>
-									<div class="flex justify-between">
-										<span class="text-gray-600">Flash Size:</span>
-										<span class="font-mono">{formatSize(backupFiles()!.flashData.length)}</span>
-									</div>
-									<div class="flex justify-between">
-										<span class="text-gray-600">UICR Size:</span>
-										<span class="font-mono">{formatSize(backupFiles()!.uicrData.length)}</span>
-									</div>
-									<Show when={backupFiles()?.metadata?.timestamp}>
-										<div class="flex justify-between">
-											<span class="text-gray-600">Backup Date:</span>
-											<span class="font-mono text-xs">
-												{new Date(backupFiles()!.metadata!.timestamp!).toLocaleString()}
-											</span>
-										</div>
-									</Show>
-									<Show when={backupFiles()?.metadata?.device?.part}>
-										<div class="flex justify-between">
-											<span class="text-gray-600">Device:</span>
-											<span class="font-mono">{backupFiles()!.metadata!.device!.part}</span>
-										</div>
-									</Show>
-								</div>
-							</div>
-
-							<div class="flex items-center gap-2">
-								<input
-									type="checkbox"
-									id="verify-checkbox"
-									checked={verifyEnabled()}
-									onChange={(e) => setVerifyEnabled(e.target.checked)}
-									class="h-4 w-4 text-blue-600 rounded border-gray-300"
-								/>
-								<label for="verify-checkbox" class="text-sm text-gray-700">
-									Verify after writing (recommended)
-								</label>
-							</div>
-
-							<div class="flex gap-2">
-								<button
-									onClick={arm}
-									disabled={isDisabled()}
-									class="flex-1 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-								>
-									Arm Restore
-								</button>
-								<button
-									onClick={reset}
-									class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
-								>
-									Clear
-								</button>
-							</div>
-						</div>
-					</Show>
-
-					<Show when={state() === 'armed' || state() === 'erasing' || state() === 'restoring'}>
-						<button
-							onClick={unarm}
-							class="w-full px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-						>
-							Cancel / Unarm
-						</button>
-					</Show>
-
-					<Show when={state() === 'complete'}>
-						<div class="space-y-4">
-							<div class="p-4 bg-green-50 border border-green-200 rounded">
-								<h3 class="font-semibold text-green-800 mb-2">Restore Complete!</h3>
-								<p class="text-sm text-green-700">
-									The device has been restored and reset. You can now disconnect the target.
-								</p>
-							</div>
-							<button
-								onClick={reset}
-								class="w-full px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
-							>
-								Reset
-							</button>
-						</div>
-					</Show>
-
-					<Show when={state() === 'error'}>
-						<div class="mt-4">
-							<button
-								onClick={reset}
-								class="w-full px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
-							>
-								Reset
-							</button>
-						</div>
-					</Show>
+					{content}
 				</div>
 			</Show>
 		</div>

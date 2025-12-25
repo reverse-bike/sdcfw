@@ -9,6 +9,7 @@ interface UsbDevice {
 
 interface UsbProbeSelectProps {
 	onDeviceSelected?: (device: USBDevice | null) => void;
+	inline?: boolean;
 }
 
 export default function UsbProbeSelect(props: UsbProbeSelectProps) {
@@ -159,10 +160,8 @@ export default function UsbProbeSelect(props: UsbProbeSelectProps) {
 		});
 	});
 
-	return (
-		<div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-			<h2 class="text-2xl font-semibold mb-4">USB Probe Select</h2>
-
+	const content = (
+		<>
 			<Show when={!isSupported()}>
 				<div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
 					<p class="text-sm text-red-700">{error()}</p>
@@ -170,74 +169,82 @@ export default function UsbProbeSelect(props: UsbProbeSelectProps) {
 			</Show>
 
 			<Show when={isSupported()}>
-				<div class="mb-4">
-					<p class="text-sm text-gray-600 mb-3">
-						Select a DAPLink-compatible USB probe device to use for the rest of the tools.
-					</p>
+				<Show when={error()}>
+					<div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
+						<p class="text-sm text-red-700">{error()}</p>
+					</div>
+				</Show>
 
-					<Show when={error()}>
-						<div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
-							<p class="text-sm text-red-700">{error()}</p>
-						</div>
-					</Show>
-
-					<Show when={selectedDevice()}>
-						<div class="bg-green-50 border-l-4 border-green-400 p-4 mb-4">
-							<div class="flex justify-between items-center">
-								<div>
-									<p class="text-sm font-medium text-green-800">Connected Device</p>
-									<p class="text-sm text-green-700">{getDeviceName(selectedDevice()!)}</p>
-									<Show when={selectedDevice()!.serialNumber}>
-										<p class="text-xs text-green-600">Serial: {selectedDevice()!.serialNumber}</p>
-									</Show>
-								</div>
-								<button
-									onClick={disconnectDevice}
-									class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-								>
-									Disconnect
-								</button>
-							</div>
-						</div>
-					</Show>
-
-					<Show when={!selectedDevice()}>
-						<button
-							onClick={requestDevice}
-							class="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors mb-4"
-						>
-							Connect New Device
-						</button>
-
-						<Show when={devices().length > 0}>
+				<Show when={selectedDevice()}>
+					<div class="bg-green-50 border-l-4 border-green-400 p-4">
+						<div class="flex justify-between items-center">
 							<div>
-								<p class="text-sm font-medium text-gray-700 mb-2">Previously Authorized Devices:</p>
-								<div class="space-y-2">
-									<For each={devices()}>
-										{(deviceInfo) => (
-											<button
-												onClick={() => selectDevice(deviceInfo.device)}
-												class="w-full text-left px-4 py-3 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
-											>
-												<p class="font-medium text-gray-900">{deviceInfo.name}</p>
-												<Show when={deviceInfo.device.serialNumber}>
-													<p class="text-xs text-gray-500">Serial: {deviceInfo.device.serialNumber}</p>
-												</Show>
-											</button>
-										)}
-									</For>
-								</div>
+								<p class="text-sm font-medium text-green-800">Connected Device</p>
+								<p class="text-sm text-green-700">{getDeviceName(selectedDevice()!)}</p>
+								<Show when={selectedDevice()!.serialNumber}>
+									<p class="text-xs text-green-600">Serial: {selectedDevice()!.serialNumber}</p>
+								</Show>
 							</div>
-						</Show>
+							<button
+								onClick={disconnectDevice}
+								class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+							>
+								Disconnect
+							</button>
+						</div>
+					</div>
+				</Show>
 
-						<Show when={devices().length === 0}>
-							<p class="text-sm text-gray-500 text-center py-4">
-								No previously authorized devices found. Click "Connect New Device" to get started.
-							</p>
-						</Show>
+				<Show when={!selectedDevice()}>
+					<button
+						onClick={requestDevice}
+						class="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors mb-4"
+					>
+						Connect New Device
+					</button>
+
+					<Show when={devices().length > 0}>
+						<div>
+							<p class="text-sm font-medium text-gray-700 mb-2">Previously Authorized Devices:</p>
+							<div class="space-y-2">
+								<For each={devices()}>
+									{(deviceInfo) => (
+										<button
+											onClick={() => selectDevice(deviceInfo.device)}
+											class="w-full text-left px-4 py-3 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+										>
+											<p class="font-medium text-gray-900">{deviceInfo.name}</p>
+											<Show when={deviceInfo.device.serialNumber}>
+												<p class="text-xs text-gray-500">Serial: {deviceInfo.device.serialNumber}</p>
+											</Show>
+										</button>
+									)}
+								</For>
+							</div>
+						</div>
 					</Show>
-				</div>
+
+					<Show when={devices().length === 0}>
+						<p class="text-sm text-gray-500 text-center py-4">
+							No previously authorized devices found. Click "Connect New Device" to get started.
+						</p>
+					</Show>
+				</Show>
 			</Show>
+		</>
+	);
+
+	if (props.inline) {
+		return <div>{content}</div>;
+	}
+
+	return (
+		<div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+			<h2 class="text-2xl font-semibold mb-4">USB Probe Select</h2>
+			<p class="text-sm text-gray-600 mb-3">
+				Select a DAPLink-compatible USB probe device to use for the rest of the tools.
+			</p>
+			{content}
 		</div>
 	);
 }

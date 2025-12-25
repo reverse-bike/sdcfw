@@ -24,6 +24,7 @@ export interface CompletedBackup {
 interface BackupProps {
 	selectedDevice: USBDevice | null;
 	onBackupComplete?: (backup: CompletedBackup) => void;
+	inline?: boolean;
 }
 
 type BackupState = 'idle' | 'armed' | 'reading-info' | 'backing-up' | 'verifying' | 'complete' | 'error';
@@ -343,6 +344,124 @@ export default function Backup(props: BackupProps) {
 		};
 	};
 
+	const content = (
+		<>
+			<Show when={error()}>
+				<div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
+					<p class="text-sm text-red-700">{error()}</p>
+				</div>
+			</Show>
+
+			<Show when={progress()}>
+				<div class="mb-4">
+					<ProgressBar
+						message={progress()}
+						percent={progressPercent()}
+						variant="green"
+					/>
+				</div>
+			</Show>
+
+			<Show when={state() === 'idle'}>
+				<button
+					onClick={arm}
+					disabled={isDisabled()}
+					class="w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+				>
+					{props.selectedDevice ? 'Arm Backup' : 'Select a device first'}
+				</button>
+			</Show>
+
+			<Show when={state() !== 'idle' && state() !== 'complete' && state() !== 'error'}>
+				<button
+					onClick={unarm}
+					class="w-full px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+				>
+					Cancel / Unarm
+				</button>
+			</Show>
+
+			<Show when={deviceInfo()}>
+				<div class="mt-4 p-4 bg-gray-50 rounded">
+					<h3 class="font-semibold mb-2">Device Information</h3>
+					<div class="text-sm space-y-1">
+						<div class="flex justify-between">
+							<span class="text-gray-600">Part:</span>
+							<span class="font-mono">{formatDeviceInfo(deviceInfo()!).part}</span>
+						</div>
+						<div class="flex justify-between">
+							<span class="text-gray-600">Variant:</span>
+							<span class="font-mono">{formatDeviceInfo(deviceInfo()!).variant}</span>
+						</div>
+						<div class="flex justify-between">
+							<span class="text-gray-600">RAM:</span>
+							<span class="font-mono">{formatDeviceInfo(deviceInfo()!).ram}</span>
+						</div>
+						<div class="flex justify-between">
+							<span class="text-gray-600">Flash:</span>
+							<span class="font-mono">{formatDeviceInfo(deviceInfo()!).flash}</span>
+						</div>
+						<div class="flex justify-between">
+							<span class="text-gray-600">Device ID:</span>
+							<span class="font-mono text-xs">{formatDeviceInfo(deviceInfo()!).deviceId}</span>
+						</div>
+					</div>
+				</div>
+			</Show>
+
+			<Show when={state() === 'complete' && backupResult()}>
+				<div class="mt-4 p-4 bg-green-50 border border-green-200 rounded">
+					<h3 class="font-semibold text-green-800 mb-2">Backup Complete!</h3>
+					<div class="text-sm space-y-1 mb-4">
+						<div class="flex justify-between">
+							<span class="text-gray-600">Flash Size:</span>
+							<span class="font-mono">{(backupResult()!.flashData.length / 1024).toFixed(1)} kB</span>
+						</div>
+						<div class="flex justify-between">
+							<span class="text-gray-600">UICR Size:</span>
+							<span class="font-mono">{backupResult()!.uicrData.length} bytes</span>
+						</div>
+						<div class="flex justify-between">
+							<span class="text-gray-600">Verification:</span>
+							<span class={verificationPassed() ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}>
+								{verificationPassed() ? 'Passed ✓' : 'Failed ✗'}
+							</span>
+						</div>
+					</div>
+					<div class="flex gap-2">
+						<button
+							onClick={downloadBackup}
+							class="flex-1 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+						>
+							Download Backup (.zip)
+						</button>
+						<button
+							onClick={reset}
+							class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+						>
+							Reset
+						</button>
+					</div>
+				</div>
+			</Show>
+
+			<Show when={state() === 'error'}>
+				<div class="mt-4">
+					<button
+						onClick={reset}
+						class="w-full px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+					>
+						Reset
+					</button>
+				</div>
+			</Show>
+		</>
+	);
+
+	if (props.inline) {
+		return <div>{content}</div>;
+	}
+
 	return (
 		<div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
 			<h2 class="text-2xl font-semibold mb-4">Backup Tool</h2>
@@ -354,121 +473,10 @@ export default function Backup(props: BackupProps) {
 			</Show>
 
 			<Show when={props.selectedDevice}>
-				<div class="mb-4">
-					<p class="text-sm text-gray-600 mb-3">
-						Backup the firmware from your device. This will create a complete backup of flash memory and UICR configuration.
-					</p>
-
-					<Show when={error()}>
-						<div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
-							<p class="text-sm text-red-700">{error()}</p>
-						</div>
-					</Show>
-
-					<Show when={progress()}>
-						<div class="mb-4">
-							<ProgressBar
-								message={progress()}
-								percent={progressPercent()}
-								variant="green"
-							/>
-						</div>
-					</Show>
-
-					<Show when={state() === 'idle'}>
-						<button
-							onClick={arm}
-							disabled={isDisabled()}
-							class="w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-						>
-							Arm Backup
-						</button>
-					</Show>
-
-					<Show when={state() !== 'idle' && state() !== 'complete' && state() !== 'error'}>
-						<button
-							onClick={unarm}
-							class="w-full px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-						>
-							Cancel / Unarm
-						</button>
-					</Show>
-
-					<Show when={deviceInfo()}>
-						<div class="mt-4 p-4 bg-gray-50 rounded">
-							<h3 class="font-semibold mb-2">Device Information</h3>
-							<div class="text-sm space-y-1">
-								<div class="flex justify-between">
-									<span class="text-gray-600">Part:</span>
-									<span class="font-mono">{formatDeviceInfo(deviceInfo()!).part}</span>
-								</div>
-								<div class="flex justify-between">
-									<span class="text-gray-600">Variant:</span>
-									<span class="font-mono">{formatDeviceInfo(deviceInfo()!).variant}</span>
-								</div>
-								<div class="flex justify-between">
-									<span class="text-gray-600">RAM:</span>
-									<span class="font-mono">{formatDeviceInfo(deviceInfo()!).ram}</span>
-								</div>
-								<div class="flex justify-between">
-									<span class="text-gray-600">Flash:</span>
-									<span class="font-mono">{formatDeviceInfo(deviceInfo()!).flash}</span>
-								</div>
-								<div class="flex justify-between">
-									<span class="text-gray-600">Device ID:</span>
-									<span class="font-mono text-xs">{formatDeviceInfo(deviceInfo()!).deviceId}</span>
-								</div>
-							</div>
-						</div>
-					</Show>
-
-					<Show when={state() === 'complete' && backupResult()}>
-						<div class="mt-4 p-4 bg-green-50 border border-green-200 rounded">
-							<h3 class="font-semibold text-green-800 mb-2">Backup Complete!</h3>
-							<div class="text-sm space-y-1 mb-4">
-								<div class="flex justify-between">
-									<span class="text-gray-600">Flash Size:</span>
-									<span class="font-mono">{(backupResult()!.flashData.length / 1024).toFixed(1)} kB</span>
-								</div>
-								<div class="flex justify-between">
-									<span class="text-gray-600">UICR Size:</span>
-									<span class="font-mono">{backupResult()!.uicrData.length} bytes</span>
-								</div>
-								<div class="flex justify-between">
-									<span class="text-gray-600">Verification:</span>
-									<span class={verificationPassed() ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}>
-										{verificationPassed() ? 'Passed ✓' : 'Failed ✗'}
-									</span>
-								</div>
-							</div>
-							<div class="flex gap-2">
-								<button
-									onClick={downloadBackup}
-									class="flex-1 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-								>
-									Download Backup (.zip)
-								</button>
-								<button
-									onClick={reset}
-									class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
-								>
-									Reset
-								</button>
-							</div>
-						</div>
-					</Show>
-
-					<Show when={state() === 'error'}>
-						<div class="mt-4">
-							<button
-								onClick={reset}
-								class="w-full px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
-							>
-								Reset
-							</button>
-						</div>
-					</Show>
-				</div>
+				<p class="text-sm text-gray-600 mb-3">
+					Backup the firmware from your device. This will create a complete backup of flash memory and UICR configuration.
+				</p>
+				{content}
 			</Show>
 		</div>
 	);

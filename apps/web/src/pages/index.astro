@@ -31,7 +31,7 @@ import GuidedTutorial from '../components/GuidedTutorial';
 				</div>
 				<div class="ml-3">
 					<p class="text-sm text-blue-700">
-						<strong>Browser requirement:</strong> This tool requires Chrome, Edge, or another Chromium-based browser for WebUSB support.
+						<strong>Browser requirement:</strong> This tool requires Chrome, Edge, or another Chromium-based browser for WebUSB support. Works on Android with Chrome. <span class="text-blue-600">Does not work on iOS</span> (Apple doesn't allow real Chrome on iPhones/iPads).
 					</p>
 				</div>
 			</div>
@@ -89,11 +89,13 @@ import GuidedTutorial from '../components/GuidedTutorial';
 				</ul>
 
 				<figure class="mt-6">
-					<img
-						src="/display.webp"
-						alt="Super73 Diamond display - the device that needs to be opened"
-						class="w-full max-w-sm mx-auto rounded-lg border border-gray-200"
-					/>
+					<a href="/display.webp" target="_blank" rel="noopener" class="block">
+						<img
+							src="/display.webp"
+							alt="Super73 Diamond display - the device that needs to be opened"
+							class="w-full max-w-sm mx-auto rounded-lg border border-gray-200 hover:opacity-90 transition-opacity cursor-zoom-in"
+						/>
+					</a>
 					<figcaption class="text-sm text-gray-500 mt-2 text-center">
 						The Diamond display - open this to access the test points
 					</figcaption>
@@ -131,21 +133,25 @@ import GuidedTutorial from '../components/GuidedTutorial';
 
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
 					<figure>
-						<img
-							src="/debug-probe-wires.webp"
-							alt="Raspberry Pi Debug Probe showing SWDIO (yellow) and SWCLK (orange) wires"
-							class="w-full rounded-lg border border-gray-200"
-						/>
+						<a href="/debug-probe-wires.webp" target="_blank" rel="noopener" class="block">
+							<img
+								src="/debug-probe-wires.webp"
+								alt="Raspberry Pi Debug Probe showing SWDIO (yellow) and SWCLK (orange) wires"
+								class="w-full rounded-lg border border-gray-200 hover:opacity-90 transition-opacity cursor-zoom-in"
+							/>
+						</a>
 						<figcaption class="text-sm text-gray-500 mt-2 text-center">
 							Debug probe wires: <span class="text-yellow-600 font-medium">Yellow</span> = SWDIO, <span class="text-orange-600 font-medium">Orange</span> = SWCLK
 						</figcaption>
 					</figure>
 					<figure>
-						<img
-							src="/test-points.webp"
-							alt="Test points inside the Diamond display showing TP10 (SWDIO) and TP11 (SWCLK)"
-							class="w-full rounded-lg border border-gray-200"
-						/>
+						<a href="/test-points.webp" target="_blank" rel="noopener" class="block">
+							<img
+								src="/test-points.webp"
+								alt="Test points inside the Diamond display showing TP10 (SWDIO) and TP11 (SWCLK)"
+								class="w-full rounded-lg border border-gray-200 hover:opacity-90 transition-opacity cursor-zoom-in"
+							/>
+						</a>
 						<figcaption class="text-sm text-gray-500 mt-2 text-center">
 							Test point locations inside the display
 						</figcaption>
