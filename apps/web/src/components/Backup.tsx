@@ -1,5 +1,5 @@
 /// <reference types="w3c-web-usb" />
-import { createSignal, Show } from 'solid-js';
+import { createSignal, createEffect, onCleanup, Show } from 'solid-js';
 import {
 	connectDAP,
 	disconnectDAP,
@@ -44,6 +44,29 @@ export default function Backup(props: BackupProps) {
 	const [backupResult, setBackupResult] = createSignal<BackupResult | null>(null);
 	const [verificationPassed, setVerificationPassed] = createSignal<boolean>(false);
 	const [connection, setConnection] = createSignal<DAPConnection | null>(null);
+	const [backupDownloaded, setBackupDownloaded] = createSignal<boolean>(false);
+
+	// Warn user if they try to leave with an undownloaded backup
+	createEffect(() => {
+		const hasUndownloadedBackup = state() === 'complete' && backupResult() && !backupDownloaded();
+
+		const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+			if (hasUndownloadedBackup) {
+				e.preventDefault();
+				// Modern browsers ignore custom messages, but we set one anyway for older browsers
+				e.returnValue = 'You have an undownloaded backup. Are you sure you want to leave?';
+				return e.returnValue;
+			}
+		};
+
+		if (hasUndownloadedBackup) {
+			window.addEventListener('beforeunload', handleBeforeUnload);
+		}
+
+		onCleanup(() => {
+			window.removeEventListener('beforeunload', handleBeforeUnload);
+		});
+	});
 
 	const isDisabled = () => !props.selectedDevice || state() !== 'idle';
 
@@ -279,6 +302,7 @@ export default function Backup(props: BackupProps) {
 		setDeviceInfo(null);
 		setBackupResult(null);
 		setVerificationPassed(false);
+		setBackupDownloaded(false);
 	};
 
 	const downloadBackup = async () => {
@@ -323,6 +347,7 @@ export default function Backup(props: BackupProps) {
 			a.click();
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
+			setBackupDownloaded(true);
 		} catch (err) {
 			console.error('Failed to create download:', err);
 			setError(`Failed to create download: ${err instanceof Error ? err.message : 'Unknown error'}`);
