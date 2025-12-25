@@ -1,5 +1,6 @@
 words = [
     "approtect",
+    "astro",
     "bundler",
     "buttonless",
     "checksums",
@@ -7,12 +8,14 @@ words = [
     "crc",
     "ebikes",
     "eraseall",
+    "fflate",
     "ficr",
+    "nrf",
     "oxlint",
     "patcher",
     "pselreset",
+    "sdcfw",
     "superduper",
     "uicr",
-    "sdcfw",
-    "astro"
+    "undownloaded",
 ]
