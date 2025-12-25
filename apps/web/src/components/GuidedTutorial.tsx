@@ -77,7 +77,7 @@ export default function GuidedTutorial() {
 			<StepCard
 				number={1}
 				title="Connect Your Debug Probe"
-				description="Plug the Raspberry Pi Debug Probe into your computer's USB port and connect the jumper wires to the test points. Turn on the bike's power so the controller is powered."
+				description="Plug the Raspberry Pi Debug Probe into your computer's USB port and connect the jumper wires to the test points. Turn on the bike's power so the display is powered."
 			/>
 
 			{/* Step 2: Select Device */}
@@ -93,7 +93,7 @@ export default function GuidedTutorial() {
 			<ToolStep
 				number={3}
 				title="Read Device Info"
-				description="Verify the connection and see details about your controller's chip, including the part number, memory size, and protection status."
+				description="Practice the connection process: click the button to arm the tool, then press and hold the jumper wires against the test points. The tool will poll for a connection and read the chip info once contact is made."
 			>
 				<ReadInfoInline selectedDevice={selectedDevice()} />
 			</ToolStep>
@@ -102,7 +102,7 @@ export default function GuidedTutorial() {
 			<ToolStep
 				number={4}
 				title="Backup Your Firmware"
-				description="Always backup first! The backup tool reads the entire flash memory and configuration, verifies the data, and downloads a ZIP file."
+				description="Always backup first! Arm the tool, then press and hold the wires to the test points. Keep holding until the backup and verification complete - this takes about a minute. The tool will download a ZIP file when done."
 			>
 				<BackupInline selectedDevice={selectedDevice()} onBackupComplete={setLastBackup} />
 			</ToolStep>
@@ -111,7 +111,7 @@ export default function GuidedTutorial() {
 			<ToolStep
 				number={5}
 				title="Restore When Needed"
-				description="If something goes wrong or you want to revert changes, use this tool to flash your backup back to the controller."
+				description="If something goes wrong, select your backup ZIP file, arm the tool, then press and hold the wires to the test points until the restore completes. Keep your backup files safe!"
 			>
 				<RestoreInline selectedDevice={selectedDevice()} lastBackup={lastBackup()} />
 			</ToolStep>

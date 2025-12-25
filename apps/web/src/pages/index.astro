@@ -66,6 +66,7 @@ import GuidedTutorial from '../components/GuidedTutorial';
 						</span>
 						<div>
 							<strong class="text-gray-900">Jumper wires</strong>
+							<span class="text-sm text-gray-500 ml-2">(Included with debug probe)</span>
 							<p class="text-gray-600 text-sm mt-1">
 								Two female-to-female jumper wires to connect the debug probe to the test points.
 								You only need to connect SWDIO and SWCLK - no ground wire required.
@@ -81,11 +82,22 @@ import GuidedTutorial from '../components/GuidedTutorial';
 						<div>
 							<strong class="text-gray-900">Access to test points</strong>
 							<p class="text-gray-600 text-sm mt-1">
-								You'll need to open your ebike controller enclosure to access the test points on the PCB.
+								You'll need to open the Diamond display to access the test points on the PCB inside.
 							</p>
 						</div>
 					</li>
 				</ul>
+
+				<figure class="mt-6">
+					<img
+						src="/display.webp"
+						alt="Super73 Diamond display - the device that needs to be opened"
+						class="w-full max-w-sm mx-auto rounded-lg border border-gray-200"
+					/>
+					<figcaption class="text-sm text-gray-500 mt-2 text-center">
+						The Diamond display - open this to access the test points
+					</figcaption>
+				</figure>
 			</div>
 		</section>
 
@@ -94,7 +106,7 @@ import GuidedTutorial from '../components/GuidedTutorial';
 			<h2 class="text-2xl font-bold mb-4">Wiring Guide</h2>
 			<div class="bg-white border border-gray-200 rounded-lg p-6">
 				<p class="text-gray-600 mb-4">
-					Connect your Raspberry Pi Debug Probe to the test points on the controller board:
+					Connect your Raspberry Pi Debug Probe to the test points inside the display:
 				</p>
 
 				<div class="bg-gray-50 rounded-lg p-4 mb-6">
@@ -103,11 +115,13 @@ import GuidedTutorial from '../components/GuidedTutorial';
 							<span class="w-24 font-mono text-sm bg-gray-200 px-2 py-1 rounded">TP10</span>
 							<span class="text-gray-400">&rarr;</span>
 							<span class="font-semibold">SWDIO (SD)</span>
+							<span class="w-4 h-4 rounded-full bg-yellow-400 border border-yellow-500" title="Yellow wire"></span>
 						</div>
 						<div class="flex items-center space-x-3">
 							<span class="w-24 font-mono text-sm bg-gray-200 px-2 py-1 rounded">TP11</span>
 							<span class="text-gray-400">&rarr;</span>
 							<span class="font-semibold">SWCLK (SC)</span>
+							<span class="w-4 h-4 rounded-full bg-orange-500 border border-orange-600" title="Orange wire"></span>
 						</div>
 					</div>
 					<p class="text-sm text-gray-500 mt-4">
@@ -115,16 +129,28 @@ import GuidedTutorial from '../components/GuidedTutorial';
 					</p>
 				</div>
 
-				<figure class="mt-4">
-					<img
-						src="/test-points.webp"
-						alt="Test points on the Super73 controller board showing TP10 (SWDIO) and TP11 (SWCLK)"
-						class="w-full rounded-lg border border-gray-200"
-					/>
-					<figcaption class="text-sm text-gray-500 mt-2 text-center">
-						Test point locations on the Super73 controller PCB
-					</figcaption>
-				</figure>
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+					<figure>
+						<img
+							src="/debug-probe-wires.webp"
+							alt="Raspberry Pi Debug Probe showing SWDIO (yellow) and SWCLK (orange) wires"
+							class="w-full rounded-lg border border-gray-200"
+						/>
+						<figcaption class="text-sm text-gray-500 mt-2 text-center">
+							Debug probe wires: <span class="text-yellow-600 font-medium">Yellow</span> = SWDIO, <span class="text-orange-600 font-medium">Orange</span> = SWCLK
+						</figcaption>
+					</figure>
+					<figure>
+						<img
+							src="/test-points.webp"
+							alt="Test points inside the Diamond display showing TP10 (SWDIO) and TP11 (SWCLK)"
+							class="w-full rounded-lg border border-gray-200"
+						/>
+						<figcaption class="text-sm text-gray-500 mt-2 text-center">
+							Test point locations inside the display
+						</figcaption>
+					</figure>
+				</div>
 			</div>
 		</section>
 
