@@ -1,6 +1,6 @@
 # SUPER73 CUSTOM FIRMWARE
 
-Go to the [custom firmware](https://cfw.reverse.bike/) site to start.
+Go to the [custom firmware](https://cfw.reverse.bike/) site to start!
 
 
 ## Developers
