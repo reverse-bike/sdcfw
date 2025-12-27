@@ -2,8 +2,8 @@
 
 Version 3, 19 November 2007
 
-Copyright (C) 2007 Free Software Foundation, Inc.
-<https://fsf.org/>
+Copyright (C) 2025 BOLLC llc.
+<https://bollc.co/>
 
 Everyone is permitted to copy and distribute verbatim copies of this
 license document, but changing it is not allowed.
