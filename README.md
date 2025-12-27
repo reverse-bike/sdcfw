@@ -10,3 +10,7 @@ To install dependencies:
 ```bash
 bun install
 ```
+
+## License
+
+AGPLv3
