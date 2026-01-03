@@ -1,5 +1,6 @@
 # Repo specific
 /backup/
+.mpc.json
 
 # dependencies (bun install)
 node_modules
