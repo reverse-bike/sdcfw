@@ -71,8 +71,8 @@ import GuidedTutorial from '../components/GuidedTutorial';
 							<strong class="text-gray-900">Jumper wires</strong>
 							<span class="text-sm text-gray-500 ml-2">(Included with debug probe)</span>
 							<p class="text-gray-600 text-sm mt-1">
-								Two female-to-female jumper wires to connect the debug probe to the test points.
-								You only need to connect SWDIO and SWCLK - no ground wire required.
+								Three male-ended jumper wires to connect the debug probe to the test points.
+								The GND wire will be shimmed into the white connector on the backside of the PCB, and the SW wires will be held in place ont the test points.
 							</p>
 						</div>
 					</li>
@@ -103,6 +103,70 @@ import GuidedTutorial from '../components/GuidedTutorial';
 						The Diamond display - open this to access the test points
 					</figcaption>
 				</figure>
+			</div>
+		</section>
+
+		<!-- Opening the Display -->
+		<section class="mb-12">
+			<h2 class="text-2xl font-bold mb-4">Opening the Display</h2>
+			<div class="bg-white border border-gray-200 rounded-lg p-6">
+				<p class="text-gray-600 mb-6">
+					Follow these steps to safely open your Diamond display and access the test points:
+				</p>
+
+				<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+					<figure>
+						<a href="/dd-dis-01-buttons.webp" target="_blank" rel="noopener" class="block aspect-[4/3] overflow-hidden rounded-lg border border-gray-200">
+							<img
+								src="/dd-dis-01-buttons.webp"
+								alt="Step 1: Display buttons"
+								class="w-full h-full object-cover hover:opacity-90 transition-opacity cursor-zoom-in"
+							/>
+						</a>
+						<figcaption class="text-sm text-gray-500 mt-2">
+							<span class="font-semibold text-gray-700">Step 1:</span> Remove the button cover with your fingers, or a slim piece of sturdy plastic or metal.
+						</figcaption>
+					</figure>
+
+					<figure>
+						<a href="/dd-dis-02-screws.webp" target="_blank" rel="noopener" class="block aspect-[4/3] overflow-hidden rounded-lg border border-gray-200">
+							<img
+								src="/dd-dis-02-screws.webp"
+								alt="Step 2: Remove screws"
+								class="w-full h-full object-cover hover:opacity-90 transition-opacity cursor-zoom-in"
+							/>
+						</a>
+						<figcaption class="text-sm text-gray-500 mt-2">
+							<span class="font-semibold text-gray-700">Step 2:</span> Remove the 6 small screws on the inner case.
+						</figcaption>
+					</figure>
+
+					<figure>
+						<a href="/dd-dis-03-cover.webp" target="_blank" rel="noopener" class="block aspect-[4/3] overflow-hidden rounded-lg border border-gray-200">
+							<img
+								src="/dd-dis-03-cover.webp"
+								alt="Step 3: Remove cover"
+								class="w-full h-full object-cover hover:opacity-90 transition-opacity cursor-zoom-in"
+							/>
+						</a>
+						<figcaption class="text-sm text-gray-500 mt-2">
+							<span class="font-semibold text-gray-700">Step 3:</span> The inner case should come off easily once screws are removed.
+						</figcaption>
+					</figure>
+
+					<figure>
+						<a href="/dd-dis-04-sticker.webp" target="_blank" rel="noopener" class="block aspect-[4/3] overflow-hidden rounded-lg border border-gray-200">
+							<img
+								src="/dd-dis-04-sticker.webp"
+								alt="Step 4: Sticker location"
+								class="w-full h-full object-cover hover:opacity-90 transition-opacity cursor-zoom-in"
+							/>
+						</a>
+						<figcaption class="text-sm text-gray-500 mt-2">
+							<span class="font-semibold text-gray-700">Step 4:</span> You may need to remove the yellow tape to reveal your golden test points.
+						</figcaption>
+					</figure>
+				</div>
 			</div>
 		</section>
 
