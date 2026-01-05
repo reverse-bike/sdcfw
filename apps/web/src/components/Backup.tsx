@@ -53,9 +53,7 @@ export default function Backup(props: BackupProps) {
 		const handleBeforeUnload = (e: BeforeUnloadEvent) => {
 			if (hasUndownloadedBackup) {
 				e.preventDefault();
-				// Modern browsers ignore custom messages, but we set one anyway for older browsers
-				e.returnValue = 'You have an undownloaded backup. Are you sure you want to leave?';
-				return e.returnValue;
+				return;
 			}
 		};
 
