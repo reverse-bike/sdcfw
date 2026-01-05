@@ -63,7 +63,7 @@ export default function GuidedTutorial() {
 			<StepCard
 				number={1}
 				title="Connect Your Debug Probe"
-				description="Plug the Raspberry Pi Debug Probe into your computer's USB port and connect the jumper wires to the test points. Turn on the bike's power so the display is powered."
+				description="Plug the Raspberry Pi Debug Probe into your computer's USB port. Turn on the bike's power so the display is powered."
 			/>
 
 			{/* Step 2: Select Device */}
@@ -79,7 +79,7 @@ export default function GuidedTutorial() {
 			<ToolStep
 				number={3}
 				title="Read Device Info"
-				description="Practice the connection process: click the button to arm the tool, then press and hold the jumper wires against the test points. The tool will poll for a connection and read the chip info once contact is made."
+				description="Practice the connection process: click the button to arm the tool, connect the ground wire, then press and hold the jumper wires against the test points. The tool will poll for a connection and read the chip info once contact is made."
 			>
 				<ReadInfo selectedDevice={selectedDevice()} inline={true} />
 			</ToolStep>
