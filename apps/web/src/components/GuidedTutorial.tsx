@@ -105,7 +105,7 @@ export default function GuidedTutorial() {
 			>
 				<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
 					<figure>
-						<a href="/dd-dis-01-buttons.webp" target="_blank" rel="noopener" class="block aspect-[4/3] overflow-hidden rounded-lg border border-gray-200">
+						<a href="/dd-dis-01-buttons.webp" target="_blank" rel="noopener" class="block aspect-4/3 overflow-hidden rounded-lg border border-gray-200">
 							<img
 								src="/dd-dis-01-buttons.webp"
 								alt="Step 1: Display buttons"
@@ -118,7 +118,7 @@ export default function GuidedTutorial() {
 					</figure>
 
 					<figure>
-						<a href="/dd-dis-02-screws.webp" target="_blank" rel="noopener" class="block aspect-[4/3] overflow-hidden rounded-lg border border-gray-200">
+						<a href="/dd-dis-02-screws.webp" target="_blank" rel="noopener" class="block aspect-4/3 overflow-hidden rounded-lg border border-gray-200">
 							<img
 								src="/dd-dis-02-screws.webp"
 								alt="Step 2: Remove screws"
@@ -131,7 +131,7 @@ export default function GuidedTutorial() {
 					</figure>
 
 					<figure>
-						<a href="/dd-dis-03-cover.webp" target="_blank" rel="noopener" class="block aspect-[4/3] overflow-hidden rounded-lg border border-gray-200">
+						<a href="/dd-dis-03-cover.webp" target="_blank" rel="noopener" class="block aspect-4/3 overflow-hidden rounded-lg border border-gray-200">
 							<img
 								src="/dd-dis-03-cover.webp"
 								alt="Step 3: Remove cover"
@@ -144,7 +144,7 @@ export default function GuidedTutorial() {
 					</figure>
 
 					<figure>
-						<a href="/dd-dis-04-sticker.webp" target="_blank" rel="noopener" class="block aspect-[4/3] overflow-hidden rounded-lg border border-gray-200">
+						<a href="/dd-dis-04-sticker.webp" target="_blank" rel="noopener" class="block aspect-4/3 overflow-hidden rounded-lg border border-gray-200">
 							<img
 								src="/dd-dis-04-sticker.webp"
 								alt="Step 4: Sticker location"

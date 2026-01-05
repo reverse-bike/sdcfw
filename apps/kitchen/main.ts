@@ -19,7 +19,6 @@ import type {
   CleanRegion,
   Patch,
   PatchFile,
-  PatchFindReplace,
 } from "./patches/types";
 
 // ============================================================================
