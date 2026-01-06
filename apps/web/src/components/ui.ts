@@ -1,6 +1,29 @@
-// Shared icon and callout definitions
+// Shared UI definitions and utilities
 // Used by both Astro and SolidJS components
 
+// Sound effects
+export function playSuccessSound(): void {
+	const audio = new Audio('/success-sound.mp3');
+	audio.play().catch(() => {
+		// Ignore errors (e.g., if user hasn't interacted with page yet)
+	});
+}
+
+export function playErrorSound(): void {
+	const audio = new Audio('/error-sound.mp3');
+	audio.play().catch(() => {
+		// Ignore errors
+	});
+}
+
+export function playConnectedSound(): void {
+	const audio = new Audio('/connected-sound.mp3');
+	audio.play().catch(() => {
+		// Ignore errors
+	});
+}
+
+// Icons
 export type IconType = 'warning' | 'info' | 'checkmark';
 
 export const iconPaths: Record<IconType, string> = {

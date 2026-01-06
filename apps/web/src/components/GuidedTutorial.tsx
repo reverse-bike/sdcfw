@@ -235,7 +235,9 @@ export default function GuidedTutorial() {
 
 				<div class="border-t border-gray-200 pt-6">
 					<h4 class="font-medium text-gray-900 mb-3">Test the Connection</h4>
-					<p class="text-gray-600 text-sm mb-4">First power on the bike. Then click the button to arm the tool, connect the ground wire, then press and hold the jumper wires against the test points. The tool will poll for a connection and read the chip info once contact is made.</p>
+					<p class="text-gray-600 text-sm mb-4">First power on the bike. Then click the button to arm the tool,
+					connect the ground wire, then press and hold the jumper wires against the test points.
+					The tool will poll for a connection and read the chip info once contact is made. <span class="font-bold">Unmute your speakers</span> to hear feedback noises.</p>
 					<ReadInfo selectedDevice={selectedDevice()} inline={true} />
 				</div>
 			</ToolStep>

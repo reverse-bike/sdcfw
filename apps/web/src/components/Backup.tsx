@@ -13,6 +13,7 @@ import {
 } from '@sdcfw/core';
 import { zipSync, strToU8 } from 'fflate';
 import ProgressBar from './ProgressBar';
+import { playSuccessSound, playErrorSound, playConnectedSound } from './ui';
 
 export interface CompletedBackup {
 	flashData: Uint8Array;
@@ -80,6 +81,7 @@ export default function Backup(props: BackupProps) {
 		if (!coreErr.recoverable) {
 			setState('error');
 			setError(`Backup failed: ${coreErr.message}`);
+			playErrorSound();
 			return false;
 		}
 		return true;
@@ -106,6 +108,7 @@ export default function Backup(props: BackupProps) {
 			const result = await connectDAP(props.selectedDevice);
 			if (result.ok) {
 				setConnection(result.value);
+				playConnectedSound();
 				return result.value;
 			}
 			if (result.error.recoverable) {
@@ -150,6 +153,7 @@ export default function Backup(props: BackupProps) {
 				}
 				conn = connectResult.value;
 				setConnection(conn);
+				playConnectedSound();
 			}
 
 			// Try to read device info
@@ -205,6 +209,7 @@ export default function Backup(props: BackupProps) {
 			if (backupRes.error.recoverable) {
 				console.log('Backup interrupted, reconnecting...');
 				setProgress('Connection lost, reconnecting...');
+				playErrorSound();
 				const newConn = await reconnect();
 				if (!newConn) return; // Cancelled or non-recoverable
 				conn = newConn;
@@ -234,6 +239,7 @@ export default function Backup(props: BackupProps) {
 			if (verifyRes.error.recoverable) {
 				console.log('Verification interrupted, reconnecting...');
 				setProgress('Connection lost, reconnecting...');
+				playErrorSound();
 				const newConn = await reconnect();
 				if (!newConn) return; // Cancelled or non-recoverable
 				conn = newConn;
@@ -265,6 +271,7 @@ export default function Backup(props: BackupProps) {
 			setProgress('');
 			setProgressPercent(undefined);
 			setState('complete');
+			playSuccessSound();
 			// Notify parent of completed backup
 			if (props.onBackupComplete && info) {
 				props.onBackupComplete({
@@ -278,6 +285,7 @@ export default function Backup(props: BackupProps) {
 			setVerificationPassed(false);
 			setError('Backup verification failed: Data mismatch');
 			setState('error');
+			playErrorSound();
 		}
 
 		// Disconnect

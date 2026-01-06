@@ -14,6 +14,7 @@ import {
 	type CoreError,
 } from '@sdcfw/core';
 import ProgressBar from './ProgressBar';
+import { playSuccessSound, playErrorSound, playConnectedSound } from './ui';
 
 interface ReadInfoProps {
 	selectedDevice: USBDevice | null;
@@ -35,6 +36,7 @@ export default function ReadInfo(props: ReadInfoProps) {
 		if (!coreErr.recoverable) {
 			setState('error');
 			setError(`Read failed: ${coreErr.message}`);
+			playErrorSound();
 			return false;
 		}
 		return true;
@@ -76,6 +78,7 @@ export default function ReadInfo(props: ReadInfoProps) {
 					return;
 				}
 				conn = connectResult.value;
+				playConnectedSound();
 			}
 
 			// Try to read device info
@@ -91,6 +94,7 @@ export default function ReadInfo(props: ReadInfoProps) {
 
 				setState('complete');
 				setProgress('');
+				playSuccessSound();
 				await safeDisconnect(conn);
 				return;
 			} catch (err) {
@@ -101,6 +105,7 @@ export default function ReadInfo(props: ReadInfoProps) {
 					conn = null;
 					setState('armed');
 					setProgress('Waiting for target connection...');
+					playErrorSound();
 					await new Promise(resolve => setTimeout(resolve, retryDelayMs));
 				} else {
 					handleError(coreErr);

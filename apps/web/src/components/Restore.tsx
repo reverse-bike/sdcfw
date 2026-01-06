@@ -12,6 +12,7 @@ import {
 import { unzipSync } from 'fflate';
 import type { CompletedBackup } from './Backup';
 import ProgressBar from './ProgressBar';
+import { playSuccessSound, playErrorSound, playConnectedSound } from './ui';
 
 // Parse percentage from progress messages like "Flashing: 50%" or "Verifying: 75%"
 function parsePercent(message: string): number | undefined {
@@ -70,6 +71,7 @@ export default function Restore(props: RestoreProps) {
 		if (!coreErr.recoverable) {
 			setState('error');
 			setError(`Restore failed: ${coreErr.message}`);
+			playErrorSound();
 			return false;
 		}
 		return true;
@@ -188,6 +190,7 @@ export default function Restore(props: RestoreProps) {
 				}
 				conn = connectResult.value;
 				setConnection(conn);
+				playConnectedSound();
 			}
 
 			// Target connected, start erase
@@ -203,6 +206,7 @@ export default function Restore(props: RestoreProps) {
 					setConnection(null);
 					setState('armed');
 					updateProgress('Connection lost, waiting for target...');
+					playErrorSound();
 					await new Promise(resolve => setTimeout(resolve, retryDelayMs));
 					continue;
 				}
@@ -229,6 +233,7 @@ export default function Restore(props: RestoreProps) {
 				setState('complete');
 				setProgress('');
 				setProgressPercent(undefined);
+				playSuccessSound();
 			} else {
 				if (result.error.recoverable) {
 					// Disconnect and retry from beginning (need to erase again)
@@ -237,6 +242,7 @@ export default function Restore(props: RestoreProps) {
 					setConnection(null);
 					setState('armed');
 					updateProgress('Connection lost, waiting for target...');
+					playErrorSound();
 					await new Promise(resolve => setTimeout(resolve, retryDelayMs));
 					continue;
 				}
