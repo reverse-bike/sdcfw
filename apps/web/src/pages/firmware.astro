@@ -1,8 +1,8 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { getCollection } from 'astro:content';
-import Callout from '../components/Callout.astro';
-import Icon from '../components/Icon.astro';
+import Callout from '../components/Callout';
+import Icon from '../components/Icon';
 
 // Get all firmware entries, excluding files starting with underscore (drafts/examples)
 const allFirmware = await getCollection('firmware', ({ id }) => !id.startsWith('_'));
