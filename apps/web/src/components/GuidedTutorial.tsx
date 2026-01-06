@@ -255,7 +255,7 @@ export default function GuidedTutorial() {
 			<ToolStep
 				number={6}
 				title="Restore or Flash Custom Firmware"
-				description={<>Use this tool to restore your original backup if something goes wrong, or to flash <a href="/firmware" target="_blank" class="text-blue-500 hover:underline">custom firmware</a>. Select your ZIP file, arm the tool, then press and hold the wires to the test points until complete.</>}
+				description={<>Use this tool to restore your original backup if something goes wrong, or to flash <a href="/firmware" target="_blank" class="text-blue-500 hover:underline">custom firmware</a>. Select your ZIP file, arm the tool, then press and hold the wires to the test points until complete. Once done, power cycle the bike.</>}
 			>
 				<div class="mb-4">
 					<Callout type="warning" title="Warning">
