@@ -6,13 +6,13 @@
   },
   "dependencies": {
     "@sdcfw/dapjs": "workspace:*",
-    "usb": "^2.16.0",
+    "usb": "^2.17.0",
     "crc-32": "^1.2.2"
   },
   "devDependencies": {
-    "@types/node": "^22.10.2",
-    "@types/usb": "^2.0.4",
+    "@types/node": "^22.19.15",
+    "@types/usb": "^2.0.5",
     "crc-32": "^1.2.2",
-    "@types/w3c-web-usb": "^1.0.10"
+    "@types/w3c-web-usb": "^1.0.14"
   }
 }
