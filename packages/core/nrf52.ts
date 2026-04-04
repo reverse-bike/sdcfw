@@ -8,6 +8,12 @@ import type {
 import { createError } from "./types.js";
 import { withTimeout } from "./connection.js";
 
+function errMsg(e: unknown): string {
+  if (e instanceof Error) return e.message;
+  if (e && typeof e === "object" && "message" in e) return String((e as { message: unknown }).message);
+  return String(e);
+}
+
 // Helper function to write uint32 in little-endian format
 function writeUInt32LE(buffer: Uint8Array, value: number, offset: number): void {
   buffer[offset] = value & 0xff;
@@ -598,7 +604,7 @@ export async function performChipErase(dap: ADI): Promise<void> {
         }
       }
     } catch (e) {
-      console.log(`Warning: Could not verify CTRL-AP IDR: ${e}`);
+      console.log(`Warning: Could not verify CTRL-AP IDR: ${errMsg(e)}`);
     }
 
     // Reset and trigger ERASEALL task
@@ -669,7 +675,7 @@ export async function performChipErase(dap: ADI): Promise<void> {
       );
     } catch (e) {
       console.log(
-        `Warning: Reset failed (${e}), but erase completed successfully.`,
+        `Warning: Reset failed (${errMsg(e)}), but erase completed successfully.`,
       );
     }
 
@@ -682,14 +688,18 @@ export async function performChipErase(dap: ADI): Promise<void> {
         "Clear ERASEALL",
       );
     } catch (e) {
-      console.log(`Warning: Could not clear ERASEALL register: ${e}`);
+      console.log(`Warning: Could not clear ERASEALL register: ${errMsg(e)}`);
     }
 
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     console.log("Erase operation complete.");
   } catch (e) {
-    throw createError("ERASE_FAILED", `Chip erase failed: ${e}`, { cause: e });
+    const msg = errMsg(e);
+    const hint = msg.includes("Transfer count mismatch")
+      ? " This usually means the connection is bad. Check that the ground wire is securely connected."
+      : "";
+    throw createError("ERASE_FAILED", `Chip erase failed: ${msg}.${hint}`, { cause: e });
   }
 
   // Clear any error flags
