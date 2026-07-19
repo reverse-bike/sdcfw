@@ -25,50 +25,69 @@
       "bin": {
         "kitchen": "./main.ts",
       },
+      "dependencies": {
+        "crc-32": "catalog:",
+      },
     },
     "apps/web": {
       "name": "web",
       "version": "0.0.1",
       "dependencies": {
-        "@astrojs/solid-js": "^5.1.3",
+        "@astrojs/solid-js": "catalog:",
         "@sdcfw/core": "workspace:*",
-        "@tailwindcss/vite": "^4.2.2",
-        "astro": "^5.18.1",
-        "eventemitter3": "^5.0.4",
-        "fflate": "^0.8.2",
-        "solid-js": "^1.9.12",
-        "tailwindcss": "^4.2.2",
+        "@tailwindcss/vite": "catalog:",
+        "astro": "catalog:",
+        "eventemitter3": "catalog:",
+        "fflate": "catalog:",
+        "solid-js": "catalog:",
+        "tailwindcss": "catalog:",
       },
       "devDependencies": {
-        "@tailwindcss/typography": "^0.5.19",
-        "@types/w3c-web-usb": "^1.0.14",
+        "@tailwindcss/typography": "catalog:",
+        "@types/w3c-web-usb": "catalog:",
       },
     },
     "packages/core": {
       "name": "@sdcfw/core",
       "dependencies": {
         "@sdcfw/dapjs": "workspace:*",
-        "crc-32": "^1.2.2",
-        "usb": "^2.17.0",
+        "crc-32": "catalog:",
+        "usb": "catalog:",
       },
       "devDependencies": {
-        "@types/node": "^22.19.15",
-        "@types/usb": "^2.0.5",
-        "@types/w3c-web-usb": "^1.0.14",
-        "crc-32": "^1.2.2",
+        "@types/node": "catalog:",
+        "@types/usb": "catalog:",
+        "@types/w3c-web-usb": "catalog:",
       },
     },
     "packages/dapjs": {
       "name": "@sdcfw/dapjs",
       "devDependencies": {
-        "@types/node": "^20.11.20",
-        "@types/node-hid": "^1.2.0",
-        "@types/usb": "^1.5.1",
-        "@types/w3c-web-usb": "^1.0.10",
-        "node-hid": "^2.1.1",
-        "usb": "^2.11.0",
+        "@types/node": "catalog:",
+        "@types/node-hid": "catalog:",
+        "@types/usb": "catalog:",
+        "@types/w3c-web-usb": "catalog:",
+        "node-hid": "catalog:",
+        "usb": "catalog:",
       },
     },
+  },
+  "catalog": {
+    "@astrojs/solid-js": "^5.1.3",
+    "@tailwindcss/typography": "^0.5.19",
+    "@tailwindcss/vite": "^4.2.2",
+    "@types/node": "^22.19.15",
+    "@types/node-hid": "^1.3.4",
+    "@types/usb": "^2.0.5",
+    "@types/w3c-web-usb": "^1.0.14",
+    "astro": "^5.18.1",
+    "crc-32": "^1.2.2",
+    "eventemitter3": "^5.0.4",
+    "fflate": "^0.8.2",
+    "node-hid": "^2.2.0",
+    "solid-js": "^1.9.12",
+    "tailwindcss": "^4.2.2",
+    "usb": "^2.17.0",
   },
   "packages": {
     "@astrojs/compiler": ["@astrojs/compiler@2.13.0", "", {}, "sha512-mqVORhUJViA28fwHYaWmsXSzLO9osbdZ5ImUfxBarqsYdMlPbqAqGJCxsNzvppp1BEzc1mJNjOVvQqeDN8Vspw=="],
@@ -1017,10 +1036,6 @@
 
     "@rollup/pluginutils/estree-walker": ["estree-walker@2.0.2", "", {}, "sha512-Rfkk/Mp/DL7JVje3u18FxFujQlTNR2q6QfMSMB7AvCBx91NGj/ba3kCfza0f6dVDbw7YlRf/nDrn7pQrCCyQ/w=="],
 
-    "@sdcfw/dapjs/@types/node": ["@types/node@20.19.37", "", { "dependencies": { "undici-types": "~6.21.0" } }, "sha512-8kzdPJ3FsNsVIurqBs7oodNnCEVbni9yUEkaHbgptDACOPW04jimGagZ51E6+lXUwJjgnBw+hyko/lkFWCldqw=="],
-
-    "@sdcfw/dapjs/@types/usb": ["@types/usb@1.5.4", "", { "dependencies": { "@types/node": "*" } }, "sha512-NOUza/8yuswu6RoECQyPHEjA34qpDaeONQ72fm+bCnnN2DJjDePAY+NsmV17H88oIlq4JlJ2mD5Kh5d6R2MwTQ=="],
-
     "@tailwindcss/node/lightningcss": ["lightningcss@1.32.0", "", { "dependencies": { "detect-libc": "^2.0.3" }, "optionalDependencies": { "lightningcss-android-arm64": "1.32.0", "lightningcss-darwin-arm64": "1.32.0", "lightningcss-darwin-x64": "1.32.0", "lightningcss-freebsd-x64": "1.32.0", "lightningcss-linux-arm-gnueabihf": "1.32.0", "lightningcss-linux-arm64-gnu": "1.32.0", "lightningcss-linux-arm64-musl": "1.32.0", "lightningcss-linux-x64-gnu": "1.32.0", "lightningcss-linux-x64-musl": "1.32.0", "lightningcss-win32-arm64-msvc": "1.32.0", "lightningcss-win32-x64-msvc": "1.32.0" } }, "sha512-NXYBzinNrblfraPGyrbPoD19C1h9lfI/1mzgWYvXUTe414Gz/X1FD2XBZSZM7rRTrMA8JL3OtAaGifrIKhQ5yQ=="],
 
     "@tailwindcss/oxide-wasm32-wasi/@emnapi/core": ["@emnapi/core@1.9.1", "", { "dependencies": { "@emnapi/wasi-threads": "1.2.0", "tslib": "^2.4.0" }, "bundled": true }, "sha512-mukuNALVsoix/w1BJwFzwXBN/dHeejQtuVzcDsfOEsdpCumXb/E9j8w11h5S54tT1xhifGfbbSm/ICrObRb3KA=="],
@@ -1056,8 +1071,6 @@
     "p-queue/eventemitter3": ["eventemitter3@5.0.1", "", {}, "sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA=="],
 
     "vite/esbuild": ["esbuild@0.25.12", "", { "optionalDependencies": { "@esbuild/aix-ppc64": "0.25.12", "@esbuild/android-arm": "0.25.12", "@esbuild/android-arm64": "0.25.12", "@esbuild/android-x64": "0.25.12", "@esbuild/darwin-arm64": "0.25.12", "@esbuild/darwin-x64": "0.25.12", "@esbuild/freebsd-arm64": "0.25.12", "@esbuild/freebsd-x64": "0.25.12", "@esbuild/linux-arm": "0.25.12", "@esbuild/linux-arm64": "0.25.12", "@esbuild/linux-ia32": "0.25.12", "@esbuild/linux-loong64": "0.25.12", "@esbuild/linux-mips64el": "0.25.12", "@esbuild/linux-ppc64": "0.25.12", "@esbuild/linux-riscv64": "0.25.12", "@esbuild/linux-s390x": "0.25.12", "@esbuild/linux-x64": "0.25.12", "@esbuild/netbsd-arm64": "0.25.12", "@esbuild/netbsd-x64": "0.25.12", "@esbuild/openbsd-arm64": "0.25.12", "@esbuild/openbsd-x64": "0.25.12", "@esbuild/openharmony-arm64": "0.25.12", "@esbuild/sunos-x64": "0.25.12", "@esbuild/win32-arm64": "0.25.12", "@esbuild/win32-ia32": "0.25.12", "@esbuild/win32-x64": "0.25.12" }, "bin": { "esbuild": "bin/esbuild" } }, "sha512-bbPBYYrtZbkt6Os6FiTLCTFxvq4tt3JKall1vRwshA3fdVztsLAatFaZobhkBC8/BrPetoa0oksYoKXoG4ryJg=="],
-
-    "@sdcfw/dapjs/@types/usb/@types/node": ["@types/node@25.0.2", "", { "dependencies": { "undici-types": "~7.16.0" } }, "sha512-gWEkeiyYE4vqjON/+Obqcoeffmk0NF15WSBwSs7zwVA2bAbTaE0SJ7P0WNGoJn8uE7fiaV5a7dKYIJriEqOrmA=="],
 
     "@tailwindcss/node/lightningcss/lightningcss-android-arm64": ["lightningcss-android-arm64@1.32.0", "", { "os": "android", "cpu": "arm64" }, "sha512-YK7/ClTt4kAK0vo6w3X+Pnm0D2cf2vPHbhOXdoNti1Ga0al1P4TBZhwjATvjNwLEBCnKvjJc2jQgHXH0NEwlAg=="],
 
@@ -1144,8 +1157,6 @@
     "vite/esbuild/@esbuild/win32-ia32": ["@esbuild/win32-ia32@0.25.12", "", { "os": "win32", "cpu": "ia32" }, "sha512-HkqnmmBoCbCwxUKKNPBixiWDGCpQGVsrQfJoVGYLPT41XWF8lHuE5N6WhVia2n4o5QK5M4tYr21827fNhi4byQ=="],
 
     "vite/esbuild/@esbuild/win32-x64": ["@esbuild/win32-x64@0.25.12", "", { "os": "win32", "cpu": "x64" }, "sha512-alJC0uCZpTFrSL0CCDjcgleBXPnCrEAhTBILpeAp7M/OFgoqtAetfBzX0xM00MUsVVPpVjlPuMbREqnZCXaTnA=="],
-
-    "@sdcfw/dapjs/@types/usb/@types/node/undici-types": ["undici-types@7.16.0", "", {}, "sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw=="],
 
     "ansi-align/string-width/strip-ansi/ansi-regex": ["ansi-regex@5.0.1", "", {}, "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ=="],
   }

@@ -3,3 +3,8 @@ dev:
 
 ts:
 	bun run typecheck
+
+outdated:
+	bun outdated --recursive
+
+test: ts

@@ -9,17 +9,17 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/solid-js": "^5.1.3",
+    "@astrojs/solid-js": "catalog:",
     "@sdcfw/core": "workspace:*",
-    "@tailwindcss/vite": "^4.2.2",
-    "astro": "^5.18.1",
-    "eventemitter3": "^5.0.4",
-    "fflate": "^0.8.2",
-    "solid-js": "^1.9.12",
-    "tailwindcss": "^4.2.2"
+    "@tailwindcss/vite": "catalog:",
+    "astro": "catalog:",
+    "eventemitter3": "catalog:",
+    "fflate": "catalog:",
+    "solid-js": "catalog:",
+    "tailwindcss": "catalog:"
   },
   "devDependencies": {
-    "@tailwindcss/typography": "^0.5.19",
-    "@types/w3c-web-usb": "^1.0.14"
+    "@tailwindcss/typography": "catalog:",
+    "@types/w3c-web-usb": "catalog:"
   }
 }
