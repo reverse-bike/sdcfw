@@ -12,6 +12,7 @@ import {
 import { unzipSync } from 'fflate';
 import type { CompletedBackup } from './Backup';
 import ProgressBar from './ProgressBar';
+import ZipFormatDetails from './ZipFormatDetails';
 import { playSuccessSound, playErrorSound, playConnectedSound } from './ui';
 
 // Parse percentage from progress messages like "Flashing: 50%" or "Verifying: 75%"
@@ -476,30 +477,7 @@ export default function Restore(props: RestoreProps) {
 						</p>
 					</div>
 
-					<details class="mb-4 text-sm">
-						<summary class="cursor-pointer text-gray-600 hover:text-gray-800 select-none">
-							File format details
-						</summary>
-						<div class="mt-2 p-3 bg-gray-50 rounded border border-gray-200 text-gray-700">
-							<p class="mb-2">
-								The firmware file must be a <code class="bg-gray-200 px-1 rounded">.zip</code> archive containing:
-							</p>
-							<ul class="list-disc list-inside space-y-1 ml-2">
-								<li>
-									<code class="bg-gray-200 px-1 rounded">flash.bin</code> — Flash memory image (required)
-								</li>
-								<li>
-									<code class="bg-gray-200 px-1 rounded">uicr.bin</code> — UICR configuration (required)
-								</li>
-								<li>
-									<code class="bg-gray-200 px-1 rounded">metadata.json</code> — Firmware metadata (optional)
-								</li>
-							</ul>
-							<p class="mt-2 text-gray-500">
-								Backups and custom firmware from this site are in the correct format.
-							</p>
-						</div>
-					</details>
+					<ZipFormatDetails />
 
 					{content}
 				</div>

@@ -5,6 +5,7 @@ import ReadInfo from './ReadInfo';
 import Backup, { type CompletedBackup } from './Backup';
 import Restore from './Restore';
 import Callout from './Callout';
+import ZipFormatDetails from './ZipFormatDetails';
 
 interface StepCardProps {
 	number: number;
@@ -267,6 +268,7 @@ export default function GuidedTutorial() {
 						After restoring firmware, you may need to delete the bike from your phone's Bluetooth list of known devices before it will connect again. Go to your phone's Bluetooth settings, find the bike, and "Forget" or remove it, then pair again.
 					</Callout>
 				</div>
+				<ZipFormatDetails />
 				<Restore selectedDevice={selectedDevice()} lastBackup={lastBackup()} inline={true} />
 			</ToolStep>
 		</div>
