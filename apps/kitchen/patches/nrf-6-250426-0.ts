@@ -46,18 +46,11 @@ const patchFile: PatchFile = {
       description: 'Change "versions" to "versionz"',
     },
     {
-      address: 0x47688,
-      type: "uint8",
-      original: 0x01,
-      data: 0x03,
-      description: "Initialize ride mode to 3 instead of 1",
-    },
-    {
-      address: 0x32988,
+      address: 0x32986,
       type: "bytes",
-      original: [0x1a, 0x73],
-      data: [0x00, 0xbf],
-      description: "Keep the initialized ride mode during startup",
+      original: [0x01, 0x22],
+      data: [0x03, 0x22],
+      description: "Set ride mode to 3 on every power-on transition",
     },
     {
       type: "find-replace",
