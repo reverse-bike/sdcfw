@@ -11,20 +11,20 @@
     ],
     "catalog": {
       "@astrojs/solid-js": "^5.1.3",
-      "@tailwindcss/typography": "^0.5.19",
-      "@tailwindcss/vite": "^4.2.2",
-      "@types/node": "^22.19.15",
+      "@tailwindcss/typography": "^0.5.20",
+      "@tailwindcss/vite": "^4.3.2",
+      "@types/node": "^22.20.1",
       "@types/node-hid": "^1.3.4",
       "@types/usb": "^2.0.5",
       "@types/w3c-web-usb": "^1.0.14",
-      "astro": "^5.18.1",
+      "astro": "^5.18.2",
       "crc-32": "^1.2.2",
       "eventemitter3": "^5.0.4",
-      "fflate": "^0.8.2",
+      "fflate": "^0.8.3",
       "node-hid": "^2.2.0",
-      "solid-js": "^1.9.12",
-      "tailwindcss": "^4.2.2",
-      "usb": "^2.17.0"
+      "solid-js": "^1.9.14",
+      "tailwindcss": "^4.3.2",
+      "usb": "^2.18.0"
     }
   },
   "devDependencies": {
