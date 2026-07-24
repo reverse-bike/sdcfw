@@ -1,4 +1,5 @@
 export {
+  APP_MANUFACTURER_ID,
   APP_SERVICE,
   APP_TX_CHAR,
   APP_RX_CHAR,
@@ -33,7 +34,13 @@ export { parseDfuPackage, stagedImage, STAGED_CRC_LEN, type DfuPackage } from ".
 
 export { authenticate, DEFAULT_AUTH_KEY } from "./auth.js";
 
-export { readVersionInfo, serialFromManufacturerData, type ModuleVersionInfo } from "./info.js";
+export {
+  readStandardDeviceInformation,
+  readVersionInfo,
+  serialFromManufacturerData,
+  type ModuleVersionInfo,
+  type StandardDeviceInformation,
+} from "./info.js";
 
 export { DfuClient, DfuError, type DfuTransferOptions } from "./dfu.js";
 
@@ -41,6 +48,7 @@ export {
   armControllerUpdate,
   controllerImageCrc,
   createArmPacket,
+  enterDfuMode,
   transferControllerFirmware,
   validateDfuTransportOptions,
   type DfuTransportOptions,

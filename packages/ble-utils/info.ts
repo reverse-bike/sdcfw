@@ -2,6 +2,7 @@ import {
   APP_RX_CHAR,
   APP_SERVICE,
   APP_TX_CHAR,
+  APP_MANUFACTURER_ID,
   DIS_SERVICE,
   HISTORY_SELECT_CHAR,
 } from "./constants.js";
@@ -10,13 +11,25 @@ import { bytesOf, withTimeout } from "./util.js";
 
 const DIS_LABELS: Record<string, string> = {
   "2a23": "System ID",
-  "2a24": "Model",
+  "2a24": "Model Number",
   "2a25": "Serial Number",
-  "2a26": "nRF Version",
+  "2a26": "Firmware Revision",
   "2a27": "Hardware Revision",
   "2a28": "Software Revision",
   "2a29": "Manufacturer Name",
+  "2a2a": "IEEE Regulatory Certification Data",
+  "2a50": "PnP ID",
+  "2a51": "UDI for Medical Devices",
 };
+
+const DIS_TEXT_IDS = new Set(["2a24", "2a25", "2a26", "2a27", "2a28", "2a29", "2a51"]);
+
+export interface StandardDeviceInformation {
+  uuid: string;
+  label: string;
+  value: Uint8Array;
+  text?: string;
+}
 
 export interface ModuleVersionInfo {
   model?: string;
@@ -57,11 +70,39 @@ export function serialFromManufacturerData(
   manufacturerData?: Map<number, DataView>,
 ): string | undefined {
   if (!manufacturerData) return undefined;
-  const value = manufacturerData.get(0x020f);
+  const value = manufacturerData.get(APP_MANUFACTURER_ID);
   if (!value) return undefined;
   const bytes = bytesOf(value);
   if (bytes.length < 8) return undefined;
   return Array.from(bytes.subarray(0, 8), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+export async function readStandardDeviceInformation(
+  server: BluetoothRemoteGATTServer,
+): Promise<StandardDeviceInformation[]> {
+  const values: StandardDeviceInformation[] = [];
+  const dis = await withTimeout(
+    server.getPrimaryService(DIS_SERVICE),
+    10_000,
+    "get Device Information Service",
+  );
+  for (const characteristic of await dis.getCharacteristics()) {
+    if (!characteristic.properties.read) continue;
+    try {
+      const uuid = shortUuid(characteristic.uuid) ?? characteristic.uuid;
+      const value = bytesOf(await characteristic.readValue());
+      const text = DIS_TEXT_IDS.has(uuid) ? utf8(value) : undefined;
+      values.push({
+        uuid,
+        label: DIS_LABELS[uuid] ?? uuid,
+        value,
+        ...(text === undefined ? {} : { text }),
+      });
+    } catch {
+      // Optional DIS characteristics may be present but unreadable.
+    }
+  }
+  return values;
 }
 
 export async function readVersionInfo(
@@ -71,21 +112,9 @@ export async function readVersionInfo(
     authKey?: Uint8Array;
   } = {},
 ): Promise<ModuleVersionInfo> {
-  const disValues = new Map<string, Uint8Array>();
-  const dis = await withTimeout(
-    server.getPrimaryService(DIS_SERVICE),
-    10_000,
-    "get Device Information Service",
+  const disValues = new Map(
+    (await readStandardDeviceInformation(server)).map(({ uuid, value }) => [uuid, value]),
   );
-  for (const characteristic of await dis.getCharacteristics()) {
-    if (!characteristic.properties.read) continue;
-    try {
-      const id = shortUuid(characteristic.uuid) ?? characteristic.uuid;
-      disValues.set(id, bytesOf(await characteristic.readValue()));
-    } catch {
-      // Optional DIS characteristics vary between display firmware versions.
-    }
-  }
 
   if (!(await authenticate(server, options.authKey))) {
     throw new Error("application authentication failed");
@@ -115,7 +144,7 @@ export async function readVersionInfo(
   const fafa = await readRegistry(0xfafa);
   const additionalDeviceInfo: Record<string, Uint8Array> = {};
   for (const [id, bytes] of disValues) {
-    if (!(id in DIS_LABELS) || id === "2a23") {
+    if (!["2a24", "2a25", "2a26", "2a27", "2a28", "2a29"].includes(id)) {
       additionalDeviceInfo[DIS_LABELS[id] ?? id] = bytes;
     }
   }

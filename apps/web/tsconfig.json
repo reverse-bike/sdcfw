@@ -4,7 +4,7 @@
   "exclude": ["dist"],
   "compilerOptions": {
     "jsxImportSource": "solid-js",
-    "types": ["w3c-web-usb"],
+    "types": ["w3c-web-usb", "web-bluetooth"],
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "exactOptionalPropertyTypes": true,

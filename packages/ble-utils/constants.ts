@@ -1,4 +1,5 @@
 export const COMODULE_BASE = "-1212-efde-1523-785feabcd123";
+export const APP_MANUFACTURER_ID = 0x020f;
 
 export function comoduleUuid(short: number): string {
   return `0000${short.toString(16).padStart(4, "0")}${COMODULE_BASE}`;

@@ -23,6 +23,38 @@ export function createArmPacket(crc: number): Uint8Array<ArrayBuffer> {
   ]);
 }
 
+export async function enterDfuMode(
+  server: BluetoothRemoteGATTServer,
+  options: {
+    rebootSettleMs?: number;
+    log?: LogFn;
+  } = {},
+): Promise<void> {
+  const log = options.log ?? (() => {});
+  log("requesting buttonless DFU reboot");
+  const dfuService = await withTimeout(
+    server.getPrimaryService(DFU_SERVICE),
+    10_000,
+    "get buttonless DFU service",
+  );
+  const buttonless = await dfuService.getCharacteristic(DFU_BUTTONLESS);
+  try {
+    await withTimeout(
+      buttonless.writeValueWithResponse(new Uint8Array([0x01])),
+      10_000,
+      "enter buttonless DFU",
+    );
+    log("buttonless DFU request acknowledged");
+  } catch (error) {
+    // The link can disappear before the write acknowledgement as the display
+    // reboots. A later DFU scan is the authoritative success check.
+    log(
+      `buttonless DFU acknowledgement was lost: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+  await sleep(options.rebootSettleMs ?? 1_000);
+}
+
 export async function armControllerUpdate(
   server: BluetoothRemoteGATTServer,
   bin: Uint8Array,
@@ -51,28 +83,11 @@ export async function armControllerUpdate(
     const eraseWaitMs = options.eraseWaitMs ?? 8_000;
     log(`external staging area armed; waiting ${eraseWaitMs / 1000}s`);
     await sleep(eraseWaitMs);
-    log("requesting buttonless DFU reboot");
-    try {
-      const dfuService = await withTimeout(
-        server.getPrimaryService(DFU_SERVICE),
-        10_000,
-        "get buttonless DFU service",
-      );
-      const buttonless = await dfuService.getCharacteristic(DFU_BUTTONLESS);
-      await withTimeout(
-        buttonless.writeValueWithResponse(new Uint8Array([0x01])),
-        10_000,
-        "enter buttonless DFU",
-      );
-      log("buttonless DFU request acknowledged");
-    } catch (error) {
-      // The link can disappear before the write acknowledgement as the display
-      // reboots. A later DFU scan is the authoritative success check.
-      log(
-        `buttonless DFU acknowledgement was lost: ${error instanceof Error ? error.message : String(error)}`,
-      );
-    }
-    await sleep(options.rebootSettleMs ?? 1_000);
+    const rebootOptions =
+      options.rebootSettleMs === undefined
+        ? { log }
+        : { rebootSettleMs: options.rebootSettleMs, log };
+    await enterDfuMode(server, rebootOptions);
   }
   return crc;
 }

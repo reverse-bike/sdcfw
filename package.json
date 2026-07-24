@@ -11,7 +11,7 @@
       "@types/web-bluetooth": "^0.0.21",
       "@astrojs/solid-js": "^7.0.1",
       "@tailwindcss/typography": "^0.5.20",
-      "@tailwindcss/vite": "^4.3.2",
+      "@tailwindcss/vite": "^4.3.3",
       "@types/node": "^26.1.1",
       "@types/node-hid": "^3.0.0",
       "@types/usb": "^2.0.5",
@@ -22,7 +22,7 @@
       "fflate": "^0.8.3",
       "node-hid": "^3.3.0",
       "solid-js": "^1.9.14",
-      "tailwindcss": "^4.3.2",
+      "tailwindcss": "^4.3.3",
       "typescript": "^7",
       "usb": "^2.18.0",
       "webbluetooth": "^3.7.0"

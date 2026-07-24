@@ -2,10 +2,14 @@
 
 import * as readline from "node:readline";
 import {
+  APP_MANUFACTURER_ID,
+  DFU_SERVICE,
   armControllerUpdate,
   connect,
+  enterDfuMode,
   hex,
   parseDfuPackage,
+  readStandardDeviceInformation,
   readVersionInfo,
   serialFromManufacturerData,
   sleep,
@@ -14,8 +18,9 @@ import {
   withDeadline,
   type DfuTransportOptions,
   type ModuleVersionInfo,
+  type StandardDeviceInformation,
 } from "@sdcfw/ble-utils";
-import { findAdvertisedDevice, type ScannedDevice } from "./node-ble.js";
+import { scanManufacturerDevices, scanServiceDevices, type ScannedDevice } from "./node-ble.js";
 
 interface ParsedArguments {
   positional: string[];
@@ -24,7 +29,7 @@ interface ParsedArguments {
 
 class CliUsageError extends Error {}
 
-const BOOLEAN_FLAGS = new Set(["--execute", "--yes", "-y", "--help", "-h"]);
+const BOOLEAN_FLAGS = new Set(["--arm", "--execute", "--yes", "-y", "--help", "-h"]);
 
 function parseArguments(argv: string[]): ParsedArguments {
   const positional: string[] = [];
@@ -53,18 +58,19 @@ function showUsage(): void {
 mc-farm - Motor-controller firmware tools over BLE
 
 Usage:
-  mc-farm read <advertised-name>
-  mc-farm flash <advertised-name> --bin <firmware.bin> --dat <init.dat> [--execute]
+  mc-farm read [device-id]
+  mc-farm read-dfu [device-id] [--arm]
+  mc-farm flash [device-id] --bin <firmware.bin> --dat <init.dat> [--execute]
 
 Flash is a dry run unless --execute is supplied. A dry run connects to the
 bike, enters DFU mode, and submits the .dat init packet, but sends no firmware
 data.
 
 Options:
+  --arm                 Enter DFU mode before read-dfu
   --execute             Send and execute the firmware binary
-  --yes, -y             Skip the interactive confirmation
-  --dfu-name <name>     DFU advertised name (default: DfuTarg)
-  --scan-time <seconds> BLE scan timeout (default: 60)
+  --yes, -y             Skip confirmation before a write or DFU reboot
+  --scan-time <seconds> BLE discovery window (default: 10)
   --timeout <seconds>   Overall timeout (default: 900)
   --wait <seconds>      Wait after arming external flash (default: 8)
   --chunk <bytes>       Initial BLE packet size (default: 20)
@@ -72,9 +78,13 @@ Options:
   --prn <count>         Packet receipt interval (default: 0)
 
 Examples:
-  mc-farm read SUPER73
-  mc-farm flash SUPER73 --bin controller.patched.bin --dat controller.dat
-  mc-farm flash SUPER73 --bin controller.patched.bin --dat controller.dat --execute
+  mc-farm read
+  mc-farm read <device-id>
+  mc-farm read-dfu
+  mc-farm read-dfu --arm
+  mc-farm read-dfu <device-id>
+  mc-farm flash --bin controller.patched.bin --dat controller.dat
+  mc-farm flash <device-id> --bin controller.patched.bin --dat controller.dat --execute
 `);
 }
 
@@ -133,30 +143,167 @@ function printVersionInfo(info: ModuleVersionInfo): void {
   }
 }
 
-function manufacturerData(device: ScannedDevice): Map<number, DataView> | undefined {
-  return device._adData?.manufacturerData;
+function printStandardDeviceInformation(info: StandardDeviceInformation[]): void {
+  console.log("\nStandard BLE Device Information");
+  if (info.length === 0) {
+    console.log("  No readable characteristics found.");
+    return;
+  }
+  for (const entry of info) {
+    console.log(`  ${entry.label} [${entry.uuid}]: ${entry.text ?? hex(entry.value)}`);
+  }
 }
 
-async function readInfo(advertisedName: string, scanTime: number): Promise<void> {
-  console.log(`scanning for "${advertisedName}"`);
-  const device = await findAdvertisedDevice(advertisedName, {
+function manufacturerData(device: ScannedDevice): Map<number, DataView> | undefined {
+  const advertised = device._adData?.manufacturerData;
+  if (!advertised) return undefined;
+  return new Map(Array.from(advertised, ([id, value]) => [Number(id), value]));
+}
+
+function describeDevice(device: BluetoothDevice): string {
+  return `${device.name ?? "(unnamed)"} [${device.id}]`;
+}
+
+function printDeviceChoices(devices: ScannedDevice[]): void {
+  for (const device of devices) {
+    console.error(`  Name: ${device.name ?? "(unnamed)"}`);
+    console.error(`  Device ID: ${device.id}`);
+  }
+}
+
+function selectDevice(
+  devices: ScannedDevice[],
+  requestedId: string | undefined,
+  description: string,
+  selectionHint: string,
+): ScannedDevice {
+  if (requestedId !== undefined) {
+    const wanted = requestedId.toLowerCase();
+    const selected = devices.find((device) => String(device.id).toLowerCase() === wanted);
+    if (selected) return selected;
+    if (devices.length === 0) throw new Error(`no ${description} found`);
+    console.error(`available ${description}:`);
+    printDeviceChoices(devices);
+    throw new Error(`device ID "${requestedId}" did not match; ${selectionHint}`);
+  }
+  if (devices.length === 0) throw new Error(`no ${description} found`);
+  if (devices.length === 1) return devices[0]!;
+
+  console.error(`multiple ${description} found:`);
+  printDeviceChoices(devices);
+  throw new Error(selectionHint);
+}
+
+async function readInfo(requestedId: string | undefined, scanTime: number): Promise<void> {
+  console.log(
+    `scanning ${scanTime}s for manufacturer 0x${APP_MANUFACTURER_ID.toString(16).padStart(4, "0")}`,
+  );
+  const discovered = await scanManufacturerDevices(APP_MANUFACTURER_ID, {
     scanTimeSeconds: scanTime,
-    log: console.log,
   });
-  console.log(`found ${device.name ?? "(unnamed)"} [${device.id}]; connecting`);
-  const server = await connect(device, { log: console.log });
+  if (discovered.length === 0) throw new Error("no compatible bikes found");
+  const devices =
+    requestedId === undefined
+      ? discovered
+      : [
+          selectDevice(
+            discovered,
+            requestedId,
+            "compatible bikes",
+            "rerun with a Device ID shown by: mc-farm read",
+          ),
+        ];
+
+  console.log(`found ${devices.length} compatible bike${devices.length === 1 ? "" : "s"}`);
+  let successes = 0;
+  for (const device of devices) {
+    console.log(`\nBLE device\n  Name: ${device.name ?? "(unnamed)"}\n  Device ID: ${device.id}`);
+    console.log("connecting");
+    let server: BluetoothRemoteGATTServer | undefined;
+    try {
+      server = await connect(device, { log: console.log });
+      const advertisedSerial = serialFromManufacturerData(manufacturerData(device));
+      const options = advertisedSerial === undefined ? {} : { advertisedSerial };
+      printVersionInfo(await readVersionInfo(server, options));
+      successes++;
+    } catch (error) {
+      console.error(`  Read failed: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      server?.disconnect();
+    }
+  }
+  if (successes === 0) throw new Error("could not read any compatible bikes");
+}
+
+async function readDfuInfo(
+  requestedId: string | undefined,
+  arm: boolean,
+  scanTime: number,
+  approved: boolean,
+): Promise<void> {
+  if (arm) {
+    console.log(
+      `scanning ${scanTime}s for manufacturer 0x${APP_MANUFACTURER_ID.toString(16).padStart(4, "0")}`,
+    );
+    const appDevices = await scanManufacturerDevices(APP_MANUFACTURER_ID, {
+      scanTimeSeconds: scanTime,
+    });
+    const device = selectDevice(
+      appDevices,
+      requestedId,
+      "compatible bikes",
+      "rerun with the intended Device ID: mc-farm read-dfu <device-id> --arm",
+    );
+    await confirm(
+      approved,
+      `This will reboot ${describeDevice(device)} into DFU mode. No firmware data will be sent. Power-cycle the bike afterward to leave DFU mode.`,
+    );
+
+    console.log(`selected ${describeDevice(device)}; connecting`);
+    const appServer = await connect(device, { log: console.log });
+    try {
+      await enterDfuMode(appServer, { log: console.log });
+    } finally {
+      try {
+        appServer.disconnect();
+      } catch {
+        // The expected reboot may have already disconnected.
+      }
+    }
+
+    console.log(`waiting for Nordic DFU service (${DFU_SERVICE})`);
+    await sleep(5_000);
+  }
+
+  console.log(`scanning ${scanTime}s for Nordic DFU service (${DFU_SERVICE})`);
+  const dfuDevices = await scanServiceDevices(DFU_SERVICE, {
+    scanTimeSeconds: scanTime,
+  });
+  const dfuDevice = selectDevice(
+    dfuDevices,
+    arm ? undefined : requestedId,
+    "Nordic DFU targets",
+    "rerun with the intended Device ID: mc-farm read-dfu <device-id>",
+  );
+  console.log(`selected ${describeDevice(dfuDevice)}; connecting`);
+  const dfuServer = await connect(dfuDevice, { log: console.log });
   try {
-    const advertisedSerial = serialFromManufacturerData(manufacturerData(device));
-    const options = advertisedSerial === undefined ? {} : { advertisedSerial };
-    const info = await readVersionInfo(server, options);
-    printVersionInfo(info);
+    console.log(`\nDFU target: ${dfuDevice.name ?? "(unnamed)"} [${dfuDevice.id}]`);
+    try {
+      printStandardDeviceInformation(await readStandardDeviceInformation(dfuServer));
+    } catch (error) {
+      console.log(
+        `\nStandard BLE Device Information\n  Device Information Service unavailable: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+    console.log("\nNo firmware data was sent. Power-cycle the bike to leave DFU mode.");
   } finally {
-    server.disconnect();
+    dfuServer.disconnect();
   }
 }
 
 async function flash(
-  advertisedName: string,
+  requestedId: string | undefined,
   binPath: string,
   datPath: string,
   flags: Map<string, string>,
@@ -194,21 +341,29 @@ async function flash(
   );
   console.log(`mode: ${execute ? "EXECUTE" : "DRY RUN"}`);
 
+  const scanTime = numberFlag(flags, "--scan-time", 10);
+  console.log(
+    `scanning ${scanTime}s for manufacturer 0x${APP_MANUFACTURER_ID.toString(16).padStart(4, "0")}`,
+  );
+  const appDevices = await scanManufacturerDevices(APP_MANUFACTURER_ID, {
+    scanTimeSeconds: scanTime,
+  });
+  const device = selectDevice(
+    appDevices,
+    requestedId,
+    "compatible bikes",
+    "rerun with the intended Device ID: mc-farm flash <device-id> --bin <firmware.bin> --dat <init.dat>",
+  );
+  console.log(`selected ${describeDevice(device)}`);
+
   await confirm(
     flags.has("--yes") || flags.has("-y"),
     execute
-      ? `This will write motor-controller firmware to "${advertisedName}".`
-      : `This dry run will reboot "${advertisedName}" into DFU mode and submit the init packet. It will send no firmware data.`,
+      ? `This will write motor-controller firmware to ${describeDevice(device)}.`
+      : `This dry run will reboot ${describeDevice(device)} into DFU mode and submit the init packet. It will send no firmware data.`,
   );
 
-  const scanTime = numberFlag(flags, "--scan-time", 60);
-  const dfuName = flags.get("--dfu-name") ?? "DfuTarg";
-  console.log(`scanning for "${advertisedName}"`);
-  const device = await findAdvertisedDevice(advertisedName, {
-    scanTimeSeconds: scanTime,
-    log: console.log,
-  });
-  console.log(`found ${device.name ?? "(unnamed)"} [${device.id}]; connecting`);
+  console.log("connecting");
   const appServer = await connect(device, { log: console.log });
   try {
     await armControllerUpdate(appServer, bin, {
@@ -223,13 +378,16 @@ async function flash(
     }
   }
 
-  console.log(`waiting for "${dfuName}"`);
+  console.log(`waiting for Nordic DFU service (${DFU_SERVICE})`);
   await sleep(5_000);
-  const dfuDevice = await findAdvertisedDevice(dfuName, {
-    scanTimeSeconds: Math.max(scanTime, 120),
-    log: console.log,
-  });
-  console.log(`found ${dfuDevice.name ?? "(unnamed)"} [${dfuDevice.id}]; connecting`);
+  console.log(`scanning ${scanTime}s for Nordic DFU service (${DFU_SERVICE})`);
+  const dfuDevice = selectDevice(
+    await scanServiceDevices(DFU_SERVICE, { scanTimeSeconds: scanTime }),
+    undefined,
+    "Nordic DFU targets",
+    "ensure only the intended DFU target is powered on, then rerun flash",
+  );
+  console.log(`selected ${describeDevice(dfuDevice)}; connecting`);
   const dfuServer = await connect(dfuDevice, { log: console.log });
   try {
     const result = await transferControllerFirmware(dfuServer, dat, bin, {
@@ -260,22 +418,32 @@ async function main(): Promise<void> {
     showUsage();
     return;
   }
-  if (command !== "read" && command !== "flash") {
+  if (command !== "read" && command !== "read-dfu" && command !== "flash") {
     throw new CliUsageError(`unknown command: ${command}`);
   }
 
-  const advertisedName = positional[1];
-  if (!advertisedName) {
-    throw new CliUsageError(`${command} requires an advertised BLE name`);
-  }
+  const requestedId = positional[1];
+  if (positional.length > 2) throw new CliUsageError(`too many arguments for ${command}`);
 
   const timeout = numberFlag(flags, "--timeout", 900) * 1_000;
   switch (command) {
     case "read":
       await withDeadline(
-        readInfo(advertisedName, numberFlag(flags, "--scan-time", 60)),
+        readInfo(requestedId, numberFlag(flags, "--scan-time", 10)),
         timeout,
         "read",
+      );
+      break;
+    case "read-dfu":
+      await withDeadline(
+        readDfuInfo(
+          requestedId,
+          flags.has("--arm"),
+          numberFlag(flags, "--scan-time", 10),
+          flags.has("--yes") || flags.has("-y"),
+        ),
+        timeout,
+        "read-dfu",
       );
       break;
     case "flash": {
@@ -284,7 +452,7 @@ async function main(): Promise<void> {
       if (!binPath || !datPath) {
         throw new CliUsageError("flash requires both --bin and --dat");
       }
-      await withDeadline(flash(advertisedName, binPath, datPath, flags), timeout, "flash");
+      await withDeadline(flash(requestedId, binPath, datPath, flags), timeout, "flash");
       break;
     }
   }
