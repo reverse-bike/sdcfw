@@ -89,20 +89,56 @@ export interface CleanRegion {
 }
 
 /**
- * A patch file defines all patches for a specific firmware version.
+ * Marks a descriptor as one that ships as a firmware archive.
+ *
+ * Release metadata describes the *output* image. Provenance — which firmware
+ * was patched to produce it — is carried by the patch file's `name`.
+ *
+ * Kitchen composes the archive filename from these fields and the target; the
+ * name is for humans and for linking, and is never parsed to recover them.
  */
-export interface PatchFile {
+export interface ReleaseInfo {
+  /** Release version of the archive itself, unrelated to any firmware version */
+  version: string;
+}
+
+/**
+ * Fields shared by every patch file, whatever the target device.
+ *
+ * Each target follows the same shape: a primary image that gets patched, plus
+ * one companion file that ships beside it unmodified.
+ */
+interface PatchFileBase {
   /** Name/identifier for this patch set */
   name: string;
   /** Path to the firmware bin file (relative to project root) */
   firmwarePath: string;
-  /** Postfix to add to output filename (e.g., ".patched" -> "flash.patched.bin") */
-  outputPostfix: string;
-  /** Firmware container rules. Defaults to the legacy nRF52 dump format. */
-  format?: "nrf52-dump" | "raw";
   /** Memory address corresponding to file offset zero. Defaults to zero. */
   imageBase?: number;
-  /** Exact pristine input size, used to reject unknown raw images. */
+  /** List of patches to apply. Empty for a stock release. */
+  patches: Patch[];
+  /** Set to publish this descriptor's output as a firmware archive. */
+  release?: ReleaseInfo;
+}
+
+/**
+ * Display firmware: a full nRF52 flash dump, patched in place, shipping
+ * alongside the UICR dump taken from the same device.
+ */
+export interface NrfPatchFile extends PatchFileBase {
+  target: "nrf";
+  /** Path to the matching UICR dump (relative to project root) */
+  uicrPath: string;
+  /** Display releases additionally declare the version the image reports. */
+  release?: ReleaseInfo & {
+    /**
+     * Version this image reports, as a string because the display exposes it
+     * through the BLE Device Information Service. Patching cannot safely change
+     * it, so it matches the source image.
+     */
+    nrfVersion: string;
+  };
+  /** Exact pristine input size, used to reject unknown images. */
   expectedSize?: number;
   /** Exact pristine input SHA-256, used to reject patched or unknown images. */
   expectedSha256?: string;
@@ -112,6 +148,34 @@ export interface PatchFile {
    * If undefined, no cleaning is performed.
    */
   cleanRegions?: CleanRegion[];
-  /** List of patches to apply */
-  patches: Patch[];
 }
+
+/**
+ * Motor controller firmware: a raw image needing no cleaning, shipping
+ * alongside the signed DFU init packet used to stage it.
+ *
+ * Size and hash are mandatory here: a controller image is never patched
+ * without verifying what went in, and it cannot be read back off the bike.
+ */
+export interface McPatchFile extends PatchFileBase {
+  target: "controller";
+  /** Path to the DFU init packet shipped with this image (relative to project root) */
+  datPath: string;
+  /** Exact pristine input size */
+  expectedSize: number;
+  /** Exact pristine input SHA-256 */
+  expectedSha256: string;
+  /** Controller releases additionally declare the version the image reports over BLE. */
+  release?: ReleaseInfo & {
+    /**
+     * Version this image reports over BLE once running, used to verify a flash
+     * succeeded. Declared by hand and deliberately not derived from the patches.
+     */
+    controllerVersion: number;
+  };
+}
+
+/**
+ * A patch file defines all patches for a specific firmware version.
+ */
+export type PatchFile = NrfPatchFile | McPatchFile;

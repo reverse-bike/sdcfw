@@ -1,4 +1,4 @@
-import type { PatchFile } from "./types";
+import type { NrfPatchFile } from "./types";
 import { publicKeyBytes } from "../keys/public-key-patch";
 
 // Original DFU signing public key in the firmware.
@@ -10,12 +10,13 @@ const originalPublicKey = [
 ];
 
 /**
- * Patches for nRF firmware version 6-250426-0.
+ * Patches for nRF firmware version 8-250426-0.
  */
-const patchFile: PatchFile = {
-  name: "nrf-6-250426-0",
-  firmwarePath: "firmware/nrf/6-250426-0/flash.bin",
-  outputPostfix: ".patched",
+const patchFile: NrfPatchFile = {
+  name: "nrf-8-250426-0",
+  target: "nrf",
+  firmwarePath: "firmware/nrf/8-250426-0/flash.bin",
+  uicrPath: "firmware/nrf/8-250426-0/uicr.bin",
   cleanRegions: [
     {
       start: 0x00000,

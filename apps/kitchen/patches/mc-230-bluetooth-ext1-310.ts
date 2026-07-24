@@ -1,13 +1,17 @@
-import type { PatchFile } from "./types.js";
+import type { McPatchFile } from "./types.js";
 
-const patchFile: PatchFile = {
+const patchFile: McPatchFile = {
   name: "mc-230-BLUETOOTH-EXT1-310",
+  target: "controller",
   firmwarePath: "firmware/mc/230-BLUETOOTH-EXT1-310/GD_S73Rx_H104_S310US_20221020.bin",
-  outputPostfix: ".patched",
-  format: "raw",
+  datPath: "firmware/mc/230-BLUETOOTH-EXT1-310/GD_S73Rx_H104_S310US_20221020.dat",
   imageBase: 0x08003800,
   expectedSize: 26_200,
   expectedSha256: "90d8bb178b308900375416f319e59f043b3363c158f2bec4dc6bbdb879f97840",
+  release: {
+    version: "1.0.0",
+    controllerVersion: 311,
+  },
   patches: [
     {
       type: "bytes",

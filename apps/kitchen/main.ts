@@ -386,8 +386,8 @@ async function patch(patchFilePath: string): Promise<void> {
   const patchFile: PatchFile = patchModule.default;
 
   console.log(`  Name: ${patchFile.name}`);
+  console.log(`  Target: ${patchFile.target}`);
   console.log(`  Firmware: ${patchFile.firmwarePath}`);
-  console.log(`  Output postfix: ${patchFile.outputPostfix}`);
   console.log(`  Patches: ${patchFile.patches.length}\n`);
 
   // Resolve firmware path relative to project root
@@ -400,10 +400,19 @@ async function patch(patchFilePath: string): Promise<void> {
     process.exit(1);
   }
 
-  // Compute output path (same directory as firmware, with postfix)
+  // Kitchen owns output naming: a patched image is marked as such, a stock
+  // release keeps the original name and so never overwrites its own input.
   const firmwareDir = path.dirname(firmwarePath);
   const firmwareBasename = path.basename(firmwarePath, ".bin");
-  const outputPath = path.join(firmwareDir, `${firmwareBasename}${patchFile.outputPostfix}.bin`);
+  const outputPostfix = patchFile.patches.length > 0 ? ".patched" : "";
+  const outputPath = path.join(firmwareDir, `${firmwareBasename}${outputPostfix}.bin`);
+  if (outputPath === firmwarePath) {
+    throw new Error(
+      `Refusing to overwrite the pristine input image: ${firmwarePath}\n` +
+        `  A descriptor with no patches reproduces its input, so it can only be ` +
+        `written to a different output directory.`,
+    );
+  }
 
   console.log(`Input:  ${firmwarePath}`);
   console.log(`Output: ${outputPath}\n`);
@@ -434,7 +443,7 @@ async function patch(patchFilePath: string): Promise<void> {
   }
 
   const imageBase = patchFile.imageBase ?? 0;
-  if (patchFile.format === "raw") {
+  if (patchFile.target === "controller") {
     console.log("Step 3: Verifying original bytes...");
     let verificationFailed = false;
     const foundAddresses = new Map<Patch, number>();
