@@ -1,5 +1,5 @@
 {
-  "exclude": ["node_modules", "dist", "build", "apps/web/src/content"],
+  "exclude": ["node_modules", "dist", "build", "apps/web"],
   "compilerOptions": {
     "paths": {
       "@sdcfw/usb-utils": ["./packages/usb-utils/index.ts"],
@@ -18,22 +18,23 @@
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
+    "isolatedModules": true,
     "noEmit": true,
-
-    // JSX setup for SolidJS
-    "jsx": "preserve",
-    "jsxImportSource": "solid-js",
 
     // Best practices
     "strict": true,
     "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
     "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
 
     // Some stricter flags (disabled by default)
     "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noPropertyAccessFromIndexSignature": false
+    "noUnusedParameters": false
   }
 }
