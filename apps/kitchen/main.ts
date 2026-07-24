@@ -140,7 +140,7 @@ function verifyOriginal(
       };
     }
 
-    return { error: null, foundAddress: offsets[0] };
+    return { error: null, foundAddress: offsets[0]! };
   }
 
   const { address } = patch;

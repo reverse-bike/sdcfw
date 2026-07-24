@@ -71,8 +71,8 @@ const IN_REPORT = 0x100;
  */
 export class USB implements Transport {
   private interfaceNumber?: number;
-  private endpointIn?: InEndpoint;
-  private endpointOut?: OutEndpoint;
+  private endpointIn: InEndpoint | undefined;
+  private endpointOut: OutEndpoint | undefined;
   public readonly packetSize = 64;
 
   /**

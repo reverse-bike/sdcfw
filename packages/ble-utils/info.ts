@@ -125,13 +125,20 @@ export async function readVersionInfo(
     return bytes ? utf8(bytes) : undefined;
   };
 
+  const model = value("2a24");
+  const serialNumber = value("2a25") ?? options.advertisedSerial;
+  const manufacturerName = value("2a29");
+  const hardwareRevision = value("2a27");
+  const nrfVersion = value("2a26");
+  const softwareRevision = value("2a28");
+
   return {
-    model: value("2a24"),
-    serialNumber: value("2a25") ?? options.advertisedSerial,
-    manufacturerName: value("2a29"),
-    hardwareRevision: value("2a27"),
-    nrfVersion: value("2a26"),
-    softwareRevision: value("2a28"),
+    ...(model === undefined ? {} : { model }),
+    ...(serialNumber === undefined ? {} : { serialNumber }),
+    ...(manufacturerName === undefined ? {} : { manufacturerName }),
+    ...(hardwareRevision === undefined ? {} : { hardwareRevision }),
+    ...(nrfVersion === undefined ? {} : { nrfVersion }),
+    ...(softwareRevision === undefined ? {} : { softwareRevision }),
     nrfBootloaderVersion: fcfc[7] ?? 0,
     firmwareVariant: fcfc[8] ?? 0,
     stmVersion: u24be(fcfc, 2),

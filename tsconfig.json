@@ -1,5 +1,5 @@
 {
-  "exclude": ["node_modules", "dist", "build", "apps/web"],
+  "exclude": ["node_modules", "dist", "build", "apps/web", "scratch"],
   "compilerOptions": {
     "paths": {
       "@sdcfw/usb-utils": ["./packages/usb-utils/index.ts"],
@@ -23,6 +23,7 @@
 
     // Best practices
     "strict": true,
+    "exactOptionalPropertyTypes": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "allowUnreachableCode": false,

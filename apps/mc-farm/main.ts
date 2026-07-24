@@ -146,9 +146,9 @@ async function readInfo(advertisedName: string, scanTime: number): Promise<void>
   console.log(`found ${device.name ?? "(unnamed)"} [${device.id}]; connecting`);
   const server = await connect(device, { log: console.log });
   try {
-    const info = await readVersionInfo(server, {
-      advertisedSerial: serialFromManufacturerData(manufacturerData(device)),
-    });
+    const advertisedSerial = serialFromManufacturerData(manufacturerData(device));
+    const options = advertisedSerial === undefined ? {} : { advertisedSerial };
+    const info = await readVersionInfo(server, options);
     printVersionInfo(info);
   } finally {
     server.disconnect();

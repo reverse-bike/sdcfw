@@ -55,8 +55,8 @@ const IN_REPORT = 0x100;
  */
 export class WebUSB implements Transport {
   private interfaceNumber?: number;
-  private endpointIn?: USBEndpoint;
-  private endpointOut?: USBEndpoint;
+  private endpointIn: USBEndpoint | undefined;
+  private endpointOut: USBEndpoint | undefined;
   public readonly packetSize = 64;
 
   /**

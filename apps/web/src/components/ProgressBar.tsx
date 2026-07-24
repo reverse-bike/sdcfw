@@ -2,7 +2,7 @@ import { Show } from "solid-js";
 
 interface ProgressBarProps {
   /** Progress percentage (0-100). If undefined, shows indeterminate animation. */
-  percent?: number;
+  percent?: number | undefined;
   /** Status message to display */
   message?: string;
   /** Color variant */
