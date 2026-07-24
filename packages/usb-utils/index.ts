@@ -1,5 +1,4 @@
 export {
-  findDevice,
   connectDAP,
   disconnectDAP,
   withTimeout,

@@ -9,6 +9,11 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
-    "@sdcfw/usb-utils": "workspace:*"
+    "@sdcfw/usb-utils": "workspace:*",
+    "usb": "catalog:"
+  },
+  "devDependencies": {
+    "@types/usb": "catalog:",
+    "@types/w3c-web-usb": "catalog:"
   }
 }

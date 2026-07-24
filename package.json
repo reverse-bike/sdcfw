@@ -32,7 +32,7 @@
       "node-hid": "^3.3.0",
       "solid-js": "^1.9.14",
       "tailwindcss": "^4.3.2",
-      "typescript": "^5.9.3",
+      "typescript": "^7",
       "usb": "^2.18.0",
       "webbluetooth": "^3.7.0"
     }

@@ -6,12 +6,10 @@
   },
   "dependencies": {
     "@sdcfw/dapjs": "workspace:*",
-    "crc-32": "catalog:",
-    "usb": "catalog:"
+    "crc-32": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",
-    "@types/usb": "catalog:",
     "@types/w3c-web-usb": "catalog:"
   }
 }

@@ -4,19 +4,7 @@ import { ADI, WebUSB as Transport } from "@sdcfw/dapjs";
 import type { DAPConnection, Result } from "./types.js";
 import { ok, err, createError, toCoreError } from "./types.js";
 
-export const ESP32_S3_VID = 0x303a;
-export const ESP32_S3_PID = 0x1002;
 export const DEFAULT_CLOCK_SPEED = 10000000; // 10mhz for speed
-
-// Dynamically import usb package to avoid bundling it for browser
-let WebUSBNode: any = null;
-async function getNodeWebUSB() {
-  if (!WebUSBNode) {
-    const usbModule = await import("usb");
-    WebUSBNode = usbModule.WebUSB;
-  }
-  return WebUSBNode;
-}
 
 export function withTimeout<T>(
   promise: Promise<T>,
@@ -32,25 +20,6 @@ export function withTimeout<T>(
       ),
     ),
   ]);
-}
-
-export async function findDevice(): Promise<Result<USBDevice>> {
-  try {
-    const WebUSB = await getNodeWebUSB();
-    const webusb = new WebUSB({ allowAllDevices: true });
-    const devices = await webusb.getDevices();
-    const device = devices.find(
-      (d: USBDevice) => d.vendorId === ESP32_S3_VID && d.productId === ESP32_S3_PID,
-    );
-
-    if (!device) {
-      return err(createError("DEVICE_NOT_FOUND", "ESP32-S3 Bridge not found. Please connect the probe."));
-    }
-
-    return ok(device);
-  } catch (e) {
-    return err(toCoreError(e));
-  }
 }
 
 export async function connectDAP(

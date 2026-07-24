@@ -2,7 +2,6 @@
 import fs from "fs";
 import path from "path";
 import {
-  findDevice,
   connectDAP,
   disconnectDAP,
   backup as backupOperation,
@@ -15,6 +14,7 @@ import {
   type DAPConnection,
   type CoreError,
 } from "@sdcfw/usb-utils";
+import { findDevice } from "./node-usb.js";
 
 function printUsage() {
   console.log(`

@@ -21,9 +21,6 @@ export default defineConfig({
         // Polyfill for Node.js 'events' module used by dapjs (browser compatibility)
         'events': path.resolve(__dirname, 'src/polyfills/events.ts'),
       }
-    },
-    optimizeDeps: {
-      exclude: ['usb']
     }
   }
 });
