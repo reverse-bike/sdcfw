@@ -24,14 +24,7 @@
 import type { Transport } from "../transport";
 import type { Proxy, DAPOperation } from "../proxy";
 import { CmsisDAP } from "../proxy";
-import {
-  DPRegister,
-  APRegister,
-  CSWMask,
-  BankSelectMask,
-  AbortMask,
-  CtrlStatMask,
-} from "./enums";
+import { DPRegister, APRegister, CSWMask, BankSelectMask, AbortMask, CtrlStatMask } from "./enums";
 import type { DAP } from "./";
 import { DAPTransferMode, DAPPort, DAPProtocol } from "../proxy/enums";
 import { DEFAULT_CLOCK_FREQUENCY } from "../proxy/cmsis-dap";
@@ -59,11 +52,7 @@ export class ADI implements DAP {
    * @param mode Debug mode to use (default 0)
    * @param clockFrequency Communication clock frequency to use (default 10000000)
    */
-  constructor(
-    transport: Transport,
-    mode?: DAPProtocol,
-    clockFrequency?: number,
-  );
+  constructor(transport: Transport, mode?: DAPProtocol, clockFrequency?: number);
   /**
    * ADI constructor
    * @param proxy Proxy to use
@@ -168,8 +157,7 @@ export class ADI implements DAP {
   }
 
   protected readAPCommand(register: number): DAPOperation[] {
-    const address =
-      (register & BankSelectMask.APSEL) | (register & BankSelectMask.APBANKSEL);
+    const address = (register & BankSelectMask.APSEL) | (register & BankSelectMask.APBANKSEL);
 
     return this.writeDPCommand(DPRegister.SELECT, address).concat({
       mode: DAPTransferMode.READ,
@@ -186,8 +174,7 @@ export class ADI implements DAP {
       this.cswValue = value;
     }
 
-    const address =
-      (register & BankSelectMask.APSEL) | (register & BankSelectMask.APBANKSEL);
+    const address = (register & BankSelectMask.APSEL) | (register & BankSelectMask.APBANKSEL);
 
     return this.writeDPCommand(DPRegister.SELECT, address).concat({
       mode: DAPTransferMode.WRITE,
@@ -233,9 +220,7 @@ export class ADI implements DAP {
       .concat(this.writeAPCommand(APRegister.DRW, value as number));
   }
 
-  protected async transferSequence(
-    operations: DAPOperation[][],
-  ): Promise<Uint32Array> {
+  protected async transferSequence(operations: DAPOperation[][]): Promise<Uint32Array> {
     // Flatten operations into single array
     let merged: DAPOperation[] = [];
     merged = merged.concat(...operations);
@@ -411,10 +396,7 @@ export class ADI implements DAP {
    * @param count The count of values to read
    * @returns Promise of register data
    */
-  protected async readMem32Sequence(
-    register: number,
-    count: number,
-  ): Promise<Uint32Array> {
+  protected async readMem32Sequence(register: number, count: number): Promise<Uint32Array> {
     await this.transferSequence([
       this.writeAPCommand(APRegister.CSW, CSWMask.VALUE | CSWMask.SIZE_32),
       this.writeAPCommand(APRegister.TAR, register),
@@ -425,15 +407,8 @@ export class ADI implements DAP {
     // Split into requests no longer than block size
     let remainder = count;
     while (remainder > 0) {
-      const chunkSize = Math.min(
-        remainder,
-        Math.floor(this.proxy.blockSize / 4),
-      );
-      const result = await this.proxy.transferBlock(
-        DAPPort.ACCESS,
-        APRegister.DRW,
-        chunkSize,
-      );
+      const chunkSize = Math.min(remainder, Math.floor(this.proxy.blockSize / 4));
+      const result = await this.proxy.transferBlock(DAPPort.ACCESS, APRegister.DRW, chunkSize);
       results.push(result);
       remainder -= chunkSize;
     }
@@ -447,10 +422,7 @@ export class ADI implements DAP {
    * @param values The values to write
    * @returns Promise
    */
-  protected async writeMem32Sequence(
-    register: number,
-    values: Uint32Array,
-  ): Promise<void> {
+  protected async writeMem32Sequence(register: number, values: Uint32Array): Promise<void> {
     await this.transferSequence([
       this.writeAPCommand(APRegister.CSW, CSWMask.VALUE | CSWMask.SIZE_32),
       this.writeAPCommand(APRegister.TAR, register),
@@ -459,10 +431,7 @@ export class ADI implements DAP {
     // Split values into chunks no longer than block size
     let index = 0;
     while (index < values.length) {
-      const chunk = values.slice(
-        index,
-        index + Math.floor(this.proxy.blockSize / 4),
-      );
+      const chunk = values.slice(index, index + Math.floor(this.proxy.blockSize / 4));
       await this.proxy.transferBlock(DAPPort.ACCESS, APRegister.DRW, chunk);
       index += Math.floor(this.proxy.blockSize / 4);
     }
@@ -474,17 +443,13 @@ export class ADI implements DAP {
    * @param count The count of values to read
    * @returns Promise of register data
    */
-  public async readBlock(
-    register: number,
-    count: number,
-  ): Promise<Uint32Array> {
+  public async readBlock(register: number, count: number): Promise<Uint32Array> {
     const results: Uint32Array[] = [];
 
     // Split into reads that do not cross TAR autoincrement boundaries
     let remainder = count;
     while (remainder > 0) {
-      const nextPageOffset =
-        DEFAULT_AUTOINC_PAGESIZE - (register % DEFAULT_AUTOINC_PAGESIZE);
+      const nextPageOffset = DEFAULT_AUTOINC_PAGESIZE - (register % DEFAULT_AUTOINC_PAGESIZE);
       const chunkSize = Math.min(remainder, nextPageOffset / 4);
       const result = await this.readMem32Sequence(register, chunkSize);
       results.push(result);
@@ -501,15 +466,11 @@ export class ADI implements DAP {
    * @param values The values to write
    * @returns Promise
    */
-  public async writeBlock(
-    register: number,
-    values: Uint32Array,
-  ): Promise<void> {
+  public async writeBlock(register: number, values: Uint32Array): Promise<void> {
     // Split into writes that do not cross TAR autoincrement boundaries
     let index = 0;
     while (index < values.length) {
-      const nextPageOffset =
-        DEFAULT_AUTOINC_PAGESIZE - (register % DEFAULT_AUTOINC_PAGESIZE);
+      const nextPageOffset = DEFAULT_AUTOINC_PAGESIZE - (register % DEFAULT_AUTOINC_PAGESIZE);
       const chunkSize = Math.min(values.length - index, nextPageOffset / 4);
       const chunk = values.slice(index, index + chunkSize);
       await this.writeMem32Sequence(register, chunk);
@@ -542,10 +503,7 @@ export class ADI implements DAP {
     }
 
     const result = await this.readBlock(register, bytesToRead / 4);
-    return new Uint8Array(result.buffer).slice(
-      startOffset,
-      startOffset + count,
-    );
+    return new Uint8Array(result.buffer).slice(startOffset, startOffset + count);
   }
 
   /**
@@ -577,9 +535,7 @@ export class ADI implements DAP {
     // chunk of word-aligned 32-bit words
     if (bytesToWrite >= 4) {
       const chunkSize = bytesToWrite - (bytesToWrite % 4);
-      const chunk = new Uint32Array(
-        values.slice(index, index + chunkSize).buffer,
-      );
+      const chunk = new Uint32Array(values.slice(index, index + chunkSize).buffer);
       await this.writeBlock(register, chunk);
       bytesToWrite -= chunkSize;
       register += chunkSize;

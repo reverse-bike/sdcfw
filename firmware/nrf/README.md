@@ -11,18 +11,21 @@ The N52832 is also able to send updates to the STM chip via the DFU method. To d
 This device can set various settings to the motor controller: Assist, Mode, Light. The mode changes based on what country (US or EU) the motor controller is set to.
 
 ## Hardware
+
 Chip: N52832
 Flash size: 512 kB
 Write Granularity: 32-bit words (aligned)
 Erase Granularity: 4 kB pages (or full chip erase)
 
 ## Software
+
 SDK: v14.2.0
 SoftDevice: 0xa5, S132 v5.1.0
 Compiler: gcc-arm-none-eabi-4_9-2015q3 (maybe)
 Type: Little-endian
 
 ## Firmware Segments
+
 0x0 - 0x22fff: SoftDevice
 0x73000 - 0x80000: Bootloader (RX)
 0x23000 - +$APP_SIZE: Application Code (RX/R)
@@ -38,4 +41,5 @@ App image size: 0x24fac
 0x47fad - 0x72fff: Writable data (RW)
 
 ## RAM
+
 RAM access is from 0x20000000 to 0x20010000

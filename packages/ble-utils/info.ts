@@ -39,22 +39,18 @@ function shortUuid(uuid: string): string | undefined {
 }
 
 function utf8(bytes: Uint8Array): string {
-  return new TextDecoder().decode(bytes).replace(/\0+$/, "");
+  const text = new TextDecoder().decode(bytes);
+  let end = text.length;
+  while (end > 0 && text.charCodeAt(end - 1) === 0) end -= 1;
+  return text.slice(0, end);
 }
 
 function u24be(bytes: Uint8Array, offset: number): number {
-  return (
-    ((bytes[offset] ?? 0) << 16) |
-    ((bytes[offset + 1] ?? 0) << 8) |
-    (bytes[offset + 2] ?? 0)
-  );
+  return ((bytes[offset] ?? 0) << 16) | ((bytes[offset + 1] ?? 0) << 8) | (bytes[offset + 2] ?? 0);
 }
 
 function u32be(bytes: Uint8Array, offset: number): number {
-  return new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getUint32(
-    offset,
-    false,
-  );
+  return new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getUint32(offset, false);
 }
 
 export function serialFromManufacturerData(
@@ -65,9 +61,7 @@ export function serialFromManufacturerData(
   if (!value) return undefined;
   const bytes = bytesOf(value);
   if (bytes.length < 8) return undefined;
-  return Array.from(bytes.subarray(0, 8), (byte) =>
-    byte.toString(16).padStart(2, "0"),
-  ).join("");
+  return Array.from(bytes.subarray(0, 8), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 export async function readVersionInfo(
@@ -103,17 +97,11 @@ export async function readVersionInfo(
   const rx = await appService.getCharacteristic(APP_RX_CHAR);
 
   async function readRegistry(id: number): Promise<Uint8Array> {
-    await select.writeValueWithResponse(
-      new Uint8Array([id >>> 8, id & 0xff]),
-    );
+    await select.writeValueWithResponse(new Uint8Array([id >>> 8, id & 0xff]));
     for (const characteristic of [rx, tx]) {
       try {
         const bytes = bytesOf(await characteristic.readValue());
-        if (
-          bytes.length === 10 &&
-          bytes[0] === (id >>> 8) &&
-          bytes[1] === (id & 0xff)
-        ) {
+        if (bytes.length === 10 && bytes[0] === id >>> 8 && bytes[1] === (id & 0xff)) {
           return bytes;
         }
       } catch {

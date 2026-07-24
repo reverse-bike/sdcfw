@@ -19,11 +19,7 @@ export async function erase(
 
     // Check a few locations to verify erase worked
     try {
-      const flash0 = await withTimeout(
-        dap.readMem32(FLASH_BASE),
-        1000,
-        "Verify Flash Start",
-      );
+      const flash0 = await withTimeout(dap.readMem32(FLASH_BASE), 1000, "Verify Flash Start");
       const flash1k = await withTimeout(
         dap.readMem32(FLASH_BASE + 0x400),
         1000,
@@ -35,24 +31,12 @@ export async function erase(
         "Verify UICR APPROTECT",
       );
 
-      onProgress?.(
-        `Flash[0x00000000] = 0x${flash0.toString(16).padStart(8, "0").toUpperCase()}`,
-      );
-      onProgress?.(
-        `Flash[0x00000400] = 0x${flash1k.toString(16).padStart(8, "0").toUpperCase()}`,
-      );
-      onProgress?.(
-        `UICR APPROTECT   = 0x${uicr.toString(16).padStart(8, "0").toUpperCase()}`,
-      );
+      onProgress?.(`Flash[0x00000000] = 0x${flash0.toString(16).padStart(8, "0").toUpperCase()}`);
+      onProgress?.(`Flash[0x00000400] = 0x${flash1k.toString(16).padStart(8, "0").toUpperCase()}`);
+      onProgress?.(`UICR APPROTECT   = 0x${uicr.toString(16).padStart(8, "0").toUpperCase()}`);
 
-      if (
-        flash0 === 0xffffffff &&
-        flash1k === 0xffffffff &&
-        uicr === 0xffffffff
-      ) {
-        onProgress?.(
-          "✓ Erase verified successfully. All checked locations show 0xFFFFFFFF.",
-        );
+      if (flash0 === 0xffffffff && flash1k === 0xffffffff && uicr === 0xffffffff) {
+        onProgress?.("✓ Erase verified successfully. All checked locations show 0xFFFFFFFF.");
       } else {
         onProgress?.(
           "⚠ Warning: Some locations are not 0xFFFFFFFF. Erase may have been incomplete.",

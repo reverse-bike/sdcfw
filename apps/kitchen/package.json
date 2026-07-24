@@ -1,12 +1,12 @@
 {
   "name": "@sdcfw/kitchen",
   "version": "1.0.0",
+  "description": "CLI to modify/prepare firmware",
+  "license": "ISC",
+  "author": "",
   "bin": {
     "kitchen": "./main.ts"
   },
-  "description": "CLI to modify/prepare firmware",
-  "author": "",
-  "license": "ISC",
   "type": "module",
   "dependencies": {
     "crc-32": "catalog:"

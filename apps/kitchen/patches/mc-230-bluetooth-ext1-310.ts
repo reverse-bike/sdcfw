@@ -2,14 +2,12 @@ import type { PatchFile } from "./types.js";
 
 const patchFile: PatchFile = {
   name: "mc-230-BLUETOOTH-EXT1-310",
-  firmwarePath:
-    "firmware/mc/230-BLUETOOTH-EXT1-310/GD_S73Rx_H104_S310US_20221020.bin",
+  firmwarePath: "firmware/mc/230-BLUETOOTH-EXT1-310/GD_S73Rx_H104_S310US_20221020.bin",
   outputPostfix: ".patched",
   format: "raw",
   imageBase: 0x08003800,
   expectedSize: 26_200,
-  expectedSha256:
-    "90d8bb178b308900375416f319e59f043b3363c158f2bec4dc6bbdb879f97840",
+  expectedSha256: "90d8bb178b308900375416f319e59f043b3363c158f2bec4dc6bbdb879f97840",
   patches: [
     {
       type: "bytes",

@@ -4,9 +4,7 @@ import type { ADI, WebUSB as Transport } from "@sdcfw/dapjs";
 // Result Pattern
 // ============================================================================
 
-export type Result<T, E = CoreError> =
-  | { ok: true; value: T }
-  | { ok: false; error: E };
+export type Result<T, E = CoreError> = { ok: true; value: T } | { ok: false; error: E };
 
 export function ok<T>(value: T): Result<T, never> {
   return { ok: true, value };
@@ -21,37 +19,35 @@ export function err<E>(error: E): Result<never, E> {
 // ============================================================================
 
 export type CoreErrorCode =
-  | "TARGET_NOT_CONNECTED"    // Target MCU not connected or not responding
-  | "TRANSFER_FAILED"         // DAP transfer failed (recoverable)
-  | "TIMEOUT"                 // Operation timed out (recoverable)
-  | "DEVICE_NOT_FOUND"        // USB device not found
-  | "CONNECTION_FAILED"       // Failed to establish DAP connection
-  | "INVALID_DATA"            // Invalid data format or size
-  | "ERASE_FAILED"            // Chip erase failed
-  | "WRITE_FAILED"            // Flash write failed
-  | "VERIFY_FAILED"           // Flash verification failed
-  | "UNKNOWN";                // Unknown error
+  | "TARGET_NOT_CONNECTED" // Target MCU not connected or not responding
+  | "TRANSFER_FAILED" // DAP transfer failed (recoverable)
+  | "TIMEOUT" // Operation timed out (recoverable)
+  | "DEVICE_NOT_FOUND" // USB device not found
+  | "CONNECTION_FAILED" // Failed to establish DAP connection
+  | "INVALID_DATA" // Invalid data format or size
+  | "ERASE_FAILED" // Chip erase failed
+  | "WRITE_FAILED" // Flash write failed
+  | "VERIFY_FAILED" // Flash verification failed
+  | "UNKNOWN"; // Unknown error
 
 export interface CoreError {
   code: CoreErrorCode;
   message: string;
-  recoverable: boolean;       // Can retry after reconnecting
-  cause?: unknown;            // Original error
+  recoverable: boolean; // Can retry after reconnecting
+  cause?: unknown; // Original error
 }
 
 export function createError(
   code: CoreErrorCode,
   message: string,
-  options?: { recoverable?: boolean; cause?: unknown }
+  options?: { recoverable?: boolean; cause?: unknown },
 ): CoreError {
   const recoverable = options?.recoverable ?? isRecoverableCode(code);
   return { code, message, recoverable, cause: options?.cause };
 }
 
 function isRecoverableCode(code: CoreErrorCode): boolean {
-  return code === "TARGET_NOT_CONNECTED" ||
-         code === "TRANSFER_FAILED" ||
-         code === "TIMEOUT";
+  return code === "TARGET_NOT_CONNECTED" || code === "TRANSFER_FAILED" || code === "TIMEOUT";
 }
 
 // Helper to convert unknown errors to CoreError
@@ -200,7 +196,7 @@ export function formatDeviceInfo(info: DeviceInfo): DeviceInfoDisplay {
   variantBytes[1] = (info.variant >> 16) & 0xff;
   variantBytes[2] = (info.variant >> 8) & 0xff;
   variantBytes[3] = info.variant & 0xff;
-  const variant = new TextDecoder().decode(variantBytes).replace(/\0/g, "");
+  const variant = new TextDecoder().decode(variantBytes).replaceAll(String.fromCharCode(0), "");
 
   // Package
   const pkg = PACKAGE_NAMES[info.package] || "Unknown";
@@ -211,14 +207,11 @@ export function formatDeviceInfo(info: DeviceInfo): DeviceInfoDisplay {
 
   // Device ID: combine two 32-bit values
   const deviceId =
-    "0x" +
-    toHex(info.deviceId[1]).substring(2) +
-    toHex(info.deviceId[0]).substring(2);
+    "0x" + toHex(info.deviceId[1]).substring(2) + toHex(info.deviceId[0]).substring(2);
 
   // MAC Address
   const macAddress =
-    toHex(info.deviceAddr[1]).substring(2) +
-    toHex(info.deviceAddr[0]).substring(2);
+    toHex(info.deviceAddr[1]).substring(2) + toHex(info.deviceAddr[0]).substring(2);
   const macType = info.deviceAddrType === 0xffffffff ? "Random Static" : "Public";
 
   return {
@@ -239,21 +232,14 @@ export function formatUICR(uicr: UICRRegisters): UICRDisplay {
   const approtect = approtectEnabled ? "Enabled (Protected)" : "Disabled (Unlocked)";
 
   // Reset pins
-  const resetPin0 =
-    uicr.pselreset0 & 0x80000000
-      ? "Disconnected"
-      : `Pin ${uicr.pselreset0 & 0xff}`;
-  const resetPin1 =
-    uicr.pselreset1 & 0x80000000
-      ? "Disconnected"
-      : `Pin ${uicr.pselreset1 & 0xff}`;
+  const resetPin0 = uicr.pselreset0 & 0x80000000 ? "Disconnected" : `Pin ${uicr.pselreset0 & 0xff}`;
+  const resetPin1 = uicr.pselreset1 & 0x80000000 ? "Disconnected" : `Pin ${uicr.pselreset1 & 0xff}`;
 
   // NFC Pins
   const nfcPins = (uicr.nfcpins & 0x01) === 0 ? "GPIO" : "NFC Antenna";
 
   // Bootloader address
-  const bootloaderAddr =
-    uicr.nrffw0 === 0xffffffff ? "Not Set" : toHex(uicr.nrffw0);
+  const bootloaderAddr = uicr.nrffw0 === 0xffffffff ? "Not Set" : toHex(uicr.nrffw0);
 
   return {
     approtect,

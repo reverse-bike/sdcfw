@@ -56,10 +56,7 @@ class ProtoReader {
   }
 }
 
-export async function parseDfuPackage(
-  dat: Uint8Array,
-  bin: Uint8Array,
-): Promise<DfuPackage> {
+export async function parseDfuPackage(dat: Uint8Array, bin: Uint8Array): Promise<DfuPackage> {
   const outer = new ProtoReader(dat);
   let signed: Uint8Array | undefined;
   while (!outer.done) {
@@ -149,9 +146,7 @@ export async function parseDfuPackage(
   if (!hash) throw new Error("no payload hash in InitCommand");
 
   const digestInput = new Uint8Array(bin);
-  const digest = new Uint8Array(
-    await crypto.subtle.digest("SHA-256", digestInput),
-  );
+  const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", digestInput));
   const hashMatches =
     hash.length === digest.length &&
     hash.every((byte, index) => byte === digest[digest.length - 1 - index]);

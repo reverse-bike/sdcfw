@@ -32,7 +32,9 @@ export async function restore(
       });
 
       if (!verifyResult.success) {
-        return err(createError("VERIFY_FAILED", `Verification failed with ${verifyResult.errors} errors`));
+        return err(
+          createError("VERIFY_FAILED", `Verification failed with ${verifyResult.errors} errors`),
+        );
       }
 
       onProgress?.("Verification successful!");

@@ -2,11 +2,7 @@ export type LogFn = (message: string) => void;
 
 export class BleTimeoutError extends Error {}
 
-export function withTimeout<T>(
-  promise: Promise<T>,
-  ms: number,
-  label: string,
-): Promise<T> {
+export function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     const timer = setTimeout(
       () => reject(new BleTimeoutError(`timeout after ${ms / 1000}s: ${label}`)),
@@ -25,19 +21,10 @@ export function withTimeout<T>(
   });
 }
 
-export function withDeadline<T>(
-  promise: Promise<T>,
-  ms: number,
-  label: string,
-): Promise<T> {
+export function withDeadline<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     const timer = setTimeout(
-      () =>
-        reject(
-          new BleTimeoutError(
-            `overall timeout (${ms / 1000}s) exceeded during ${label}`,
-          ),
-        ),
+      () => reject(new BleTimeoutError(`overall timeout (${ms / 1000}s) exceeded during ${label}`)),
       ms,
     );
     promise.then(
@@ -58,9 +45,7 @@ export function bytesOf(value: DataView): Uint8Array {
 }
 
 export function hex(data: Uint8Array | readonly number[]): string {
-  return Array.from(data, (byte) => byte.toString(16).padStart(2, "0")).join(
-    " ",
-  );
+  return Array.from(data, (byte) => byte.toString(16).padStart(2, "0")).join(" ");
 }
 
 export function sleep(ms: number): Promise<void> {
@@ -86,11 +71,7 @@ export async function connect(
 
   for (let attempt = 1; attempt <= attempts; attempt++) {
     try {
-      return await withTimeout(
-        gatt.connect(),
-        timeoutMs,
-        `connect attempt ${attempt}`,
-      );
+      return await withTimeout(gatt.connect(), timeoutMs, `connect attempt ${attempt}`);
     } catch (error) {
       lastError = error;
       options.log?.(

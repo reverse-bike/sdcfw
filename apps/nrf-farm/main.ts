@@ -94,9 +94,7 @@ async function runReadInfo() {
     variantBuf.writeUInt32BE(deviceInfo.variant);
     // oxlint-disable-next-line eslint/no-control-regex
     const variantStr = variantBuf.toString("ascii").replace(/\0/g, "");
-    console.log(
-      `${"Variant".padEnd(20)}: ${variantStr} (${toHex(deviceInfo.variant)})`,
-    );
+    console.log(`${"Variant".padEnd(20)}: ${variantStr} (${toHex(deviceInfo.variant)})`);
 
     // Package
     const pkgMap: Record<number, string> = {
@@ -106,9 +104,7 @@ async function runReadInfo() {
       0x2005: "QK",
     };
     const pkgStr = pkgMap[deviceInfo.package] || "Unknown";
-    console.log(
-      `${"Package".padEnd(20)}: ${pkgStr} (${toHex(deviceInfo.package)})`,
-    );
+    console.log(`${"Package".padEnd(20)}: ${pkgStr} (${toHex(deviceInfo.package)})`);
 
     // RAM and Flash
     console.log(`${"RAM Size".padEnd(20)}: ${deviceInfo.ram} kB`);
@@ -116,16 +112,13 @@ async function runReadInfo() {
 
     // Device ID
     const deviceIdStr =
-      toHex(deviceInfo.deviceId[1]).substring(2) +
-      toHex(deviceInfo.deviceId[0]).substring(2);
+      toHex(deviceInfo.deviceId[1]).substring(2) + toHex(deviceInfo.deviceId[0]).substring(2);
     console.log(`${"Device ID".padEnd(20)}: 0x${deviceIdStr}`);
 
     // MAC Address
     const addrStr =
-      toHex(deviceInfo.deviceAddr[1]).substring(2) +
-      toHex(deviceInfo.deviceAddr[0]).substring(2);
-    const addrType =
-      deviceInfo.deviceAddrType === 0xffffffff ? "Random Static" : "Public";
+      toHex(deviceInfo.deviceAddr[1]).substring(2) + toHex(deviceInfo.deviceAddr[0]).substring(2);
+    const addrType = deviceInfo.deviceAddrType === 0xffffffff ? "Random Static" : "Public";
     console.log(`${"MAC Address".padEnd(20)}: ${addrStr} (Type: ${addrType})`);
 
     console.log("\nConfiguration:");
@@ -133,43 +126,27 @@ async function runReadInfo() {
 
     // APPROTECT
     const approtectStr =
-      (uicr.approtect & 0xff) === 0x00
-        ? "Enabled (Protected)"
-        : "Disabled (Unlocked)";
-    console.log(
-      `${"Readout Protection".padEnd(20)}: ${approtectStr} (${toHex(uicr.approtect)})`,
-    );
+      (uicr.approtect & 0xff) === 0x00 ? "Enabled (Protected)" : "Disabled (Unlocked)";
+    console.log(`${"Readout Protection".padEnd(20)}: ${approtectStr} (${toHex(uicr.approtect)})`);
 
     // Reset pins
     const pselreset0Str =
-      uicr.pselreset0 & 0x80000000
-        ? "Disconnected"
-        : `Pin ${uicr.pselreset0 & 0xff}`;
-    console.log(
-      `${"Reset Pin 1".padEnd(20)}: ${pselreset0Str} (${toHex(uicr.pselreset0)})`,
-    );
+      uicr.pselreset0 & 0x80000000 ? "Disconnected" : `Pin ${uicr.pselreset0 & 0xff}`;
+    console.log(`${"Reset Pin 1".padEnd(20)}: ${pselreset0Str} (${toHex(uicr.pselreset0)})`);
 
     const pselreset1Str =
-      uicr.pselreset1 & 0x80000000
-        ? "Disconnected"
-        : `Pin ${uicr.pselreset1 & 0xff}`;
-    console.log(
-      `${"Reset Pin 2".padEnd(20)}: ${pselreset1Str} (${toHex(uicr.pselreset1)})`,
-    );
+      uicr.pselreset1 & 0x80000000 ? "Disconnected" : `Pin ${uicr.pselreset1 & 0xff}`;
+    console.log(`${"Reset Pin 2".padEnd(20)}: ${pselreset1Str} (${toHex(uicr.pselreset1)})`);
 
     // NFC Pins
     const nfcpinsStr = (uicr.nfcpins & 0x01) === 0 ? "GPIO" : "NFC Antenna";
-    console.log(
-      `${"NFC Pins Mode".padEnd(20)}: ${nfcpinsStr} (${toHex(uicr.nfcpins)})`,
-    );
+    console.log(`${"NFC Pins Mode".padEnd(20)}: ${nfcpinsStr} (${toHex(uicr.nfcpins)})`);
 
     // Bootloader addresses
-    const nrffw0Str =
-      uicr.nrffw0 === 0xffffffff ? "Not Set" : toHex(uicr.nrffw0).substring(2);
+    const nrffw0Str = uicr.nrffw0 === 0xffffffff ? "Not Set" : toHex(uicr.nrffw0).substring(2);
     console.log(`${"Bootloader Addr".padEnd(20)}: ${nrffw0Str}`);
 
-    const nrffw1Str =
-      uicr.nrffw1 === 0xffffffff ? "Not Set" : toHex(uicr.nrffw1).substring(2);
+    const nrffw1Str = uicr.nrffw1 === 0xffffffff ? "Not Set" : toHex(uicr.nrffw1).substring(2);
     console.log(`${"NRFFW[1]".padEnd(20)}: ${nrffw1Str}`);
 
     console.log("\nFactory Info (Raw):");
@@ -192,48 +169,30 @@ async function runReadInfo() {
       console.log("No bootloader settings found (memory erased or not set)");
     } else {
       console.log(`${"CRC".padEnd(20)}: ${toHex(bootloaderSettings.crc)}`);
-      console.log(
-        `${"Settings Version".padEnd(20)}: ${bootloaderSettings.settingsVersion}`,
-      );
-      console.log(
-        `${"App Version".padEnd(20)}: ${bootloaderSettings.appVersion}`,
-      );
-      console.log(
-        `${"Bootloader Version".padEnd(20)}: ${bootloaderSettings.bootloaderVersion}`,
-      );
+      console.log(`${"Settings Version".padEnd(20)}: ${bootloaderSettings.settingsVersion}`);
+      console.log(`${"App Version".padEnd(20)}: ${bootloaderSettings.appVersion}`);
+      console.log(`${"Bootloader Version".padEnd(20)}: ${bootloaderSettings.bootloaderVersion}`);
       console.log(
         `${"Bank Layout".padEnd(20)}: ${bootloaderSettings.bankLayout === 0 ? "Single" : "Dual"}`,
       );
-      console.log(
-        `${"Bank Current".padEnd(20)}: Bank ${bootloaderSettings.bankCurrent}`,
-      );
+      console.log(`${"Bank Current".padEnd(20)}: Bank ${bootloaderSettings.bankCurrent}`);
 
       console.log("\n  Bank 0:");
       console.log(
         `  ${"Image Size".padEnd(18)}: ${bootloaderSettings.bank0.imageSize} bytes (${(bootloaderSettings.bank0.imageSize / 1024).toFixed(1)} kB)`,
       );
-      console.log(
-        `  ${"Image CRC".padEnd(18)}: ${toHex(bootloaderSettings.bank0.imageCrc)}`,
-      );
-      console.log(
-        `  ${"Bank Code".padEnd(18)}: ${toHex(bootloaderSettings.bank0.bankCode)}`,
-      );
+      console.log(`  ${"Image CRC".padEnd(18)}: ${toHex(bootloaderSettings.bank0.imageCrc)}`);
+      console.log(`  ${"Bank Code".padEnd(18)}: ${toHex(bootloaderSettings.bank0.bankCode)}`);
 
       console.log("\n  Bank 1:");
       console.log(
         `  ${"Image Size".padEnd(18)}: ${bootloaderSettings.bank1.imageSize} bytes (${(bootloaderSettings.bank1.imageSize / 1024).toFixed(1)} kB)`,
       );
-      console.log(
-        `  ${"Image CRC".padEnd(18)}: ${toHex(bootloaderSettings.bank1.imageCrc)}`,
-      );
-      console.log(
-        `  ${"Bank Code".padEnd(18)}: ${toHex(bootloaderSettings.bank1.bankCode)}`,
-      );
+      console.log(`  ${"Image CRC".padEnd(18)}: ${toHex(bootloaderSettings.bank1.imageCrc)}`);
+      console.log(`  ${"Bank Code".padEnd(18)}: ${toHex(bootloaderSettings.bank1.bankCode)}`);
 
       console.log();
-      console.log(
-        `${"Write Offset".padEnd(20)}: ${toHex(bootloaderSettings.writeOffset)}`,
-      );
+      console.log(`${"Write Offset".padEnd(20)}: ${toHex(bootloaderSettings.writeOffset)}`);
       console.log(
         `${"SD Size".padEnd(20)}: ${bootloaderSettings.sdSize} bytes (${(bootloaderSettings.sdSize / 1024).toFixed(1)} kB)`,
       );
@@ -242,9 +201,7 @@ async function runReadInfo() {
       console.log(
         `  ${"Command Size".padEnd(18)}: ${bootloaderSettings.progress.commandSize} bytes`,
       );
-      console.log(
-        `  ${"Command Offset".padEnd(18)}: ${bootloaderSettings.progress.commandOffset}`,
-      );
+      console.log(`  ${"Command Offset".padEnd(18)}: ${bootloaderSettings.progress.commandOffset}`);
       console.log(
         `  ${"Command CRC".padEnd(18)}: ${toHex(bootloaderSettings.progress.commandCrc)}`,
       );
@@ -314,9 +271,7 @@ async function runBackup(outputDir: string) {
 
 async function runErase() {
   console.log("Starting chip erase...");
-  console.log(
-    "WARNING: This will erase ALL data and remove APPROTECT protection!",
-  );
+  console.log("WARNING: This will erase ALL data and remove APPROTECT protection!");
 
   const connection = await getConnection();
 
@@ -335,11 +290,7 @@ async function runErase() {
   }
 }
 
-async function runRestore(
-  flashFile: string,
-  uicrFile: string,
-  options: { verify: boolean },
-) {
+async function runRestore(flashFile: string, uicrFile: string, options: { verify: boolean }) {
   console.log("Starting restore...");
 
   // Check files exist

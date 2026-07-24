@@ -15,11 +15,7 @@ import fs from "fs";
 import path from "path";
 import { execSync } from "child_process";
 import crc32 from "crc-32";
-import type {
-  CleanRegion,
-  Patch,
-  PatchFile,
-} from "./patches/types";
+import type { CleanRegion, Patch, PatchFile } from "./patches/types";
 
 // ============================================================================
 // TYPES
@@ -96,11 +92,7 @@ function findAllOccurrences(haystack: Buffer, needle: Buffer): number[] {
 /**
  * Clean a firmware dump by filling with 0xFF and preserving only specified regions.
  */
-function cleanFirmware(
-  flash: Buffer,
-  regions: CleanRegion[],
-  appEnd: number,
-): Buffer {
+function cleanFirmware(flash: Buffer, regions: CleanRegion[], appEnd: number): Buffer {
   const cleaned = Buffer.alloc(flash.length, 0xff);
 
   for (const region of regions) {
@@ -206,7 +198,11 @@ function verifyOriginal(
       const actual = flash.subarray(offset, offset + original.length);
       if (!actual.equals(original)) {
         return {
-          error: `Expected [${patch.original.map((b) => "0x" + b.toString(16).padStart(2, "0")).join(", ")}] but found [${Array.from(actual).map((b) => "0x" + b.toString(16).padStart(2, "0")).join(", ")}]`,
+          error: `Expected [${patch.original.map((b) => "0x" + b.toString(16).padStart(2, "0")).join(", ")}] but found [${Array.from(
+            actual,
+          )
+            .map((b) => "0x" + b.toString(16).padStart(2, "0"))
+            .join(", ")}]`,
         };
       }
       break;
@@ -216,12 +212,7 @@ function verifyOriginal(
   return { error: null };
 }
 
-function applyPatch(
-  flash: Buffer,
-  patch: Patch,
-  foundAddress?: number,
-  imageBase = 0,
-): void {
+function applyPatch(flash: Buffer, patch: Patch, foundAddress?: number, imageBase = 0): void {
   console.log(`  Applying: ${patch.description}`);
 
   switch (patch.type) {
@@ -256,9 +247,7 @@ function applyPatch(
     case "uint16": {
       console.log(`    Address: ${toHex(patch.address)}`);
       const offset = patch.address - imageBase;
-      console.log(
-        `    Writing: 0x${(patch.data & 0xffff).toString(16).padStart(4, "0")}`,
-      );
+      console.log(`    Writing: 0x${(patch.data & 0xffff).toString(16).padStart(4, "0")}`);
       flash.writeUInt16BE(patch.data, offset);
       break;
     }
@@ -314,9 +303,12 @@ async function keygen(outputDir: string): Promise<void> {
 
   // Extract public key using nrfutil
   console.log("\nExtracting public key...");
-  const publicKeyOutput = execSync(`nrfutil keys display --key pk --format code ${privateKeyPath}`, {
-    encoding: "utf-8",
-  });
+  const publicKeyOutput = execSync(
+    `nrfutil keys display --key pk --format code ${privateKeyPath}`,
+    {
+      encoding: "utf-8",
+    },
+  );
 
   // Parse the public key from nrfutil output
   // nrfutil outputs: "const uint8_t pk[64] =\n{\n    0x5f, 0x5a, ...\n};"
@@ -343,9 +335,7 @@ async function keygen(outputDir: string): Promise<void> {
   console.log(`Public key (hex):  ${publicKeyHexPath}`);
 
   // Generate the array format for patching
-  const hexArray = Array.from(rawPublicKey).map(
-    (b) => "0x" + b.toString(16).padStart(2, "0"),
-  );
+  const hexArray = Array.from(rawPublicKey).map((b) => "0x" + b.toString(16).padStart(2, "0"));
 
   // Format as 8 bytes per line for readability
   const lines: string[] = [];
@@ -370,7 +360,9 @@ export const publicKeyBytes = [
   console.log(`[${hexArray.join(", ")}]`);
 
   console.log("\n--- Usage with nrfutil ---");
-  console.log(`nrfutil pkg generate --hw-version 52 --sd-req 0xA5 --application app.hex --application-version 1 --key-file ${privateKeyPath} dfu_package.zip`);
+  console.log(
+    `nrfutil pkg generate --hw-version 52 --sd-req 0xA5 --application app.hex --application-version 1 --key-file ${privateKeyPath} dfu_package.zip`,
+  );
 
   console.log("\nKey generation complete!");
 }
@@ -411,10 +403,7 @@ async function patch(patchFilePath: string): Promise<void> {
   // Compute output path (same directory as firmware, with postfix)
   const firmwareDir = path.dirname(firmwarePath);
   const firmwareBasename = path.basename(firmwarePath, ".bin");
-  const outputPath = path.join(
-    firmwareDir,
-    `${firmwareBasename}${patchFile.outputPostfix}.bin`,
-  );
+  const outputPath = path.join(firmwareDir, `${firmwareBasename}${patchFile.outputPostfix}.bin`);
 
   console.log(`Input:  ${firmwarePath}`);
   console.log(`Output: ${outputPath}\n`);
@@ -422,14 +411,9 @@ async function patch(patchFilePath: string): Promise<void> {
   // Read input file
   console.log("Step 2: Reading input file...");
   let flash = fs.readFileSync(firmwarePath);
-  console.log(
-    `  Size: ${flash.length} bytes (${(flash.length / 1024).toFixed(1)} KB)\n`,
-  );
+  console.log(`  Size: ${flash.length} bytes (${(flash.length / 1024).toFixed(1)} KB)\n`);
 
-  if (
-    patchFile.expectedSize !== undefined &&
-    flash.length !== patchFile.expectedSize
-  ) {
+  if (patchFile.expectedSize !== undefined && flash.length !== patchFile.expectedSize) {
     throw new Error(
       `Unexpected input size: ${flash.length} bytes (expected ${patchFile.expectedSize})`,
     );
@@ -457,8 +441,7 @@ async function patch(patchFilePath: string): Promise<void> {
     for (const item of patchFile.patches) {
       const result = verifyOriginal(flash, item, imageBase);
       if (result.error) {
-        const location =
-          item.type === "find-replace" ? "" : ` at ${toHex(item.address)}`;
+        const location = item.type === "find-replace" ? "" : ` at ${toHex(item.address)}`;
         console.log(`  FAIL: ${item.description}${location}: ${result.error}`);
         verificationFailed = true;
       } else {
@@ -513,17 +496,12 @@ async function patch(patchFilePath: string): Promise<void> {
 
   // Calculate original CRC
   console.log("Step 5: Calculating original app CRC...");
-  const appData = flash.subarray(
-    APP_START,
-    APP_START + blSettings.bank0.imageSize,
-  );
+  const appData = flash.subarray(APP_START, APP_START + blSettings.bank0.imageSize);
   const originalCrc = crc32.buf(appData) >>> 0;
 
   console.log(`  App Start:    ${toHex(APP_START)}`);
   console.log(`  App Size:     ${blSettings.bank0.imageSize} bytes`);
-  console.log(
-    `  App End:      ${toHex(APP_START + blSettings.bank0.imageSize)}`,
-  );
+  console.log(`  App End:      ${toHex(APP_START + blSettings.bank0.imageSize)}`);
   console.log(`  Original CRC: ${toHex(originalCrc)}`);
 
   if (originalCrc !== blSettings.bank0.imageCrc) {
@@ -560,12 +538,8 @@ async function patch(patchFilePath: string): Promise<void> {
   }
 
   if (verificationFailed) {
-    console.error(
-      "\nError: Original byte verification failed. Aborting patch.",
-    );
-    console.error(
-      "This patch file may be for a different firmware version.\n",
-    );
+    console.error("\nError: Original byte verification failed. Aborting patch.");
+    console.error("This patch file may be for a different firmware version.\n");
     process.exit(1);
   }
   console.log();
@@ -583,10 +557,7 @@ async function patch(patchFilePath: string): Promise<void> {
 
   // Calculate new CRC
   console.log("Step 8: Calculating new app CRC...");
-  const patchedAppData = flash.subarray(
-    APP_START,
-    APP_START + blSettings.bank0.imageSize,
-  );
+  const patchedAppData = flash.subarray(APP_START, APP_START + blSettings.bank0.imageSize);
   const newCrc = crc32.buf(patchedAppData) >>> 0;
 
   console.log(`  New CRC: ${toHex(newCrc)}\n`);
@@ -604,15 +575,10 @@ async function patch(patchFilePath: string): Promise<void> {
 
   // Recalculate bootloader settings CRC
   console.log("Step 10: Recalculating bootloader settings CRC...");
-  const settingsData = flash.subarray(
-    BL_SETTINGS_ADDR + 4,
-    BL_SETTINGS_ADDR + 92,
-  );
+  const settingsData = flash.subarray(BL_SETTINGS_ADDR + 4, BL_SETTINGS_ADDR + 92);
   const settingsCrc = crc32.buf(settingsData) >>> 0;
 
-  console.log(
-    `  Old settings CRC: ${toHex(flash.readUInt32LE(BL_SETTINGS_ADDR))}`,
-  );
+  console.log(`  Old settings CRC: ${toHex(flash.readUInt32LE(BL_SETTINGS_ADDR))}`);
   console.log(`  New settings CRC: ${toHex(settingsCrc)}`);
 
   flash.writeUInt32LE(settingsCrc, BL_SETTINGS_ADDR);
@@ -633,9 +599,7 @@ async function patch(patchFilePath: string): Promise<void> {
   console.log(`\nPatching complete!\n`);
   console.log(`To flash the patched firmware:`);
   console.log(`  bun apps/nrf-farm/main.ts erase`);
-  console.log(
-    `  bun apps/nrf-farm/main.ts restore ${outputPath} ./patched_backup/uicr.bin`,
-  );
+  console.log(`  bun apps/nrf-farm/main.ts restore ${outputPath} ./patched_backup/uicr.bin`);
 }
 
 // ============================================================================

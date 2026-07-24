@@ -1,16 +1,12 @@
 import type { ADI } from "@sdcfw/dapjs";
-import type {
-  DeviceInfo,
-  UICRRegisters,
-  ProgressCallback,
-  BootloaderSettings,
-} from "./types.js";
+import type { DeviceInfo, UICRRegisters, ProgressCallback, BootloaderSettings } from "./types.js";
 import { createError } from "./types.js";
 import { withTimeout } from "./connection.js";
 
 function errMsg(e: unknown): string {
   if (e instanceof Error) return e.message;
-  if (e && typeof e === "object" && "message" in e) return String((e as { message: unknown }).message);
+  if (e && typeof e === "object" && "message" in e)
+    return String((e as { message: unknown }).message);
   return String(e);
 }
 
@@ -25,11 +21,12 @@ function writeUInt32LE(buffer: Uint8Array, value: number, offset: number): void 
 // Helper function to read uint32 in little-endian format
 function readUInt32LE(buffer: Uint8Array, offset: number): number {
   return (
-    buffer[offset]! |
-    (buffer[offset + 1]! << 8) |
-    (buffer[offset + 2]! << 16) |
-    (buffer[offset + 3]! << 24)
-  ) >>> 0;
+    (buffer[offset]! |
+      (buffer[offset + 1]! << 8) |
+      (buffer[offset + 2]! << 16) |
+      (buffer[offset + 3]! << 24)) >>>
+    0
+  );
 }
 
 // Memory Map Constants
@@ -100,11 +97,7 @@ export async function readDeviceInfo(dap: ADI): Promise<DeviceInfo> {
     1000,
     "Read DEVICEADDRTYPE",
   );
-  const part = await withTimeout(
-    dap.readMem32(FICR_BASE + FICR_INFO_PART),
-    1000,
-    "Read PART",
-  );
+  const part = await withTimeout(dap.readMem32(FICR_BASE + FICR_INFO_PART), 1000, "Read PART");
   const variant = await withTimeout(
     dap.readMem32(FICR_BASE + FICR_INFO_VARIANT),
     1000,
@@ -115,16 +108,8 @@ export async function readDeviceInfo(dap: ADI): Promise<DeviceInfo> {
     1000,
     "Read PACKAGE",
   );
-  const ram = await withTimeout(
-    dap.readMem32(FICR_BASE + FICR_INFO_RAM),
-    1000,
-    "Read RAM",
-  );
-  const flash = await withTimeout(
-    dap.readMem32(FICR_BASE + FICR_INFO_FLASH),
-    1000,
-    "Read FLASH",
-  );
+  const ram = await withTimeout(dap.readMem32(FICR_BASE + FICR_INFO_RAM), 1000, "Read RAM");
+  const flash = await withTimeout(dap.readMem32(FICR_BASE + FICR_INFO_FLASH), 1000, "Read FLASH");
 
   return {
     part,
@@ -156,21 +141,9 @@ export async function readUICR(dap: ADI): Promise<UICRRegisters> {
     1000,
     "Read APPROTECT",
   );
-  const nfcpins = await withTimeout(
-    dap.readMem32(UICR_BASE + UICR_NFCPINS),
-    1000,
-    "Read NFCPINS",
-  );
-  const nrffw0 = await withTimeout(
-    dap.readMem32(UICR_BASE + UICR_NRFFW_0),
-    1000,
-    "Read NRFFW[0]",
-  );
-  const nrffw1 = await withTimeout(
-    dap.readMem32(UICR_BASE + UICR_NRFFW_1),
-    1000,
-    "Read NRFFW[1]",
-  );
+  const nfcpins = await withTimeout(dap.readMem32(UICR_BASE + UICR_NFCPINS), 1000, "Read NFCPINS");
+  const nrffw0 = await withTimeout(dap.readMem32(UICR_BASE + UICR_NRFFW_0), 1000, "Read NRFFW[0]");
+  const nrffw1 = await withTimeout(dap.readMem32(UICR_BASE + UICR_NRFFW_1), 1000, "Read NRFFW[1]");
 
   return {
     pselreset0,
@@ -200,9 +173,7 @@ export async function readUICRBinary(dap: ADI): Promise<Uint8Array> {
   return buffer;
 }
 
-export async function readBootloaderSettings(
-  dap: ADI,
-): Promise<BootloaderSettings | null> {
+export async function readBootloaderSettings(dap: ADI): Promise<BootloaderSettings | null> {
   try {
     // Read first 92 bytes (23 words) of the nrf_dfu_settings_t struct
     const words = await withTimeout(
@@ -283,11 +254,7 @@ export async function readBootloaderSettings(
 
 export async function writeUICR(dap: ADI, uicr: UICRRegisters): Promise<void> {
   // Enable NVMC Write
-  await withTimeout(
-    dap.writeMem32(NVMC_CONFIG, 0x00000001),
-    1000,
-    "Enable NVMC",
-  );
+  await withTimeout(dap.writeMem32(NVMC_CONFIG, 0x00000001), 1000, "Enable NVMC");
 
   // Wait for NVMC to be ready
   await new Promise((resolve) => setTimeout(resolve, 100));
@@ -303,21 +270,9 @@ export async function writeUICR(dap: ADI, uicr: UICRRegisters): Promise<void> {
     1000,
     "Write PSELRESET[1]",
   );
-  await withTimeout(
-    dap.writeMem32(UICR_BASE + UICR_NFCPINS, uicr.nfcpins),
-    1000,
-    "Write NFCPINS",
-  );
-  await withTimeout(
-    dap.writeMem32(UICR_BASE + UICR_NRFFW_0, uicr.nrffw0),
-    1000,
-    "Write NRFFW[0]",
-  );
-  await withTimeout(
-    dap.writeMem32(UICR_BASE + UICR_NRFFW_1, uicr.nrffw1),
-    1000,
-    "Write NRFFW[1]",
-  );
+  await withTimeout(dap.writeMem32(UICR_BASE + UICR_NFCPINS, uicr.nfcpins), 1000, "Write NFCPINS");
+  await withTimeout(dap.writeMem32(UICR_BASE + UICR_NRFFW_0, uicr.nrffw0), 1000, "Write NRFFW[0]");
+  await withTimeout(dap.writeMem32(UICR_BASE + UICR_NRFFW_1, uicr.nrffw1), 1000, "Write NRFFW[1]");
   await withTimeout(
     dap.writeMem32(UICR_BASE + UICR_APPROTECT, uicr.approtect),
     1000,
@@ -325,11 +280,7 @@ export async function writeUICR(dap: ADI, uicr: UICRRegisters): Promise<void> {
   );
 
   // Disable NVMC Write
-  await withTimeout(
-    dap.writeMem32(NVMC_CONFIG, 0x00000000),
-    1000,
-    "Disable NVMC",
-  );
+  await withTimeout(dap.writeMem32(NVMC_CONFIG, 0x00000000), 1000, "Disable NVMC");
 }
 
 export async function writeUICRBinary(dap: ADI, data: Uint8Array): Promise<void> {
@@ -341,11 +292,7 @@ export async function writeUICRBinary(dap: ADI, data: Uint8Array): Promise<void>
   }
 
   // Enable NVMC Write
-  await withTimeout(
-    dap.writeMem32(NVMC_CONFIG, 0x00000001),
-    1000,
-    "Enable NVMC",
-  );
+  await withTimeout(dap.writeMem32(NVMC_CONFIG, 0x00000001), 1000, "Enable NVMC");
 
   // Wait for NVMC to be ready
   await new Promise((resolve) => setTimeout(resolve, 100));
@@ -358,18 +305,10 @@ export async function writeUICRBinary(dap: ADI, data: Uint8Array): Promise<void>
     words[i] = readUInt32LE(data, i * 4);
   }
 
-  await withTimeout(
-    dap.writeBlock(UICR_BASE, words),
-    5000,
-    "Write UICR Block",
-  );
+  await withTimeout(dap.writeBlock(UICR_BASE, words), 5000, "Write UICR Block");
 
   // Disable NVMC Write
-  await withTimeout(
-    dap.writeMem32(NVMC_CONFIG, 0x00000000),
-    1000,
-    "Disable NVMC",
-  );
+  await withTimeout(dap.writeMem32(NVMC_CONFIG, 0x00000000), 1000, "Disable NVMC");
 }
 
 export async function readFlash(
@@ -421,11 +360,7 @@ export async function writeFlash(
   progressCallback?: ProgressCallback,
 ): Promise<void> {
   // Enable NVMC Write
-  await withTimeout(
-    dap.writeMem32(NVMC_CONFIG, 0x00000001),
-    1000,
-    "Enable NVMC",
-  );
+  await withTimeout(dap.writeMem32(NVMC_CONFIG, 0x00000001), 1000, "Enable NVMC");
 
   // Wait for NVMC to be ready
   await new Promise((resolve) => setTimeout(resolve, 100));
@@ -456,11 +391,7 @@ export async function writeFlash(
     }
 
     // Write block
-    await withTimeout(
-      dap.writeBlock(FLASH_BASE + offset, words),
-      5000,
-      "Write Flash Block",
-    );
+    await withTimeout(dap.writeBlock(FLASH_BASE + offset, words), 5000, "Write Flash Block");
 
     offset += writeSize;
 
@@ -478,11 +409,7 @@ export async function writeFlash(
   }
 
   // Disable NVMC Write
-  await withTimeout(
-    dap.writeMem32(NVMC_CONFIG, 0x00000000),
-    1000,
-    "Disable NVMC",
-  );
+  await withTimeout(dap.writeMem32(NVMC_CONFIG, 0x00000000), 1000, "Disable NVMC");
 }
 
 export async function verifyFlash(
@@ -578,23 +505,15 @@ export async function performChipErase(dap: ADI): Promise<void> {
     // Verify CTRL-AP IDR at register 0xFC
     console.log("Verifying CTRL-AP IDR...");
     try {
-      const idr = await withTimeout(
-        dap.readAP(CTRL_AP | 0xfc),
-        2000,
-        "Read IDR",
-      );
+      const idr = await withTimeout(dap.readAP(CTRL_AP | 0xfc), 2000, "Read IDR");
 
       if (idr === undefined || idr === null) {
         console.log("Warning: Could not read CTRL-AP IDR (undefined)");
       } else {
-        console.log(
-          `CTRL-AP IDR = 0x${idr.toString(16).padStart(8, "0").toUpperCase()}`,
-        );
+        console.log(`CTRL-AP IDR = 0x${idr.toString(16).padStart(8, "0").toUpperCase()}`);
 
         if (idr === 0xffffffff) {
-          console.log(
-            "Warning: Got 0xFFFFFFFF - CTRL-AP may not be accessible",
-          );
+          console.log("Warning: Got 0xFFFFFFFF - CTRL-AP may not be accessible");
         } else if (idr !== 0x02880000) {
           console.log(
             `Warning: CTRL-AP IDR mismatch! Expected 0x02880000, got 0x${idr.toString(16).padStart(8, "0").toUpperCase()}`,
@@ -610,18 +529,10 @@ export async function performChipErase(dap: ADI): Promise<void> {
     // Reset and trigger ERASEALL task
     // Register 4 (0x04) is ERASEALL
     console.log("Resetting ERASEALL register...");
-    await withTimeout(
-      dap.writeAP(CTRL_AP | 0x04, 0x00000000),
-      2000,
-      "Clear ERASEALL",
-    );
+    await withTimeout(dap.writeAP(CTRL_AP | 0x04, 0x00000000), 2000, "Clear ERASEALL");
 
     console.log("Triggering ERASEALL...");
-    await withTimeout(
-      dap.writeAP(CTRL_AP | 0x04, 0x00000001),
-      2000,
-      "Set ERASEALL",
-    );
+    await withTimeout(dap.writeAP(CTRL_AP | 0x04, 0x00000001), 2000, "Set ERASEALL");
 
     // Poll ERASEALLSTATUS (register 8) until it becomes 0
     console.log("Waiting for chip erase...");
@@ -631,11 +542,7 @@ export async function performChipErase(dap: ADI): Promise<void> {
     for (let i = 0; i < maxAttempts; i++) {
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      const status = await withTimeout(
-        dap.readAP(CTRL_AP | 0x08),
-        2000,
-        "Read ERASEALLSTATUS",
-      );
+      const status = await withTimeout(dap.readAP(CTRL_AP | 0x08), 2000, "Read ERASEALLSTATUS");
 
       if (status === 0x00000000) {
         console.log("✓ Device has been successfully erased and unlocked.");
@@ -644,9 +551,7 @@ export async function performChipErase(dap: ADI): Promise<void> {
       }
 
       if (i % 10 === 0) {
-        console.log(
-          `Still erasing... (${i / 10}s) - status: 0x${status.toString(16)}`,
-        );
+        console.log(`Still erasing... (${i / 10}s) - status: 0x${status.toString(16)}`);
       }
     }
 
@@ -658,35 +563,21 @@ export async function performChipErase(dap: ADI): Promise<void> {
     // Note: Reset may not always work depending on target state, but erase is complete
     console.log("Asserting reset...");
     try {
-      await withTimeout(
-        dap.writeAP(CTRL_AP | 0x00, 0x00000001),
-        2000,
-        "Assert RESET",
-      );
+      await withTimeout(dap.writeAP(CTRL_AP | 0x00, 0x00000001), 2000, "Assert RESET");
 
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Deassert reset (write 0 to register 0)
       console.log("Deasserting reset...");
-      await withTimeout(
-        dap.writeAP(CTRL_AP | 0x00, 0x00000000),
-        2000,
-        "Deassert RESET",
-      );
+      await withTimeout(dap.writeAP(CTRL_AP | 0x00, 0x00000000), 2000, "Deassert RESET");
     } catch (e) {
-      console.log(
-        `Warning: Reset failed (${errMsg(e)}), but erase completed successfully.`,
-      );
+      console.log(`Warning: Reset failed (${errMsg(e)}), but erase completed successfully.`);
     }
 
     // Reset ERASEALL task (write 0 to register 4)
     console.log("Clearing ERASEALL register...");
     try {
-      await withTimeout(
-        dap.writeAP(CTRL_AP | 0x04, 0x00000000),
-        2000,
-        "Clear ERASEALL",
-      );
+      await withTimeout(dap.writeAP(CTRL_AP | 0x04, 0x00000000), 2000, "Clear ERASEALL");
     } catch (e) {
       console.log(`Warning: Could not clear ERASEALL register: ${errMsg(e)}`);
     }

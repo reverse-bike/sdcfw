@@ -78,11 +78,7 @@ Examples:
 `);
 }
 
-function numberFlag(
-  flags: Map<string, string>,
-  name: string,
-  fallback: number,
-): number {
+function numberFlag(flags: Map<string, string>, name: string, fallback: number): number {
   const raw = flags.get(name);
   if (raw === undefined) return fallback;
   const value = Number(raw);
@@ -111,13 +107,10 @@ function printVersionInfo(info: ModuleVersionInfo): void {
   console.log("\nDisplay main controller / nRF");
   if (info.model) console.log(`  Model: ${info.model}`);
   if (info.serialNumber) console.log(`  Serial Number: ${info.serialNumber}`);
-  if (info.manufacturerName)
-    console.log(`  Manufacturer: ${info.manufacturerName}`);
-  if (info.hardwareRevision)
-    console.log(`  Hardware Revision: ${info.hardwareRevision}`);
+  if (info.manufacturerName) console.log(`  Manufacturer: ${info.manufacturerName}`);
+  if (info.hardwareRevision) console.log(`  Hardware Revision: ${info.hardwareRevision}`);
   if (info.nrfVersion) console.log(`  nRF Version: ${info.nrfVersion}`);
-  if (info.softwareRevision)
-    console.log(`  Software Revision: ${info.softwareRevision}`);
+  if (info.softwareRevision) console.log(`  Software Revision: ${info.softwareRevision}`);
   console.log(`  nRF Bootloader Version: ${info.nrfBootloaderVersion}`);
   console.log(`  Firmware Variant: ${info.firmwareVariant}`);
 
@@ -126,9 +119,7 @@ function printVersionInfo(info: ModuleVersionInfo): void {
 
   console.log("\nMotor controller");
   console.log(`  Firmware Version: ${info.controllerVersion}`);
-  console.log(
-    `  Controller Variant: ${info.controllerVariant || "unknown (0)"}`,
-  );
+  console.log(`  Controller Variant: ${info.controllerVariant || "unknown (0)"}`);
 
   console.log("\nBattery management system");
   console.log(`  Firmware Version: ${info.batteryVersion}`);
@@ -179,9 +170,7 @@ async function flash(
       prn: numberFlag(flags, "--prn", 0),
     });
   } catch (error) {
-    throw new CliUsageError(
-      error instanceof Error ? error.message : String(error),
-    );
+    throw new CliUsageError(error instanceof Error ? error.message : String(error));
   }
   const bin = new Uint8Array(await Bun.file(binPath).arrayBuffer());
   const dat = new Uint8Array(await Bun.file(datPath).arrayBuffer());
@@ -190,9 +179,7 @@ async function flash(
 
   const pkg = await parseDfuPackage(dat, bin);
   if (pkg.appSize !== bin.length) {
-    throw new Error(
-      `.dat app_size ${pkg.appSize} does not match .bin size ${bin.length}`,
-    );
+    throw new Error(`.dat app_size ${pkg.appSize} does not match .bin size ${bin.length}`);
   }
   if (pkg.fwVersion !== 0x80) {
     throw new Error(
@@ -242,9 +229,7 @@ async function flash(
     scanTimeSeconds: Math.max(scanTime, 120),
     log: console.log,
   });
-  console.log(
-    `found ${dfuDevice.name ?? "(unnamed)"} [${dfuDevice.id}]; connecting`,
-  );
+  console.log(`found ${dfuDevice.name ?? "(unnamed)"} [${dfuDevice.id}]; connecting`);
   const dfuServer = await connect(dfuDevice, { log: console.log });
   try {
     const result = await transferControllerFirmware(dfuServer, dat, bin, {
@@ -288,10 +273,7 @@ async function main(): Promise<void> {
   switch (command) {
     case "read":
       await withDeadline(
-        readInfo(
-          advertisedName,
-          numberFlag(flags, "--scan-time", 60),
-        ),
+        readInfo(advertisedName, numberFlag(flags, "--scan-time", 60)),
         timeout,
         "read",
       );
@@ -302,11 +284,7 @@ async function main(): Promise<void> {
       if (!binPath || !datPath) {
         throw new CliUsageError("flash requires both --bin and --dat");
       }
-      await withDeadline(
-        flash(advertisedName, binPath, datPath, flags),
-        timeout,
-        "flash",
-      );
+      await withDeadline(flash(advertisedName, binPath, datPath, flags), timeout, "flash");
       break;
     }
   }

@@ -27,32 +27,15 @@ export {
   type LogFn,
 } from "./util.js";
 
-export {
-  crc32Ieee,
-  crc32Mpeg2Update,
-  deviceImageCrc,
-} from "./crc.js";
+export { crc32Ieee, crc32Mpeg2Update, deviceImageCrc } from "./crc.js";
 
-export {
-  parseDfuPackage,
-  stagedImage,
-  STAGED_CRC_LEN,
-  type DfuPackage,
-} from "./package.js";
+export { parseDfuPackage, stagedImage, STAGED_CRC_LEN, type DfuPackage } from "./package.js";
 
 export { authenticate, DEFAULT_AUTH_KEY } from "./auth.js";
 
-export {
-  readVersionInfo,
-  serialFromManufacturerData,
-  type ModuleVersionInfo,
-} from "./info.js";
+export { readVersionInfo, serialFromManufacturerData, type ModuleVersionInfo } from "./info.js";
 
-export {
-  DfuClient,
-  DfuError,
-  type DfuTransferOptions,
-} from "./dfu.js";
+export { DfuClient, DfuError, type DfuTransferOptions } from "./dfu.js";
 
 export {
   armControllerUpdate,

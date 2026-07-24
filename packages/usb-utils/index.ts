@@ -1,8 +1,4 @@
-export {
-  connectDAP,
-  disconnectDAP,
-  withTimeout,
-} from "./connection.js";
+export { connectDAP, disconnectDAP, withTimeout } from "./connection.js";
 
 // nRF52 operations
 export {
@@ -50,11 +46,4 @@ export type {
 } from "./types.js";
 
 // Result helpers and error utilities
-export {
-  ok,
-  err,
-  createError,
-  toCoreError,
-  formatDeviceInfo,
-  formatUICR,
-} from "./types.js";
+export { ok, err, createError, toCoreError, formatDeviceInfo, formatUICR } from "./types.js";

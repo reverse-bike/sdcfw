@@ -2,10 +2,10 @@
   "name": "@sdcfw/mc-farm",
   "version": "1.0.0",
   "description": "CLI for reading and updating motor-controller firmware over BLE",
-  "type": "module",
   "bin": {
     "mc-farm": "./main.ts"
   },
+  "type": "module",
   "dependencies": {
     "@sdcfw/ble-utils": "workspace:*",
     "webbluetooth": "catalog:"

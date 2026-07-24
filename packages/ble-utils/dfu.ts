@@ -1,8 +1,4 @@
-import {
-  DFU_CONTROL_POINT,
-  DFU_PACKET,
-  DFU_SERVICE,
-} from "./constants.js";
+import { DFU_CONTROL_POINT, DFU_PACKET, DFU_SERVICE } from "./constants.js";
 import { crc32Ieee } from "./crc.js";
 import { hex, sleep, withTimeout, type LogFn } from "./util.js";
 
@@ -80,10 +76,7 @@ export class DfuClient {
     private chunkSize: number,
     private readonly log: LogFn,
   ) {
-    this.controlPoint.addEventListener(
-      "characteristicvaluechanged",
-      this.onNotification,
-    );
+    this.controlPoint.addEventListener("characteristicvaluechanged", this.onNotification);
   }
 
   static async connect(
@@ -111,22 +104,14 @@ export class DfuClient {
       options.chunkSize ?? 20,
       options.log ?? (() => {}),
     );
-    await withTimeout(
-      controlPoint.startNotifications(),
-      10_000,
-      "enable DFU notifications",
-    );
+    await withTimeout(controlPoint.startNotifications(), 10_000, "enable DFU notifications");
     return client;
   }
 
   private readonly onNotification = (event: Event): void => {
     const value = (event.target as BluetoothRemoteGATTCharacteristic).value;
     if (!value) return;
-    const bytes = new Uint8Array(
-      value.buffer,
-      value.byteOffset,
-      value.byteLength,
-    );
+    const bytes = new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
     if (bytes[0] !== 0x60) {
       this.log(`unexpected DFU notification: ${hex(bytes)}`);
       return;
@@ -155,11 +140,7 @@ export class DfuClient {
       const timer = setTimeout(() => {
         const index = this.queue.findIndex((entry) => entry.op === op);
         if (index >= 0) this.queue.splice(index, 1);
-        reject(
-          new DfuError(
-            `timeout waiting for response to DFU op 0x${op.toString(16)}`,
-          ),
-        );
+        reject(new DfuError(`timeout waiting for response to DFU op 0x${op.toString(16)}`));
       }, timeoutMs);
       this.queue.push({
         op,
@@ -210,12 +191,7 @@ export class DfuClient {
   }
 
   private u32le(value: number): number[] {
-    return [
-      value & 0xff,
-      (value >>> 8) & 0xff,
-      (value >>> 16) & 0xff,
-      (value >>> 24) & 0xff,
-    ];
+    return [value & 0xff, (value >>> 8) & 0xff, (value >>> 16) & 0xff, (value >>> 24) & 0xff];
   }
 
   async setPrn(interval: number): Promise<void> {
@@ -243,15 +219,9 @@ export class DfuClient {
     });
   }
 
-  async select(
-    objectType: number,
-  ): Promise<{ maxSize: number; offset: number; crc: number }> {
+  async select(objectType: number): Promise<{ maxSize: number; offset: number; crc: number }> {
     const response = await this.expectOk(OP.SELECT, [objectType]);
-    const view = new DataView(
-      response.buffer,
-      response.byteOffset,
-      response.byteLength,
-    );
+    const view = new DataView(response.buffer, response.byteOffset, response.byteLength);
     const selected = {
       maxSize: view.getUint32(3, true),
       offset: view.getUint32(7, true),
@@ -270,11 +240,7 @@ export class DfuClient {
 
   async calculateChecksum(): Promise<{ offset: number; crc: number }> {
     const response = await this.expectOk(OP.CALC);
-    const view = new DataView(
-      response.buffer,
-      response.byteOffset,
-      response.byteLength,
-    );
+    const view = new DataView(response.buffer, response.byteOffset, response.byteLength);
     return {
       offset: view.getUint32(3, true),
       crc: view.getUint32(7, true),
@@ -285,26 +251,16 @@ export class DfuClient {
     await this.expectOk(OP.EXEC, [], timeoutMs);
   }
 
-  async executeWithRetries(
-    attempts = 1,
-    delayMs = 2_000,
-    timeoutMs = 15_000,
-  ): Promise<void> {
+  async executeWithRetries(attempts = 1, delayMs = 2_000, timeoutMs = 15_000): Promise<void> {
     for (let attempt = 1; ; attempt++) {
       try {
         await this.execute(timeoutMs);
         return;
       } catch (error) {
-        if (
-          !(error instanceof DfuError) ||
-          error.result !== 0x0a ||
-          attempt >= attempts
-        ) {
+        if (!(error instanceof DfuError) || error.result !== 0x0a || attempt >= attempts) {
           throw error;
         }
-        this.log(
-          `execute failed; retrying ${attempt}/${attempts - 1} after ${delayMs}ms`,
-        );
+        this.log(`execute failed; retrying ${attempt}/${attempts - 1} after ${delayMs}ms`);
         await sleep(delayMs);
       }
     }
@@ -335,19 +291,14 @@ export class DfuClient {
           `packet write failed at 0x${(baseOffset + offset).toString(16)} with chunk ${this.chunkSize}: ${error instanceof Error ? error.message : String(error)}`,
         );
         if (this.chunkSize <= 20) throw error;
-        this.chunkSize =
-          this.chunkSize > 100 ? 100 : this.chunkSize > 58 ? 58 : 20;
+        this.chunkSize = this.chunkSize > 100 ? 100 : this.chunkSize > 58 ? 58 : 20;
         this.log(`reducing chunk size to ${this.chunkSize}`);
         continue;
       }
 
       if (receipt) {
         const response = await receipt;
-        const view = new DataView(
-          response.buffer,
-          response.byteOffset,
-          response.byteLength,
-        );
+        const view = new DataView(response.buffer, response.byteOffset, response.byteLength);
         this.log(`PRN receipt: offset=0x${view.getUint32(3, true).toString(16)}`);
       }
 

@@ -14,8 +14,7 @@ export function advertisedNameMatcher(
   advertisedNameOrId: string,
 ): (name: string, id: string) => boolean {
   const wanted = advertisedNameOrId.toLowerCase();
-  return (name, id) =>
-    id.toLowerCase() === wanted || name.toLowerCase().includes(wanted);
+  return (name, id) => id.toLowerCase() === wanted || name.toLowerCase().includes(wanted);
 }
 
 export async function findAdvertisedDevice(

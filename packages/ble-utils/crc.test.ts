@@ -1,16 +1,10 @@
 import { expect, test } from "bun:test";
-import {
-  crc32Ieee,
-  crc32Mpeg2Update,
-  deviceImageCrc,
-} from "./crc.js";
+import { crc32Ieee, crc32Mpeg2Update, deviceImageCrc } from "./crc.js";
 import { stagedImage } from "./package.js";
 import { controllerImageCrc, createArmPacket } from "./update.js";
 
 test("CRC-32/MPEG-2 standard vector", () => {
-  expect(crc32Mpeg2Update(new TextEncoder().encode("123456789"))).toBe(
-    0x0376e6e7,
-  );
+  expect(crc32Mpeg2Update(new TextEncoder().encode("123456789"))).toBe(0x0376e6e7);
 });
 
 test("CRC-32/IEEE standard vector", () => {

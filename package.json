@@ -1,15 +1,6 @@
 {
   "name": "sdcfw",
   "private": true,
-  "scripts": {
-    "mc-farm": "bun apps/mc-farm/main.ts",
-    "nrf-farm": "bun apps/nrf-farm/main.ts",
-    "kitchen": "bun apps/kitchen/main.ts",
-    "web": "bun run --cwd apps/web dev",
-    "web:build": "bun run --cwd apps/web build",
-    "web:preview": "bun run --cwd apps/web preview",
-    "typecheck": "tsc --noEmit"
-  },
   "workspaces": {
     "packages": [
       "apps/*",
@@ -37,14 +28,31 @@
       "webbluetooth": "^3.7.0"
     }
   },
+  "type": "module",
+  "scripts": {
+    "mc-farm": "bun apps/mc-farm/main.ts",
+    "nrf-farm": "bun apps/nrf-farm/main.ts",
+    "kitchen": "bun apps/kitchen/main.ts",
+    "web": "bun run --cwd apps/web dev",
+    "web:build": "bun run --cwd apps/web build",
+    "web:preview": "bun run --cwd apps/web preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint . --fix",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check ."
+  },
   "devDependencies": {
+    "@sdcfw/kitchen": "workspace:*",
     "@sdcfw/mc-farm": "workspace:*",
     "@sdcfw/nrf-farm": "workspace:*",
-    "@sdcfw/kitchen": "workspace:*",
     "@types/bun": "catalog:",
     "@types/node": "catalog:",
-    "@types/web-bluetooth": "catalog:",
     "@types/w3c-web-usb": "catalog:",
+    "@types/web-bluetooth": "catalog:",
+    "eslint-plugin-solid": "^0.14.5",
+    "oxfmt": "^0.59.0",
+    "oxlint": "^1.74.0",
     "typescript": "catalog:"
   }
 }

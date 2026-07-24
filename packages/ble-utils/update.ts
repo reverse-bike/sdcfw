@@ -1,9 +1,4 @@
-import {
-  APP_RX_CHAR,
-  APP_SERVICE,
-  DFU_BUTTONLESS,
-  DFU_SERVICE,
-} from "./constants.js";
+import { APP_RX_CHAR, APP_SERVICE, DFU_BUTTONLESS, DFU_SERVICE } from "./constants.js";
 import { crc32Ieee, deviceImageCrc } from "./crc.js";
 import { DfuClient } from "./dfu.js";
 import { stagedImage } from "./package.js";
@@ -50,11 +45,7 @@ export async function armControllerUpdate(
     "get application service",
   );
   const rx = await appService.getCharacteristic(APP_RX_CHAR);
-  await withTimeout(
-    rx.writeValueWithResponse(packet),
-    15_000,
-    "write F0CC arm packet",
-  );
+  await withTimeout(rx.writeValueWithResponse(packet), 15_000, "write F0CC arm packet");
 
   if (options.enterDfu ?? true) {
     const eraseWaitMs = options.eraseWaitMs ?? 8_000;
@@ -102,10 +93,7 @@ export interface DfuTransportOptions {
 }
 
 export function validateDfuTransportOptions(
-  options: Pick<
-    FirmwareTransferOptions,
-    "chunkSize" | "objectSize" | "prn"
-  > = {},
+  options: Pick<FirmwareTransferOptions, "chunkSize" | "objectSize" | "prn"> = {},
 ): DfuTransportOptions {
   const chunkSize = options.chunkSize ?? 20;
   const objectSize = options.objectSize ?? 4_096;
@@ -154,10 +142,7 @@ export async function transferControllerFirmware(
       executeAttempts: 5,
       executeRetryDelayMs: 2_000,
     });
-  } else if (
-    commandSelection.offset === dat.length &&
-    commandSelection.crc === commandCrc
-  ) {
+  } else if (commandSelection.offset === dat.length && commandSelection.crc === commandCrc) {
     log("init packet already present; retrying execute");
     await client.executeWithRetries(5, 2_000, 30_000);
   } else {

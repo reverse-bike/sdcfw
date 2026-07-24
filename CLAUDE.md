@@ -3,6 +3,7 @@ This project is an end-to-end pipeline to develop custom firmware for ebikes.
 # Structure
 
 ## Apps
+
 Apps, in `/apps` are for users. They are runnable or deployable.
 
 - nRF Farm: Legacy USB CLI for backing up, erasing, and restoring display firmware.
@@ -12,6 +13,7 @@ Apps, in `/apps` are for users. They are runnable or deployable.
 - Server: This is server code for users to backup their firmware dumps in case they need to restore later.
 
 ## Packages
+
 Packages, in `/packages`, are shared code for other packages and apps to depend on.
 
 - BLE Utils: Shared, browser-compatible BLE protocols and motor-controller DFU.
@@ -19,6 +21,7 @@ Packages, in `/packages`, are shared code for other packages and apps to depend 
 - DapJs: This is a vendored version of the public `dapjs` library for interacting the DAPLink dongles. Do not modify.
 
 ## Firmware
+
 Firmware, in `/firmware`, is a data folder that holds raw firmware dumps and 'cleaned' (by Kitchen) dumps.
 
 It contains firmware for several different MCUs, with folders for different found versions. `nrf` is a N52832, `stm` is a stm32f042f6, `mc` is for the motor controller and the MCU is currently unknown.
@@ -32,6 +35,7 @@ Folders may contain README.md's with extra information. Read them when working o
 Default to using Bun instead of Node.js. This project uses strict TypeScript exclusively.
 
 ## Testing
+
 Use `bun run typecheck` to run tsc on the whole repo.
 Use `bun test` to run tests. (there are no tests yet.)
 

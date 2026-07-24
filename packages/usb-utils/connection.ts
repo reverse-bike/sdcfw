@@ -1,23 +1,14 @@
-
-
 import { ADI, WebUSB as Transport } from "@sdcfw/dapjs";
 import type { DAPConnection, Result } from "./types.js";
 import { ok, err, createError, toCoreError } from "./types.js";
 
 export const DEFAULT_CLOCK_SPEED = 10000000; // 10mhz for speed
 
-export function withTimeout<T>(
-  promise: Promise<T>,
-  ms: number,
-  label = "Operation",
-): Promise<T> {
+export function withTimeout<T>(promise: Promise<T>, ms: number, label = "Operation"): Promise<T> {
   return Promise.race([
     promise,
     new Promise<T>((_, reject) =>
-      setTimeout(
-        () => reject(createError("TIMEOUT", `${label} timed out after ${ms}ms`)),
-        ms,
-      ),
+      setTimeout(() => reject(createError("TIMEOUT", `${label} timed out after ${ms}ms`)), ms),
     ),
   ]);
 }
