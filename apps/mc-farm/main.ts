@@ -10,7 +10,9 @@ import {
   serialFromManufacturerData,
   sleep,
   transferControllerFirmware,
+  validateDfuTransportOptions,
   withDeadline,
+  type DfuTransportOptions,
   type ModuleVersionInfo,
 } from "@sdcfw/ble-utils";
 import { findAdvertisedDevice, type ScannedDevice } from "./node-ble.js";
@@ -19,6 +21,8 @@ interface ParsedArguments {
   positional: string[];
   flags: Map<string, string>;
 }
+
+class CliUsageError extends Error {}
 
 const BOOLEAN_FLAGS = new Set(["--execute", "--yes", "-y", "--help", "-h"]);
 
@@ -37,7 +41,7 @@ function parseArguments(argv: string[]): ParsedArguments {
     }
     const argument = argv[++index];
     if (!argument || argument.startsWith("-")) {
-      throw new Error(`missing value for ${value}`);
+      throw new CliUsageError(`missing value for ${value}`);
     }
     flags.set(value, argument);
   }
@@ -49,7 +53,7 @@ function showUsage(): void {
 mc-farm - Motor-controller firmware tools over BLE
 
 Usage:
-  mc-farm read-info <advertised-name>
+  mc-farm read <advertised-name>
   mc-farm flash <advertised-name> --bin <firmware.bin> --dat <init.dat> [--execute]
 
 Flash is a dry run unless --execute is supplied. A dry run connects to the
@@ -66,6 +70,11 @@ Options:
   --chunk <bytes>       Initial BLE packet size (default: 20)
   --object-size <bytes> DFU object size (default: 4096)
   --prn <count>         Packet receipt interval (default: 0)
+
+Examples:
+  mc-farm read SUPER73
+  mc-farm flash SUPER73 --bin controller.patched.bin --dat controller.dat
+  mc-farm flash SUPER73 --bin controller.patched.bin --dat controller.dat --execute
 `);
 }
 
@@ -78,7 +87,7 @@ function numberFlag(
   if (raw === undefined) return fallback;
   const value = Number(raw);
   if (!Number.isFinite(value) || value < 0) {
-    throw new Error(`${name} must be a non-negative number`);
+    throw new CliUsageError(`${name} must be a non-negative number`);
   }
   return value;
 }
@@ -162,6 +171,18 @@ async function flash(
   flags: Map<string, string>,
 ): Promise<void> {
   const execute = flags.has("--execute");
+  let transport: DfuTransportOptions;
+  try {
+    transport = validateDfuTransportOptions({
+      chunkSize: numberFlag(flags, "--chunk", 20),
+      objectSize: numberFlag(flags, "--object-size", 4_096),
+      prn: numberFlag(flags, "--prn", 0),
+    });
+  } catch (error) {
+    throw new CliUsageError(
+      error instanceof Error ? error.message : String(error),
+    );
+  }
   const bin = new Uint8Array(await Bun.file(binPath).arrayBuffer());
   const dat = new Uint8Array(await Bun.file(datPath).arrayBuffer());
   if (bin.length === 0) throw new Error(`firmware binary is empty: ${binPath}`);
@@ -228,9 +249,9 @@ async function flash(
   try {
     const result = await transferControllerFirmware(dfuServer, dat, bin, {
       executeFirmware: execute,
-      chunkSize: numberFlag(flags, "--chunk", 20),
-      objectSize: numberFlag(flags, "--object-size", 4_096),
-      prn: numberFlag(flags, "--prn", 0),
+      chunkSize: transport.chunkSize,
+      objectSize: transport.objectSize,
+      prn: transport.prn,
       log: console.log,
     });
     if (!result.firmwareTransferred) {
@@ -254,29 +275,32 @@ async function main(): Promise<void> {
     showUsage();
     return;
   }
+  if (command !== "read" && command !== "flash") {
+    throw new CliUsageError(`unknown command: ${command}`);
+  }
 
   const advertisedName = positional[1];
   if (!advertisedName) {
-    throw new Error(`${command} requires an advertised BLE name`);
+    throw new CliUsageError(`${command} requires an advertised BLE name`);
   }
 
   const timeout = numberFlag(flags, "--timeout", 900) * 1_000;
   switch (command) {
-    case "read-info":
+    case "read":
       await withDeadline(
         readInfo(
           advertisedName,
           numberFlag(flags, "--scan-time", 60),
         ),
         timeout,
-        "read-info",
+        "read",
       );
       break;
     case "flash": {
       const binPath = flags.get("--bin");
       const datPath = flags.get("--dat");
       if (!binPath || !datPath) {
-        throw new Error("flash requires both --bin and --dat");
+        throw new CliUsageError("flash requires both --bin and --dat");
       }
       await withDeadline(
         flash(advertisedName, binPath, datPath, flags),
@@ -285,8 +309,6 @@ async function main(): Promise<void> {
       );
       break;
     }
-    default:
-      throw new Error(`unknown command: ${command}`);
   }
 }
 
@@ -294,6 +316,7 @@ try {
   await main();
   process.exit(0);
 } catch (error) {
+  if (error instanceof CliUsageError) showUsage();
   console.error(`error: ${error instanceof Error ? error.message : String(error)}`);
   process.exit(1);
 }

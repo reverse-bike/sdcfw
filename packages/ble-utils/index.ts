@@ -59,5 +59,7 @@ export {
   controllerImageCrc,
   createArmPacket,
   transferControllerFirmware,
+  validateDfuTransportOptions,
+  type DfuTransportOptions,
   type FirmwareTransferOptions,
 } from "./update.js";

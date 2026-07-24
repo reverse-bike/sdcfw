@@ -34,6 +34,7 @@ export async function armControllerUpdate(
   options: {
     eraseWaitMs?: number;
     enterDfu?: boolean;
+    rebootSettleMs?: number;
     log?: LogFn;
   } = {},
 ): Promise<number> {
@@ -59,6 +60,7 @@ export async function armControllerUpdate(
     const eraseWaitMs = options.eraseWaitMs ?? 8_000;
     log(`external staging area armed; waiting ${eraseWaitMs / 1000}s`);
     await sleep(eraseWaitMs);
+    log("requesting buttonless DFU reboot");
     try {
       const dfuService = await withTimeout(
         server.getPrimaryService(DFU_SERVICE),
@@ -71,6 +73,7 @@ export async function armControllerUpdate(
         10_000,
         "enter buttonless DFU",
       );
+      log("buttonless DFU request acknowledged");
     } catch (error) {
       // The link can disappear before the write acknowledgement as the display
       // reboots. A later DFU scan is the authoritative success check.
@@ -78,6 +81,7 @@ export async function armControllerUpdate(
         `buttonless DFU acknowledgement was lost: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
+    await sleep(options.rebootSettleMs ?? 1_000);
   }
   return crc;
 }
@@ -87,7 +91,43 @@ export interface FirmwareTransferOptions {
   chunkSize?: number;
   objectSize?: number;
   prn?: number;
+  finalizeSettleMs?: number;
   log?: LogFn;
+}
+
+export interface DfuTransportOptions {
+  chunkSize: number;
+  objectSize: number;
+  prn: number;
+}
+
+export function validateDfuTransportOptions(
+  options: Pick<
+    FirmwareTransferOptions,
+    "chunkSize" | "objectSize" | "prn"
+  > = {},
+): DfuTransportOptions {
+  const chunkSize = options.chunkSize ?? 20;
+  const objectSize = options.objectSize ?? 4_096;
+  const prn = options.prn ?? 0;
+
+  if (!Number.isInteger(chunkSize) || chunkSize <= 0) {
+    throw new Error(`chunk size must be a positive integer; received ${chunkSize}`);
+  }
+  if (!Number.isInteger(objectSize) || objectSize <= 0) {
+    throw new Error(`object size must be a positive integer; received ${objectSize}`);
+  }
+  if (!Number.isInteger(prn) || prn < 0) {
+    throw new Error(`PRN must be a non-negative integer; received ${prn}`);
+  }
+  if (prn >= chunkSize) {
+    throw new Error(
+      `PRN (${prn} packets) must be less than chunk size (${chunkSize} bytes) ` +
+        "so receipt checkpoints remain more frequent than the configured packet payload boundary",
+    );
+  }
+
+  return { chunkSize, objectSize, prn };
 }
 
 export async function transferControllerFirmware(
@@ -97,11 +137,12 @@ export async function transferControllerFirmware(
   options: FirmwareTransferOptions = {},
 ): Promise<{ firmwareTransferred: boolean }> {
   const log = options.log ?? (() => {});
+  const transport = validateDfuTransportOptions(options);
   const client = await DfuClient.connect(server, {
-    chunkSize: options.chunkSize ?? 20,
+    chunkSize: transport.chunkSize,
     log,
   });
-  await client.setPrn(options.prn ?? 0);
+  await client.setPrn(transport.prn);
 
   log("transferring signed init packet");
   const commandSelection = await client.select(0x01);
@@ -132,7 +173,7 @@ export async function transferControllerFirmware(
   }
 
   const selection = await client.select(0x02);
-  const requestedObjectSize = options.objectSize ?? 4_096;
+  const requestedObjectSize = transport.objectSize;
   const objectSize = Math.min(selection.maxSize, requestedObjectSize);
   if (!Number.isInteger(objectSize) || objectSize <= 0) {
     throw new Error(`invalid data object size ${requestedObjectSize}`);
@@ -167,6 +208,8 @@ export async function transferControllerFirmware(
     offset = end;
   }
 
-  log("firmware transfer complete; controller programming will follow");
+  log("firmware transfer complete; waiting for validation and reboot");
+  await sleep(options.finalizeSettleMs ?? 1_000);
+  log("controller programming will follow in the display application");
   return { firmwareTransferred: true };
 }

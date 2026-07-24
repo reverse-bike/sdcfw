@@ -408,5 +408,6 @@ export class DfuClient {
       options.executeRetryDelayMs ?? 2_000,
       options.executeTimeoutMs ?? 15_000,
     );
+    this.log("object executed");
   }
 }

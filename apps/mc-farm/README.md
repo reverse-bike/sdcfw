@@ -10,7 +10,7 @@ Bluetooth support currently depends on the host adapter supported by the
 ## Read firmware versions
 
 ```bash
-bun apps/mc-farm/main.ts read-info SUPER73
+bun mc-farm read SUPER73
 ```
 
 The BLE name is matched case-insensitively. A device ID may also be supplied.
