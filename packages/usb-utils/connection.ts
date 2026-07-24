@@ -1,4 +1,4 @@
-/// <reference types="w3c-web-usb" />
+
 
 import { ADI, WebUSB as Transport } from "@sdcfw/dapjs";
 import type { DAPConnection, Result } from "./types.js";

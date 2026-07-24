@@ -1,4 +1,4 @@
-/// <reference types="w3c-web-usb" />
+
 import { createSignal } from 'solid-js';
 import UsbProbeSelect from './UsbProbeSelect';
 import ReadInfo from './ReadInfo';

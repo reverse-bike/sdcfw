@@ -10,6 +10,7 @@
         "@sdcfw/nrf-farm": "workspace:*",
         "@types/bun": "catalog:",
         "@types/node": "catalog:",
+        "@types/w3c-web-usb": "catalog:",
         "@types/web-bluetooth": "catalog:",
         "typescript": "catalog:",
       },
@@ -46,11 +47,11 @@
       },
       "dependencies": {
         "@sdcfw/usb-utils": "workspace:*",
+        "@types/w3c-web-usb": "catalog:",
         "usb": "catalog:",
       },
       "devDependencies": {
         "@types/usb": "catalog:",
-        "@types/w3c-web-usb": "catalog:",
       },
     },
     "apps/web": {

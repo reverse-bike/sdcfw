@@ -1,4 +1,4 @@
-/// <reference types="w3c-web-usb" />
+
 import { createSignal, createEffect, onCleanup, For, Show } from 'solid-js';
 
 interface UsbDevice {

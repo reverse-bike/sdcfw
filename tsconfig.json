@@ -8,7 +8,7 @@
     },
     // Environment setup & latest features
     "lib": ["ESNext", "dom"],
-    "types": ["bun", "node", "web-bluetooth"],
+    "types": ["bun", "node", "w3c-web-usb", "web-bluetooth"],
     "target": "ESNext",
     "module": "Preserve",
     "moduleDetection": "force",

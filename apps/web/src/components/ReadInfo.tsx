@@ -1,4 +1,4 @@
-/// <reference types="w3c-web-usb" />
+
 import { createSignal, Show } from 'solid-js';
 import {
 	connectDAP,

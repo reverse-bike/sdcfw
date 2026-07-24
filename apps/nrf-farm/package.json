@@ -10,10 +10,10 @@
   "type": "module",
   "dependencies": {
     "@sdcfw/usb-utils": "workspace:*",
-    "usb": "catalog:"
+    "usb": "catalog:",
+    "@types/w3c-web-usb": "catalog:"
   },
   "devDependencies": {
-    "@types/usb": "catalog:",
-    "@types/w3c-web-usb": "catalog:"
+    "@types/usb": "catalog:"
   }
 }
