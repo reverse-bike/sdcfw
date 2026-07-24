@@ -23,10 +23,62 @@ export function createArmPacket(crc: number): Uint8Array<ArrayBuffer> {
   ]);
 }
 
+const BUTTONLESS_ENTER_DFU = 0x01;
+const BUTTONLESS_RESPONSE = 0x20;
+const BUTTONLESS_SUCCESS = 0x01;
+
+const BUTTONLESS_RESULTS: Record<number, string> = {
+  0x01: "success",
+  0x02: "op code not supported",
+  0x03: "operation failed",
+  0x04: "invalid advertisement name",
+  0x05: "busy",
+  0x06: "not bonded",
+};
+
+/**
+ * True when a failed operation is explained by the display already having
+ * rebooted, rather than by the display rejecting the request.
+ */
+function isLinkLoss(error: unknown, server: BluetoothRemoteGATTServer): boolean {
+  if (!server.connected) return true;
+  const name = (error as { name?: string } | null)?.name;
+  if (name === "NetworkError") return true;
+  const message =
+    error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+  return message.includes("disconnect") || message.includes("not connected");
+}
+
+/** Resolves with the buttonless control point indication, or undefined if none arrives. */
+function awaitButtonlessResponse(
+  characteristic: BluetoothRemoteGATTCharacteristic,
+  timeoutMs: number,
+): { response: Promise<Uint8Array | undefined>; cancel: () => void } {
+  let settle: (value: Uint8Array | undefined) => void = () => {};
+  const onChange = (event: Event): void => {
+    const value = (event.target as BluetoothRemoteGATTCharacteristic).value;
+    if (!value) return;
+    settle(new Uint8Array(value.buffer, value.byteOffset, value.byteLength));
+  };
+  characteristic.addEventListener("characteristicvaluechanged", onChange);
+
+  let timer: ReturnType<typeof setTimeout>;
+  const response = new Promise<Uint8Array | undefined>((resolve) => {
+    settle = (value) => {
+      clearTimeout(timer);
+      characteristic.removeEventListener("characteristicvaluechanged", onChange);
+      resolve(value);
+    };
+    timer = setTimeout(() => settle(undefined), timeoutMs);
+  });
+  return { response, cancel: () => settle(undefined) };
+}
+
 export async function enterDfuMode(
   server: BluetoothRemoteGATTServer,
   options: {
     rebootSettleMs?: number;
+    responseTimeoutMs?: number;
     log?: LogFn;
   } = {},
 ): Promise<void> {
@@ -38,20 +90,55 @@ export async function enterDfuMode(
     "get buttonless DFU service",
   );
   const buttonless = await dfuService.getCharacteristic(DFU_BUTTONLESS);
+
+  // Nordic's buttonless service refuses control point writes with "CCCD
+  // improperly configured" until indications are enabled on the same link.
+  try {
+    await withTimeout(buttonless.startNotifications(), 10_000, "enable buttonless DFU indications");
+  } catch (error) {
+    log(
+      `could not enable buttonless DFU indications: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+
+  const pending = awaitButtonlessResponse(buttonless, options.responseTimeoutMs ?? 3_000);
+  let rebooted = false;
   try {
     await withTimeout(
-      buttonless.writeValueWithResponse(new Uint8Array([0x01])),
+      buttonless.writeValueWithResponse(new Uint8Array([BUTTONLESS_ENTER_DFU])),
       10_000,
       "enter buttonless DFU",
     );
     log("buttonless DFU request acknowledged");
   } catch (error) {
     // The link can disappear before the write acknowledgement as the display
-    // reboots. A later DFU scan is the authoritative success check.
+    // reboots; anything else is a rejection that leaves the bike running.
+    if (!isLinkLoss(error, server)) {
+      pending.cancel();
+      throw new Error(
+        `the display rejected the buttonless DFU request: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+    rebooted = true;
     log(
-      `buttonless DFU acknowledgement was lost: ${error instanceof Error ? error.message : String(error)}`,
+      `buttonless DFU acknowledgement was lost, which usually means the display rebooted: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
+
+  if (!rebooted) {
+    const response = await pending.response;
+    if (!response) {
+      log("no buttonless DFU response indication arrived; relying on the DFU scan instead");
+    } else if (response[0] === BUTTONLESS_RESPONSE && response[2] !== BUTTONLESS_SUCCESS) {
+      const result = response[2] ?? 0;
+      throw new Error(
+        `buttonless DFU request failed: ${BUTTONLESS_RESULTS[result] ?? `result 0x${result.toString(16)}`} (raw ${hex(response)})`,
+      );
+    } else {
+      log(`buttonless DFU response: ${hex(response)}`);
+    }
+  }
+  pending.cancel();
   await sleep(options.rebootSettleMs ?? 1_000);
 }
 
