@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@astrojs/solid-js": "catalog:",
-    "@sdcfw/core": "workspace:*",
+    "@sdcfw/usb-utils": "workspace:*",
     "@tailwindcss/vite": "catalog:",
     "astro": "catalog:",
     "eventemitter3": "catalog:",

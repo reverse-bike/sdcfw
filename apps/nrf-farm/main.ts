@@ -14,36 +14,36 @@ import {
   createError,
   type DAPConnection,
   type CoreError,
-} from "@sdcfw/core";
+} from "@sdcfw/usb-utils";
 
 function printUsage() {
   console.log(`
 nRF52 Tool - Backup, Erase, and Restore nRF52 devices via CMSIS-DAP
 
 Usage:
-  node main.ts read_info
+  bun apps/nrf-farm/main.ts read_info
     - Reads and displays device information (FICR and UICR)
 
-  node main.ts backup <output-dir>
+  bun apps/nrf-farm/main.ts backup <output-dir>
     - Backs up flash and UICR to files in output-dir
     - Creates: flash.bin and uicr.bin
 
-  node main.ts erase
+  bun apps/nrf-farm/main.ts erase
     - Performs chip erase (ERASEALL via CTRL-AP)
     - Removes APPROTECT and erases all flash and UICR
 
-  node main.ts restore <flash.bin> <uicr.bin> [--no-verify]
+  bun apps/nrf-farm/main.ts restore <flash.bin> <uicr.bin> [--no-verify]
     - Restores flash and UICR from backup files
     - Use --no-verify to skip verification (faster but risky)
 
-  node main.ts dev
+  bun apps/nrf-farm/main.ts dev
     - Development/experimental commands (use at your own risk)
 
 Examples:
-  node main.ts read_info
-  node main.ts backup ./backup
-  node main.ts erase
-  node main.ts restore ./backup/flash.bin ./backup/uicr.bin
+  bun apps/nrf-farm/main.ts read_info
+  bun apps/nrf-farm/main.ts backup ./backup
+  bun apps/nrf-farm/main.ts erase
+  bun apps/nrf-farm/main.ts restore ./backup/flash.bin ./backup/uicr.bin
 `);
 }
 

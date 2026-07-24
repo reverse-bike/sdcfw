@@ -1,5 +1,5 @@
 {
-  "name": "@sdcfw/core",
+  "name": "@sdcfw/usb-utils",
   "type": "module",
   "exports": {
     ".": "./index.ts"

@@ -1,0 +1,10 @@
+{
+  "name": "@sdcfw/ble-utils",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "devDependencies": {
+    "@types/web-bluetooth": "catalog:"
+  }
+}

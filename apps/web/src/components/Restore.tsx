@@ -8,7 +8,7 @@ import {
 	formatDeviceInfo,
 	type DAPConnection,
 	type CoreError,
-} from '@sdcfw/core';
+} from '@sdcfw/usb-utils';
 import { unzipSync } from 'fflate';
 import type { CompletedBackup } from './Backup';
 import ProgressBar from './ProgressBar';

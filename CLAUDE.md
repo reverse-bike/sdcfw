@@ -5,7 +5,8 @@ This project is an end-to-end pipeline to develop custom firmware for ebikes.
 ## Apps
 Apps, in `/apps` are for users. They are runnable or deployable.
 
-- Farm: This is a CLI for interacting with physical devices. Backup, erase, restore firmware.
+- nRF Farm: Legacy USB CLI for backing up, erasing, and restoring display firmware.
+- MC Farm: BLE CLI for reading versions and updating motor-controller firmware.
 - Kitchen: This is a CLI for taking dumped firmware and creating custom firmware.
 - Site: This is a deployable website for end users. Similar to Farm, but for the web.
 - Server: This is server code for users to backup their firmware dumps in case they need to restore later.
@@ -13,7 +14,8 @@ Apps, in `/apps` are for users. They are runnable or deployable.
 ## Packages
 Packages, in `/packages`, are shared code for other packages and apps to depend on.
 
-- Core: The main package. Any types or functionality that needs to be shared between apps goes here. Needs to be web and server compatible.
+- BLE Utils: Shared, browser-compatible BLE protocols and motor-controller DFU.
+- USB Utils: Shared USB/DAP display-firmware operations.
 - DapJs: This is a vendored version of the public `dapjs` library for interacting the DAPLink dongles. Do not modify.
 
 ## Firmware

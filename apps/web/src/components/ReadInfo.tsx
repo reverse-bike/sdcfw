@@ -12,7 +12,7 @@ import {
 	type DeviceInfo,
 	type UICRRegisters,
 	type CoreError,
-} from '@sdcfw/core';
+} from '@sdcfw/usb-utils';
 import ProgressBar from './ProgressBar';
 import { playSuccessSound, playErrorSound, playConnectedSound } from './ui';
 

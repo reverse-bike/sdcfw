@@ -2,12 +2,13 @@
   "exclude": ["node_modules", "dist", "build", "apps/web/src/content"],
   "compilerOptions": {
     "paths": {
-      "@sdcfw/core": ["./packages/core/index.ts"],
+      "@sdcfw/usb-utils": ["./packages/usb-utils/index.ts"],
+      "@sdcfw/ble-utils": ["./packages/ble-utils/index.ts"],
       "@sdcfw/dapjs": ["./packages/dapjs/index.ts"],
     },
     // Environment setup & latest features
     "lib": ["ESNext", "dom"],
-    "types": ["node"],
+    "types": ["bun", "node", "web-bluetooth"],
     "target": "ESNext",
     "module": "Preserve",
     "moduleDetection": "force",

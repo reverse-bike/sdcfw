@@ -10,7 +10,7 @@ import {
 	type DeviceInfo,
 	type BackupResult,
 	type CoreError,
-} from '@sdcfw/core';
+} from '@sdcfw/usb-utils';
 import { zipSync, strToU8 } from 'fflate';
 import ProgressBar from './ProgressBar';
 import { playSuccessSound, playErrorSound, playConnectedSound } from './ui';

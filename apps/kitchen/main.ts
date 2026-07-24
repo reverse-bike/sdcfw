@@ -125,6 +125,7 @@ function cleanFirmware(
 function verifyOriginal(
   flash: Buffer,
   patch: Patch,
+  imageBase = 0,
 ): { error: string | null; foundAddress?: number } {
   const { type } = patch;
 
@@ -151,11 +152,17 @@ function verifyOriginal(
   }
 
   const { address } = patch;
+  const offset = address - imageBase;
+  if (offset < 0 || offset >= flash.length) {
+    return {
+      error: `Address ${toHex(address)} is outside the firmware image`,
+    };
+  }
 
   switch (type) {
     case "string": {
       const buf = Buffer.from(patch.original, "ascii");
-      const actual = flash.subarray(address, address + buf.length);
+      const actual = flash.subarray(offset, offset + buf.length);
       if (!actual.equals(buf)) {
         return {
           error: `Expected "${patch.original}" but found "${actual.toString("ascii")}"`,
@@ -165,7 +172,7 @@ function verifyOriginal(
     }
 
     case "uint8": {
-      const actual = flash.readUInt8(address);
+      const actual = flash.readUInt8(offset);
       if (actual !== patch.original) {
         return {
           error: `Expected 0x${patch.original.toString(16).padStart(2, "0")} but found 0x${actual.toString(16).padStart(2, "0")}`,
@@ -175,7 +182,7 @@ function verifyOriginal(
     }
 
     case "uint16": {
-      const actual = flash.readUInt16BE(address);
+      const actual = flash.readUInt16BE(offset);
       if (actual !== patch.original) {
         return {
           error: `Expected 0x${patch.original.toString(16).padStart(4, "0")} but found 0x${actual.toString(16).padStart(4, "0")}`,
@@ -185,7 +192,7 @@ function verifyOriginal(
     }
 
     case "uint32": {
-      const actual = flash.readUInt32BE(address);
+      const actual = flash.readUInt32BE(offset);
       if (actual !== patch.original) {
         return {
           error: `Expected ${toHex(patch.original)} but found ${toHex(actual)}`,
@@ -196,7 +203,7 @@ function verifyOriginal(
 
     case "bytes": {
       const original = Buffer.from(patch.original);
-      const actual = flash.subarray(address, address + original.length);
+      const actual = flash.subarray(offset, offset + original.length);
       if (!actual.equals(original)) {
         return {
           error: `Expected [${patch.original.map((b) => "0x" + b.toString(16).padStart(2, "0")).join(", ")}] but found [${Array.from(actual).map((b) => "0x" + b.toString(16).padStart(2, "0")).join(", ")}]`,
@@ -213,6 +220,7 @@ function applyPatch(
   flash: Buffer,
   patch: Patch,
   foundAddress?: number,
+  imageBase = 0,
 ): void {
   console.log(`  Applying: ${patch.description}`);
 
@@ -230,40 +238,45 @@ function applyPatch(
 
     case "string": {
       console.log(`    Address: ${toHex(patch.address)}`);
+      const offset = patch.address - imageBase;
       const buf = Buffer.from(patch.data, "ascii");
       console.log(`    Writing: "${patch.data}" (${buf.length} bytes)`);
-      buf.copy(flash, patch.address);
+      buf.copy(flash, offset);
       break;
     }
 
     case "uint8": {
       console.log(`    Address: ${toHex(patch.address)}`);
+      const offset = patch.address - imageBase;
       console.log(`    Writing: 0x${patch.data.toString(16).padStart(2, "0")}`);
-      flash.writeUInt8(patch.data, patch.address);
+      flash.writeUInt8(patch.data, offset);
       break;
     }
 
     case "uint16": {
       console.log(`    Address: ${toHex(patch.address)}`);
+      const offset = patch.address - imageBase;
       console.log(
         `    Writing: 0x${(patch.data & 0xffff).toString(16).padStart(4, "0")}`,
       );
-      flash.writeUInt16BE(patch.data, patch.address);
+      flash.writeUInt16BE(patch.data, offset);
       break;
     }
 
     case "uint32": {
       console.log(`    Address: ${toHex(patch.address)}`);
+      const offset = patch.address - imageBase;
       console.log(`    Writing: ${toHex(patch.data)}`);
-      flash.writeUInt32BE(patch.data, patch.address);
+      flash.writeUInt32BE(patch.data, offset);
       break;
     }
 
     case "bytes": {
       console.log(`    Address: ${toHex(patch.address)}`);
+      const offset = patch.address - imageBase;
       const buf = Buffer.from(patch.data);
       console.log(`    Writing: ${buf.length} bytes`);
-      buf.copy(flash, patch.address);
+      buf.copy(flash, offset);
       break;
     }
 
@@ -413,6 +426,69 @@ async function patch(patchFilePath: string): Promise<void> {
     `  Size: ${flash.length} bytes (${(flash.length / 1024).toFixed(1)} KB)\n`,
   );
 
+  if (
+    patchFile.expectedSize !== undefined &&
+    flash.length !== patchFile.expectedSize
+  ) {
+    throw new Error(
+      `Unexpected input size: ${flash.length} bytes (expected ${patchFile.expectedSize})`,
+    );
+  }
+
+  if (patchFile.expectedSha256) {
+    const hasher = new Bun.CryptoHasher("sha256");
+    hasher.update(flash);
+    const actualSha256 = hasher.digest("hex");
+    if (actualSha256 !== patchFile.expectedSha256) {
+      throw new Error(
+        `Input is already patched or is an unsupported firmware image.\n` +
+          `  Actual SHA-256:   ${actualSha256}\n` +
+          `  Expected SHA-256: ${patchFile.expectedSha256}`,
+      );
+    }
+    console.log(`  SHA-256: ${actualSha256}\n`);
+  }
+
+  const imageBase = patchFile.imageBase ?? 0;
+  if (patchFile.format === "raw") {
+    console.log("Step 3: Verifying original bytes...");
+    let verificationFailed = false;
+    const foundAddresses = new Map<Patch, number>();
+    for (const item of patchFile.patches) {
+      const result = verifyOriginal(flash, item, imageBase);
+      if (result.error) {
+        const location =
+          item.type === "find-replace" ? "" : ` at ${toHex(item.address)}`;
+        console.log(`  FAIL: ${item.description}${location}: ${result.error}`);
+        verificationFailed = true;
+      } else {
+        if (result.foundAddress !== undefined) {
+          foundAddresses.set(item, result.foundAddress);
+        }
+        console.log(`  OK: ${item.description}`);
+      }
+    }
+    if (verificationFailed) {
+      throw new Error(
+        "Original byte verification failed; this patch is for a different firmware version.",
+      );
+    }
+
+    console.log("\nStep 4: Applying patches...");
+    for (const item of patchFile.patches) {
+      applyPatch(flash, item, foundAddresses.get(item), imageBase);
+    }
+
+    console.log("\nStep 5: Writing patched firmware...");
+    fs.writeFileSync(outputPath, flash);
+    const outputHasher = new Bun.CryptoHasher("sha256");
+    outputHasher.update(flash);
+    console.log(`  SHA-256: ${outputHasher.digest("hex")}`);
+    console.log(`  Saved to: ${outputPath}`);
+    console.log(`\nPatching complete: ${patchFile.patches.length} patches applied.`);
+    return;
+  }
+
   // Read bootloader settings
   console.log("Step 3: Reading bootloader settings...");
   const blSettings = readBootloaderSettings(flash);
@@ -464,7 +540,7 @@ async function patch(patchFilePath: string): Promise<void> {
   const foundAddresses: Map<Patch, number> = new Map();
 
   for (const patch of patchFile.patches) {
-    const result = verifyOriginal(flash, patch);
+    const result = verifyOriginal(flash, patch, imageBase);
     if (result.error) {
       console.log(`  FAIL: ${patch.description}`);
       if (patch.type === "find-replace") {
@@ -500,7 +576,7 @@ async function patch(patchFilePath: string): Promise<void> {
     console.log("  No patches defined.\n");
   } else {
     for (const patch of patchFile.patches) {
-      applyPatch(flash, patch, foundAddresses.get(patch));
+      applyPatch(flash, patch, foundAddresses.get(patch), imageBase);
     }
     console.log();
   }
@@ -556,8 +632,10 @@ async function patch(patchFilePath: string): Promise<void> {
   console.log(`  Settings CRC:        ${toHex(settingsCrc)}`);
   console.log(`\nPatching complete!\n`);
   console.log(`To flash the patched firmware:`);
-  console.log(`  bun run farm erase`);
-  console.log(`  bun run farm restore ${outputPath} ./patched_backup/metadata.json`);
+  console.log(`  bun apps/nrf-farm/main.ts erase`);
+  console.log(
+    `  bun apps/nrf-farm/main.ts restore ${outputPath} ./patched_backup/uicr.bin`,
+  );
 }
 
 // ============================================================================

@@ -98,6 +98,14 @@ export interface PatchFile {
   firmwarePath: string;
   /** Postfix to add to output filename (e.g., ".patched" -> "flash.patched.bin") */
   outputPostfix: string;
+  /** Firmware container rules. Defaults to the legacy nRF52 dump format. */
+  format?: "nrf52-dump" | "raw";
+  /** Memory address corresponding to file offset zero. Defaults to zero. */
+  imageBase?: number;
+  /** Exact pristine input size, used to reject unknown raw images. */
+  expectedSize?: number;
+  /** Exact pristine input SHA-256, used to reject patched or unknown images. */
+  expectedSha256?: string;
   /**
    * Regions to preserve when cleaning the firmware dump.
    * If defined, the output will be filled with 0xFF except for these regions.
