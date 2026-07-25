@@ -33,6 +33,13 @@ mc-311-patched-v1.0.0.zip
 Display archives use `target: "nrf"`, the roles `flash` and `uicr`, and
 `provides.nrfVersion`. Their entry names stay `flash.bin` and `uicr.bin`,
 which the restore tool and every backup a user has ever downloaded rely on.
+Adding a manifest to one is backward compatible, since that tool looks entries
+up by name and ignores anything else.
+
+`source` records the image a release was built from, by repository path and
+hash, so a rebuild is provably identical. It is not an archive entry: for
+display releases the source is also called `flash.bin`, and naming it twice
+with two hashes reads as a contradiction to anyone checking by hand.
 
 Hashes are lowercase hex SHA-256 over the raw bytes, so they can be checked
 with `shasum -a 256`. `readPackage` verifies every file against them.
