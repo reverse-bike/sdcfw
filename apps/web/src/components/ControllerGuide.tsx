@@ -419,7 +419,7 @@ export default function ControllerGuide(props: ControllerGuideProps) {
       </Step>
 
       {/* Step 2 */}
-      <Step number={2} title="Prepare the update" locked={!pkg()} done={armed()}>
+      <Step number={2} title="Enter update mode" locked={!pkg()} done={armed()}>
         <p class="mb-4 text-gray-600">
           Switches your display into update mode, ready to receive the new firmware. Its screen will
           say <b>Updating Firmware</b> when it is ready for the next step.
@@ -434,7 +434,7 @@ export default function ControllerGuide(props: ControllerGuideProps) {
           </div>
         </Show>
         <Button onClick={() => arm(false)} disabled={!idle() || !pkg()}>
-          {busy() === "arming" ? "Preparing…" : "Prepare the update"}
+          {busy() === "arming" ? "Switching…" : "Enter update mode"}
         </Button>
         <Show when={needsPicker() && !armed()}>
           <span class="ml-3">
@@ -480,7 +480,7 @@ export default function ControllerGuide(props: ControllerGuideProps) {
             <StatusMessage tone="success">
               {outcome() === "sent"
                 ? "Firmware sent. Your bike is installing it now. Wait for its normal screen, then check it below."
-                : "Practice run finished, and nothing was written. Power-cycle the bike, then prepare the update again to do it for real."}
+                : "Practice run finished, and nothing was written. Power-cycle the bike, then enter update mode again to do it for real."}
             </StatusMessage>
           }
         >
