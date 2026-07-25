@@ -421,9 +421,8 @@ export default function ControllerGuide(props: ControllerGuideProps) {
       {/* Step 2 */}
       <Step number={2} title="Prepare the update" locked={!pkg()} done={armed()}>
         <p class="mb-4 text-gray-600">
-          This clears room on your display for the new firmware and restarts it into update mode.
-          Nothing is sent yet. Your bike stops working for a few minutes, until the update finishes.
-          Its screen will say <b>Updating Firmware</b> when it is ready for the next step.
+          Switches your display into update mode, ready to receive the new firmware. Its screen will
+          say <b>Updating Firmware</b> when it is ready for the next step.
         </p>
         <Show when={alreadyRunning()}>
           <div class="mb-4">
