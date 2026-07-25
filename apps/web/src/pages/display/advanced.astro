@@ -1,0 +1,27 @@
+---
+import Page from '../../layouts/Page.astro';
+import AdvancedTools from '../../components/AdvancedTools';
+import Callout from '../../components/Callout';
+---
+
+<Page
+	title="Display tools"
+	lead="The individual display tools, without the guide around them."
+	back={{ href: '/display', label: 'Display guide' }}
+	links={[{ href: '/firmware#display', label: 'Custom firmware' }]}
+>
+
+		<div class="mb-6">
+			<Callout type="warning" title="For development, not for updating your bike">
+				These run one operation at a time, in whatever order you click them, with none of the
+				checks or ordering the guide applies, including backing up before anything is
+				overwritten. They may not behave the way you expect. If you came here to install
+				firmware, use the <a href="/display" class="underline">display guide</a> instead.
+			</Callout>
+		</div>
+
+		<div id="tools-container">
+			<AdvancedTools client:only="solid-js" />
+		</div>
+	
+</Page>

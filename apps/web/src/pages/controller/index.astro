@@ -1,0 +1,35 @@
+---
+import { getCollection } from "astro:content";
+import ControllerGuide from "../../components/ControllerGuide";
+import type { FirmwareRelease } from "../../components/controllerFlash";
+import Page from "../../layouts/Page.astro";
+
+const entries = await getCollection(
+  "firmware",
+  ({ id, data }) => !id.startsWith("_") && data.target === "controller",
+);
+
+const releases: FirmwareRelease[] = entries
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
+  .map((entry) => ({
+    id: entry.id,
+    name: entry.data.name,
+    version: entry.data.version,
+    description: entry.data.description,
+    path: entry.data.path,
+    experimental: entry.data.experimental,
+    ...(entry.data.requires ? { requires: entry.data.requires } : {}),
+  }));
+---
+
+<Page
+  title="Motor controller firmware"
+  lead="Update your motor controller with a custom build, or put it back to stock. Everything happens over Bluetooth, with no cables and nothing to take apart."
+  back={{ href: "/", label: "Back to home" }}
+  links={[
+    { href: "/controller/advanced", label: "Advanced tools" },
+    { href: "/firmware#controller", label: "Custom firmware" },
+  ]}
+>
+  <ControllerGuide client:only="solid-js" releases={releases} />
+</Page>

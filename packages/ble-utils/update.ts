@@ -179,6 +179,13 @@ export async function armControllerUpdate(
   return crc;
 }
 
+export interface TransferProgress {
+  /** Which object is moving: the signed init packet, or the firmware itself */
+  phase: "init" | "firmware";
+  bytesSent: number;
+  totalBytes: number;
+}
+
 export interface FirmwareTransferOptions {
   executeFirmware?: boolean;
   chunkSize?: number;
@@ -186,6 +193,8 @@ export interface FirmwareTransferOptions {
   prn?: number;
   finalizeSettleMs?: number;
   log?: LogFn;
+  /** Reports transfer position, for driving a progress bar */
+  onProgress?: (progress: TransferProgress) => void;
 }
 
 export interface DfuTransportOptions {
@@ -228,6 +237,9 @@ export async function transferControllerFirmware(
 ): Promise<{ firmwareTransferred: boolean }> {
   const log = options.log ?? (() => {});
   const transport = validateDfuTransportOptions(options);
+  const report = (phase: TransferProgress["phase"], bytesSent: number, totalBytes: number): void =>
+    options.onProgress?.({ phase, bytesSent, totalBytes });
+
   const client = await DfuClient.connect(server, {
     chunkSize: transport.chunkSize,
     log,
@@ -235,6 +247,7 @@ export async function transferControllerFirmware(
   await client.setPrn(transport.prn);
 
   log("transferring signed init packet");
+  report("init", 0, dat.length);
   const commandSelection = await client.select(0x01);
   const commandCrc = crc32Ieee(dat);
   if (commandSelection.offset === 0) {
@@ -243,6 +256,7 @@ export async function transferControllerFirmware(
       expectedCrc: commandCrc,
       executeAttempts: 5,
       executeRetryDelayMs: 2_000,
+      onBytes: (sent) => report("init", sent, dat.length),
     });
   } else if (commandSelection.offset === dat.length && commandSelection.crc === commandCrc) {
     log("init packet already present; retrying execute");
@@ -253,6 +267,7 @@ export async function transferControllerFirmware(
     );
   }
   log("init packet accepted");
+  report("init", dat.length, dat.length);
 
   if (!(options.executeFirmware ?? false)) {
     log("dry run complete; no firmware data was sent");
@@ -278,6 +293,7 @@ export async function transferControllerFirmware(
   }
 
   let offset = selection.offset;
+  report("firmware", offset, bin.length);
   while (offset < bin.length) {
     const objectBase = Math.floor(offset / objectSize) * objectSize;
     const end = Math.min(objectBase + objectSize, bin.length);
@@ -291,6 +307,7 @@ export async function transferControllerFirmware(
       expectedOffset: end,
       expectedCrc: crc32Ieee(bin.subarray(0, end)),
       executeTimeoutMs: isLast ? 120_000 : 15_000,
+      onBytes: (sent) => report("firmware", sent, bin.length),
     });
     offset = end;
   }

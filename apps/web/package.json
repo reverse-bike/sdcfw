@@ -9,8 +9,10 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/check": "catalog:",
     "@astrojs/solid-js": "catalog:",
     "@sdcfw/ble-utils": "workspace:*",
+    "@sdcfw/firmware-utils": "workspace:*",
     "@sdcfw/usb-utils": "workspace:*",
     "@tailwindcss/vite": "catalog:",
     "astro": "catalog:",
@@ -22,6 +24,7 @@
   "devDependencies": {
     "@tailwindcss/typography": "catalog:",
     "@types/w3c-web-usb": "catalog:",
-    "@types/web-bluetooth": "catalog:"
+    "@types/web-bluetooth": "catalog:",
+    "typescript": "catalog:"
   }
 }

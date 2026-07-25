@@ -1,114 +1,132 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import GuidedTutorial from '../components/GuidedTutorial';
-import Callout from '../components/Callout';
-import Icon from '../components/Icon';
+import Page from "../layouts/Page.astro";
+import Callout from "../components/Callout";
+
+const paths = [
+    {
+        href: "/controller",
+        eyebrow: "Start here",
+        title: "Motor controller",
+        summary: "Change how your bike delivers power.",
+        body: "Runs over Bluetooth from this page. Nothing to buy, nothing to open, nothing to solder. Takes a few minutes, and you can put the factory firmware back the same way.",
+        cta: "Update the motor controller",
+        featured: true,
+    },
+    {
+        href: "/display",
+        eyebrow: "Advanced",
+        title: "Display",
+        summary: "Change the display module itself.",
+        body: "Needs a debug probe wired to test points inside the display, so you have to open the case. Back up your original firmware first. The guide walks you through it.",
+        cta: "Update the display",
+        featured: false,
+    },
+];
 ---
 
-<Layout>
-	<div class="container mx-auto px-4 py-8 max-w-4xl">
-		<!-- Hero Section -->
-		<div class="text-center mb-12">
-			<img
-				src="/sd-sk-logo.webp"
-				alt="Skeleton Key Logo"
-				class="mx-auto mb-6 max-w-xs"
-			/>
-			<h1 class="text-4xl font-bold mb-4">Reverse.bike Firmware Tools</h1>
-			<p class="text-xl text-gray-600 mb-6">
-				Backup, restore, and customize Super73 ebike firmware directly from your browser.
-			</p>
-			<nav class="flex justify-center gap-6 text-sm">
-				<a href="/advanced" class="text-blue-500 hover:underline">Advanced Tools</a>
-				<a href="/firmware" class="text-blue-500 hover:underline">Custom Firmware</a>
-				<a href="https://github.com/reverse-bike/sdcfw" target="_blank" rel="noopener" class="text-blue-500 hover:underline">GitHub</a>
-				<a href="https://discord.gg/STvgARZYaw" target="_blank" rel="noopener" class="text-blue-500 hover:underline">Discord</a>
-			</nav>
-		</div>
+<Page>
+        <div class="mb-12 text-center">
+            <img
+                src="/sd-sk-logo.webp"
+                alt="Skeleton Key Logo"
+                class="mx-auto mb-6 max-w-xs"
+            />
+            <h1 class="mb-4 text-4xl font-bold">Reverse.bike Firmware Tools</h1>
+            <p class="mb-6 text-xl text-gray-600">
+                Back up, restore, and customize Super73 ebike firmware, straight
+                from your browser.
+            </p>
+            <nav class="flex justify-center gap-6 text-sm">
+                <a href="/firmware" class="text-blue-500 hover:underline"
+                    >Firmware</a
+                >
+                <a
+                    href="https://github.com/reverse-bike/sdcfw"
+                    target="_blank"
+                    rel="noopener"
+                    class="text-blue-500 hover:underline">GitHub</a
+                >
+                <a
+                    href="https://discord.gg/STvgARZYaw"
+                    target="_blank"
+                    rel="noopener"
+                    class="text-blue-500 hover:underline">Discord</a
+                >
+            </nav>
+        </div>
 
-		<!-- Browser Support Warning -->
-		<div class="mb-8">
-			<Callout type="info" title="Browser requirement">
-				This tool requires Chrome, Edge, or another Chromium-based browser for WebUSB support. Works on Android with Chrome. <span class="text-blue-600">Does not work on iOS</span> (Apple doesn't allow real Chrome on iPhones/iPads).
-			</Callout>
-		</div>
+        <Callout type="info" title="Browser requirement">
+            Both guides need Chrome, Edge, or another Chromium browser, on
+            desktop or Android.
+            <span class="text-blue-600"> Neither works on iOS</span>, because
+            Apple does not allow real Chrome on iPhones or iPads.
+        </Callout>
 
-		<!-- What You'll Need -->
-		<section class="mb-12">
-			<h2 class="text-2xl font-bold mb-4">What You'll Need</h2>
-			<div class="bg-white border border-gray-200 rounded-lg p-6">
-				<ul class="space-y-4">
-					<li class="flex items-start">
-						<span class="text-green-500 mr-3 mt-1">
-							<Icon type="checkmark" class="w-5 h-5" />
-						</span>
-						<div>
-							<strong class="text-gray-900">Raspberry Pi Debug Probe</strong>
-							<span class="text-sm text-gray-500 ml-2">(Recommended)</span>
-							<p class="text-gray-600 text-sm mt-1">
-								A low-cost SWD debug probe that works perfectly with this tool. Available from the{" "}
-								<a href="https://www.raspberrypi.com/products/debug-probe/" target="_blank" rel="noopener" class="text-blue-500 hover:underline">Raspberry Pi store</a>
-								{" "}or major electronics retailers.
-							</p>
-						</div>
-					</li>
-					<li class="flex items-start">
-						<span class="text-green-500 mr-3 mt-1">
-							<Icon type="checkmark" class="w-5 h-5" />
-						</span>
-						<div>
-							<strong class="text-gray-900">Jumper wires</strong>
-							<span class="text-sm text-gray-500 ml-2">(Included with debug probe)</span>
-							<p class="text-gray-600 text-sm mt-1">
-								Three male-ended jumper wires to connect the debug probe to the test points.
-								The GND wire will be shimmed into the white connector on the backside of the PCB (may require tape to keep in place), and the SW wires will be held in place on the test points.
-							</p>
-						</div>
-					</li>
-					<li class="flex items-start">
-						<span class="text-green-500 mr-3 mt-1">
-							<Icon type="checkmark" class="w-5 h-5" />
-						</span>
-						<div>
-							<strong class="text-gray-900">Access to test points</strong>
-							<p class="text-gray-600 text-sm mt-1">
-								You'll need to open the Diamond display to access the test points on the PCB inside.
-							</p>
-						</div>
-					</li>
-					<li class="flex items-start">
-						<span class="text-blue-500 mr-3 mt-1">
-							<Icon type="info" class="w-5 h-5" />
-						</span>
-						<div>
-							<strong class="text-gray-900">Custom firmware</strong>
-							<span class="text-sm text-gray-500 ml-2">(Optional)</span>
-							<p class="text-gray-600 text-sm mt-1">
-								If you want to flash custom firmware, download it from the <a href="/firmware" class="text-blue-500 hover:underline">custom firmware page</a> before starting.
-							</p>
-						</div>
-					</li>
-				</ul>
+        <h2 class="mb-2 text-2xl font-bold mt-10">
+            What do you want to change?
+        </h2>
+        <p class="mb-6 text-gray-600">
+            Your bike has two parts you can reflash. They are separate jobs,
+            with different requirements. You'll likely want the motor controller
+            one.
+        </p>
 
-				<figure class="mt-6">
-					<a href="/display.webp" target="_blank" rel="noopener" class="block">
-						<img
-							src="/display.webp"
-							alt="Super73 Diamond display - the device that needs to be opened"
-							class="w-full max-w-sm mx-auto rounded-lg border border-gray-200 hover:opacity-90 transition-opacity cursor-zoom-in"
-						/>
-					</a>
-					<figcaption class="text-sm text-gray-500 mt-2 text-center">
-						The Diamond display
-					</figcaption>
-				</figure>
-			</div>
-		</section>
+        <div class="mb-10 grid gap-6 sm:grid-cols-2">
+            {
+                paths.map((path) => (
+                    <a
+                        href={path.href}
+                        class={`flex flex-col rounded-xl border bg-white p-6 transition hover:shadow-md ${
+                            path.featured
+                                ? "border-blue-300 ring-1 ring-blue-100"
+                                : "border-gray-200"
+                        }`}
+                    >
+                        <span
+                            class={`text-xs font-semibold tracking-wide uppercase ${
+                                path.featured
+                                    ? "text-blue-600"
+                                    : "text-gray-500"
+                            }`}
+                        >
+                            {path.eyebrow}
+                        </span>
+                        <h3 class="mt-1 text-xl font-bold">{path.title}</h3>
+                        <p class="mt-1 font-medium text-gray-700">
+                            {path.summary}
+                        </p>
+                        <p class="mt-2 grow text-sm text-gray-600">
+                            {path.body}
+                        </p>
+                        <span
+                            class={`mt-5 rounded-lg px-4 py-2 text-center font-semibold ${
+                                path.featured
+                                    ? "bg-blue-500 text-white"
+                                    : "border border-gray-300 text-gray-700"
+                            }`}
+                        >
+                            {path.cta}
+                        </span>
+                    </a>
+                ))
+            }
+        </div>
 
-		<!-- Step-by-Step Tutorial with Inline Tools -->
-		<section class="mb-12">
-			<h2 class="text-2xl font-bold mb-4">Step-by-Step Guide</h2>
-			<GuidedTutorial client:only="solid-js" />
-		</section>
-	</div>
-</Layout>
+        <section class="mt-12">
+            <h2 class="mb-4 text-2xl font-bold">Before you start</h2>
+            <div
+                class="rounded-lg border border-gray-200 bg-white p-6 text-gray-600"
+            >
+                <p>
+                    Custom firmware is made by owners, not by Super73. It will
+                    likely void your warranty, may affect whether your bike
+                    complies with local rules, and comes with no guarantee. Read
+                    what a release changes on the{" "}
+                    <a href="/firmware" class="text-blue-500 hover:underline"
+                        >firmware page</a
+                    > before you install it.
+                </p>
+            </div>
+        </section>
+    
+</Page>

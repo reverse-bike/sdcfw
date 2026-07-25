@@ -4,9 +4,32 @@ This expands the final paragraph of `SPEC2.md`, which deferred the web app work.
 The BLE package, the `mc-farm` CLI, and Kitchen's controller patch are done; this
 covers bringing the same capability to the browser over Web Bluetooth.
 
-Current state: `apps/web/src/pages/mc-farm.astro` is an unlinked prototype page
-with two working tools, a version-info reader and a two-step "enter DFU mode"
-tool. Both are proven against real hardware.
+## Current state
+
+Built and, except where noted, proven on hardware:
+
+- **Packaging**: `@sdcfw/firmware-utils`, `kitchen patch --zip`, and three
+  published archives.
+- **`/controller`**: the guided flash, end to end, including going to stock and
+  back.
+- **`/controller/advanced`**: the individual tools. Read version info, enter
+  DFU mode, and transfer unpublished firmware from an archive or a raw
+  `.bin`/`.dat` pair, defaulting to a dry run like the CLI and exposing the
+  chunk, object size, and PRN knobs.
+- **Site structure**: home offers the controller and display paths, the display
+  guide moved to `/display` with its tools at `/display/advanced`, and
+  `/firmware` documents both.
+
+The site layout is:
+
+```text
+/                     choose a path
+  /firmware           every published release
+  /controller         guided controller flash
+    /controller/advanced
+  /display            guided display flash
+    /display/advanced
+```
 
 ## Reference: what the CLI does
 
@@ -15,11 +38,11 @@ tool. Both are proven against real hardware.
 1. Load `.bin` and `.dat`, parse the init packet, check `appSize` against the
    binary length and that the firmware class is EXT1 (`0x80`).
 2. Scan for the manufacturer ID, select a bike, confirm with the operator.
-3. Connect and call `armControllerUpdate` — writes the F0CC packet carrying the
+3. Connect and call `armControllerUpdate`, which writes the F0CC packet carrying the
    image CRC, waits ~8s for the external staging area to erase, then requests a
    buttonless DFU reboot.
 4. Disconnect, wait 5s, scan for the Nordic DFU service, connect.
-5. Call `transferControllerFirmware` — sends the signed init packet, then the
+5. Call `transferControllerFirmware`, which sends the signed init packet, then the
    firmware data objects with periodic checkpoints, then executes.
 6. The display application programs the controller from external flash.
 
@@ -61,9 +84,16 @@ in `packages/ble-utils`.
 - **A failed or stalled transfer is safe.** Data lands in the display's external
   staging flash, and the controller refuses to program unless its own CRC check
   matches the CRC we supplied in the F0CC arm packet. An interrupted transfer
-  means: power-cycle, re-arm, retry. The UI should say this plainly — it is the
-  difference between a tool people trust and one they abandon halfway.
+  means: power-cycle, re-arm, retry. The UI should say this plainly, since it is
+  the difference between a tool people trust and one they abandon halfway.
 - **Leaving DFU mode is a power cycle.** No firmware is at risk in the meantime.
+- **Re-flashing what is already installed appears to do nothing.** Observed on
+  hardware: the transfer completes and the bike reboots, but the display does
+  not show its updating screen. Harmless as far as we can tell, and the tool
+  says so up front rather than leaving it looking like a failure. Which layer
+  skips the work is not yet established. The display may compare the staged
+  image against what the controller runs, or the DFU session may simply resend
+  nothing when the bootloader already holds identical objects.
 - The one genuinely sensitive window is the display programming the controller
   after the final execute. Users are told not to power off during it.
 
@@ -82,7 +112,7 @@ itself.
 4. **Preflight gate.** Two independent checks. Integrity: the archive's file
    hashes match its manifest. Applicability: the bike's `controllerVariant`,
    `controllerVersion`, and `firmwareVariant` satisfy the compatibility declared
-   by the _content entry_ (not the archive — see Firmware packaging). A mismatch
+   by the _content entry_ (not the archive; see Firmware packaging). A mismatch
    blocks, it does not warn. This is the biggest safety improvement over the
    CLI, which only validates the package against itself. Also validate
    `appSize` and the EXT1 class as the CLI does.
@@ -108,9 +138,8 @@ itself.
 Failure at any point after step 5 offers "Reconnect and resume", which re-picks
 the DFU target and calls `transferControllerFirmware` again with the same
 package. The transfer already resumes from the device's reported offset when the
-CRC prefix matches, so this is mostly UI work. The selected firmware ID is kept
-in `sessionStorage` so a page reload can re-fetch the package and offer to
-resume; uploaded files cannot survive a reload and the tool should say so.
+CRC prefix matches, so this needs no extra machinery. Reloading the page starts
+over, which is fine: the read step is quick and the transfer resumes anyway.
 
 No dry run in the guided flow. Step 2 is the connectivity rehearsal, the data
 phase is resumable, and an extra "nothing happened" step mostly confuses.
@@ -173,7 +202,7 @@ mc-311-patched-v1.0.0.zip
   `shasum -a 256` and with `crypto.subtle.digest` in the browser.
 - File sizes and an image CRC are deliberately absent: the hash subsumes both,
   and the arm CRC is computed from the same bytes at flash time.
-- `appSize` and the EXT1 firmware class are absent for the same reason — they
+- `appSize` and the EXT1 firmware class are absent for the same reason: they
   are parsed from the `.dat` and validated at runtime.
 - `schema` makes a future format change fail loudly rather than misparse.
 - `version` is the archive's own release version. Together with `target` and
@@ -194,9 +223,9 @@ mc-311-patched-v1.0.0.zip
   string, since the display exposes it through the Device Information Service
   and patching cannot safely change it.
 - Nordic's `manifest.json` is **not** included. Nothing outside our own tooling
-  can flash these packages — the controller is programmed by the display over a
-  hybrid external-flash path — so an nrfutil-compatible manifest would be a dead
-  file.
+  can flash these packages, since the controller is programmed by the display
+  over a hybrid external-flash path, so an nrfutil-compatible manifest would be a
+  dead file.
 - No compatibility data lives in the archive. See below.
 
 Display archives use the same manifest with `target: "nrf"` and the roles
@@ -223,7 +252,7 @@ release:
   is likely the right shape, because the accepted set has to cover the stock
   version, the versions our own releases report, and any version that only
   differs in the two trailing digits. Re-flashing a bike that already reports
-  the same version as the archive is explicitly allowed — it is safe, and the
+  the same version as the archive is explicitly allowed. It is safe, and the
   gate must not treat it as a downgrade or a no-op.
 
 Users who bring their own archives to the advanced tools get integrity checking
@@ -232,14 +261,14 @@ but no applicability gating; compatibility is their responsibility.
 ### Producing archives
 
 Patching an nRF dump and patching a controller image have diverged enough that
-the descriptor becomes a discriminated union — `NrfPatchFile | McPatchFile` on a
-`target` field — rather than one shape with fields that only apply half the
+the descriptor becomes a discriminated union, `NrfPatchFile | McPatchFile` on a
+`target` field, rather than one shape with fields that only apply half the
 time. Controller descriptors also require `expectedSize` and `expectedSha256`,
 and `target` feeds the archive manifest directly.
 
 Both targets share a shape: a primary image that gets patched, plus one
 companion file that ships alongside it unmodified. The companion is declared in
-the descriptor rather than passed at the command line — `datPath` for the
+the descriptor rather than passed at the command line: `datPath` for the
 controller's init packet, `uicrPath` for the nRF's UICR dump. Today every
 controller release ships the same `.dat`, but that will not necessarily stay
 true.
@@ -260,7 +289,7 @@ guard enough.
 The pristine image is a release too. `firmware/mc/230-BLUETOOTH-EXT1-310/
 GD_S73Rx_H104_S310US_20221020.bin` flashes by the same path and is what makes
 "go back to stock" possible, so it is packaged and published exactly like a
-patched release — declaring `controllerVersion: 310`, which Kitchen names
+patched release, declaring `controllerVersion: 310`, which Kitchen names
 `mc-310-stock-v1.0.0.zip`.
 
 That means a release descriptor is not necessarily a _patch_: a stock release is
@@ -289,7 +318,7 @@ release: {
   ```
 
   giving `mc-311-patched-v1.0.0.zip`, `mc-310-stock-v1.0.0.zip`, and
-  `nrf-221122-patched-v1.0.0.zip` — which is exactly what the existing display
+  `nrf-221122-patched-v1.0.0.zip`, which is exactly what the existing display
   archive is already called, so it needs no rename. `patched` versus `stock`
   comes from whether the descriptor has any patches, the same rule that names
   the loose `.bin`. The name exists for humans and for linking; identity for
@@ -315,17 +344,16 @@ since it exists only in content.
 Stronger, and worth having: re-run each release descriptor's pipeline and
 compare the result against the published archive's entries. That catches an
 edited patch descriptor silently diverging from firmware users have already
-installed. The existing `nrf-221122-patched-v1.0.0.zip` passes this today — its
+installed. The existing `nrf-221122-patched-v1.0.0.zip` passes this today. Its
 `flash.bin` is byte-identical to `firmware/nrf/6-221122-0/flash.patched.bin` and
 its `uicr.bin` to the pristine dump.
 
-The comparison is per-entry, not over archive bytes. The published display
-archive was built with Finder's Compress and contains `__MACOSX/._*`
-AppleDouble entries, so it cannot be reproduced byte-for-byte and should not be.
-Re-cutting it with `--zip` once available yields identical firmware without the
-junk and with a manifest; the shipped bytes users flash do not change. Archive
-writing should pin mtimes and compression level so that regenerating a release
-is otherwise deterministic.
+The comparison is per-entry, never over archive bytes. Entry timestamps are
+left to the zip writer, so two builds of the same release differ in metadata
+while carrying identical files, which is all that matters, since the manifest
+hashes pin the contents. The published display archive was additionally built
+with Finder's Compress and carries `__MACOSX/._*` AppleDouble entries, so it
+was re-cut: identical firmware, without the junk, with a manifest.
 
 ### A note on the `.dat` payload hash
 

@@ -14,265 +14,9 @@
 import fs from "fs";
 import path from "path";
 import { execSync } from "child_process";
-import crc32 from "crc-32";
-import type { CleanRegion, Patch, PatchFile } from "./patches/types";
-
-// ============================================================================
-// TYPES
-// ============================================================================
-
-interface BootloaderBank {
-  imageSize: number;
-  imageCrc: number;
-  bankCode: number;
-}
-
-interface BootloaderSettings {
-  crc: number;
-  settingsVersion: number;
-  appVersion: number;
-  bootloaderVersion: number;
-  bankLayout: number;
-  bankCurrent: number;
-  bank0: BootloaderBank;
-}
-
-// ============================================================================
-// CONSTANTS
-// ============================================================================
-
-const APP_START = 0x23000;
-const BL_SETTINGS_ADDR = 0x7f000;
-const BANK0_IMAGE_CRC_OFFSET = 28; // Offset within bootloader settings
-
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
-
-function toHex(val: number): string {
-  return "0x" + val.toString(16).toUpperCase().padStart(8, "0");
-}
-
-function readBootloaderSettings(flash: Buffer): BootloaderSettings {
-  const offset = BL_SETTINGS_ADDR;
-
-  return {
-    crc: flash.readUInt32LE(offset),
-    settingsVersion: flash.readUInt32LE(offset + 4),
-    appVersion: flash.readUInt32LE(offset + 8),
-    bootloaderVersion: flash.readUInt32LE(offset + 12),
-    bankLayout: flash.readUInt32LE(offset + 16),
-    bankCurrent: flash.readUInt32LE(offset + 20),
-    bank0: {
-      imageSize: flash.readUInt32LE(offset + 24),
-      imageCrc: flash.readUInt32LE(offset + 28),
-      bankCode: flash.readUInt32LE(offset + 32),
-    },
-  };
-}
-
-/**
- * Find all occurrences of a byte pattern in a buffer.
- * Returns an array of offsets where the pattern was found.
- */
-function findAllOccurrences(haystack: Buffer, needle: Buffer): number[] {
-  const offsets: number[] = [];
-  let pos = 0;
-
-  while (pos <= haystack.length - needle.length) {
-    const idx = haystack.indexOf(needle, pos);
-    if (idx === -1) break;
-    offsets.push(idx);
-    pos = idx + 1;
-  }
-
-  return offsets;
-}
-
-/**
- * Clean a firmware dump by filling with 0xFF and preserving only specified regions.
- */
-function cleanFirmware(flash: Buffer, regions: CleanRegion[], appEnd: number): Buffer {
-  const cleaned = Buffer.alloc(flash.length, 0xff);
-
-  for (const region of regions) {
-    const start = region.start;
-    const end = region.end === "appEnd" ? appEnd : region.end;
-
-    console.log(
-      `    ${region.description}: ${toHex(start)} - ${toHex(end)} (${end - start} bytes)`,
-    );
-
-    flash.copy(cleaned, start, start, end);
-  }
-
-  return cleaned;
-}
-
-/**
- * Verify that the original bytes at the patch address match what we expect.
- * Returns null if verification passes, or an error message if it fails.
- * For find-replace patches, also returns the found address.
- */
-function verifyOriginal(
-  flash: Buffer,
-  patch: Patch,
-  imageBase = 0,
-): { error: string | null; foundAddress?: number } {
-  const { type } = patch;
-
-  // Handle find-replace separately since it doesn't have an address
-  if (type === "find-replace") {
-    const needle = Buffer.from(patch.find);
-    const offsets = findAllOccurrences(flash, needle);
-
-    if (offsets.length === 0) {
-      return { error: "Pattern not found in firmware" };
-    }
-    if (offsets.length > 1) {
-      return {
-        error: `Pattern found ${offsets.length} times (at ${offsets.map((o) => toHex(o)).join(", ")}), expected exactly 1`,
-      };
-    }
-    if (patch.find.length !== patch.replace.length) {
-      return {
-        error: `Find (${patch.find.length} bytes) and replace (${patch.replace.length} bytes) must be same length`,
-      };
-    }
-
-    return { error: null, foundAddress: offsets[0]! };
-  }
-
-  const { address } = patch;
-  const offset = address - imageBase;
-  if (offset < 0 || offset >= flash.length) {
-    return {
-      error: `Address ${toHex(address)} is outside the firmware image`,
-    };
-  }
-
-  switch (type) {
-    case "string": {
-      const buf = Buffer.from(patch.original, "ascii");
-      const actual = flash.subarray(offset, offset + buf.length);
-      if (!actual.equals(buf)) {
-        return {
-          error: `Expected "${patch.original}" but found "${actual.toString("ascii")}"`,
-        };
-      }
-      break;
-    }
-
-    case "uint8": {
-      const actual = flash.readUInt8(offset);
-      if (actual !== patch.original) {
-        return {
-          error: `Expected 0x${patch.original.toString(16).padStart(2, "0")} but found 0x${actual.toString(16).padStart(2, "0")}`,
-        };
-      }
-      break;
-    }
-
-    case "uint16": {
-      const actual = flash.readUInt16BE(offset);
-      if (actual !== patch.original) {
-        return {
-          error: `Expected 0x${patch.original.toString(16).padStart(4, "0")} but found 0x${actual.toString(16).padStart(4, "0")}`,
-        };
-      }
-      break;
-    }
-
-    case "uint32": {
-      const actual = flash.readUInt32BE(offset);
-      if (actual !== patch.original) {
-        return {
-          error: `Expected ${toHex(patch.original)} but found ${toHex(actual)}`,
-        };
-      }
-      break;
-    }
-
-    case "bytes": {
-      const original = Buffer.from(patch.original);
-      const actual = flash.subarray(offset, offset + original.length);
-      if (!actual.equals(original)) {
-        return {
-          error: `Expected [${patch.original.map((b) => "0x" + b.toString(16).padStart(2, "0")).join(", ")}] but found [${Array.from(
-            actual,
-          )
-            .map((b) => "0x" + b.toString(16).padStart(2, "0"))
-            .join(", ")}]`,
-        };
-      }
-      break;
-    }
-  }
-
-  return { error: null };
-}
-
-function applyPatch(flash: Buffer, patch: Patch, foundAddress?: number, imageBase = 0): void {
-  console.log(`  Applying: ${patch.description}`);
-
-  switch (patch.type) {
-    case "find-replace": {
-      if (foundAddress === undefined) {
-        throw new Error("find-replace patch requires foundAddress from verification");
-      }
-      console.log(`    Found at: ${toHex(foundAddress)}`);
-      const buf = Buffer.from(patch.replace);
-      console.log(`    Writing: ${buf.length} bytes`);
-      buf.copy(flash, foundAddress);
-      break;
-    }
-
-    case "string": {
-      console.log(`    Address: ${toHex(patch.address)}`);
-      const offset = patch.address - imageBase;
-      const buf = Buffer.from(patch.data, "ascii");
-      console.log(`    Writing: "${patch.data}" (${buf.length} bytes)`);
-      buf.copy(flash, offset);
-      break;
-    }
-
-    case "uint8": {
-      console.log(`    Address: ${toHex(patch.address)}`);
-      const offset = patch.address - imageBase;
-      console.log(`    Writing: 0x${patch.data.toString(16).padStart(2, "0")}`);
-      flash.writeUInt8(patch.data, offset);
-      break;
-    }
-
-    case "uint16": {
-      console.log(`    Address: ${toHex(patch.address)}`);
-      const offset = patch.address - imageBase;
-      console.log(`    Writing: 0x${(patch.data & 0xffff).toString(16).padStart(4, "0")}`);
-      flash.writeUInt16BE(patch.data, offset);
-      break;
-    }
-
-    case "uint32": {
-      console.log(`    Address: ${toHex(patch.address)}`);
-      const offset = patch.address - imageBase;
-      console.log(`    Writing: ${toHex(patch.data)}`);
-      flash.writeUInt32BE(patch.data, offset);
-      break;
-    }
-
-    case "bytes": {
-      console.log(`    Address: ${toHex(patch.address)}`);
-      const offset = patch.address - imageBase;
-      const buf = Buffer.from(patch.data);
-      console.log(`    Writing: ${buf.length} bytes`);
-      buf.copy(flash, offset);
-      break;
-    }
-
-    default:
-      throw new Error(`Unknown patch type: ${(patch as Patch).type}`);
-  }
-}
+import { buildPackage, type PackageBuild } from "@sdcfw/firmware-utils";
+import { buildPatchedImage, toHex } from "./patcher";
+import type { PatchFile } from "./patches/types";
 
 // ============================================================================
 // KEYGEN COMMAND
@@ -371,7 +115,106 @@ export const publicKeyBytes = [
 // PATCH COMMAND
 // ============================================================================
 
-async function patch(patchFilePath: string): Promise<void> {
+interface PatchOptions {
+  /** Directory to write the loose patched image into */
+  binDir?: string;
+  /** Directory to write the firmware archive into */
+  zipDir?: string;
+}
+
+/**
+ * Package the patch output as a firmware archive.
+ *
+ * The companion file ships unmodified alongside the image: the DFU init packet
+ * for a controller, the UICR dump for a display. Display archives keep the
+ * `flash.bin` / `uicr.bin` entry names the restore tool and every existing
+ * backup rely on.
+ */
+async function writeArchive(
+  patchFile: PatchFile,
+  options: {
+    projectRoot: string;
+    zipDir: string;
+    source: Buffer;
+    sourceName: string;
+    output: Buffer;
+    outputName: string;
+  },
+): Promise<void> {
+  /** Narrows per target: a display release declares nrfVersion, a controller one controllerVersion. */
+  function requireRelease<T>(release: T | undefined): T {
+    if (!release) {
+      throw new Error(
+        `${patchFile.name} has no release block, so it cannot be packaged. ` +
+          `Add one to publish this descriptor as a firmware archive.`,
+      );
+    }
+    return release;
+  }
+
+  const kind = patchFile.patches.length > 0 ? "patched" : "stock";
+  const companionPath = path.resolve(
+    options.projectRoot,
+    patchFile.target === "controller" ? patchFile.datPath : patchFile.uicrPath,
+  );
+  if (!fs.existsSync(companionPath)) {
+    throw new Error(`Companion file not found: ${companionPath}`);
+  }
+  const companion = fs.readFileSync(companionPath);
+  // The repo-relative path, not a basename: for display releases the source is
+  // also called flash.bin, and naming it twice with two hashes reads as a
+  // contradiction to anyone checking the archive by hand.
+  const source = { name: options.sourceName, data: new Uint8Array(options.source) };
+
+  let build: PackageBuild;
+  if (patchFile.target === "controller") {
+    const release = requireRelease(patchFile.release);
+    build = {
+      target: "controller",
+      version: release.version,
+      kind,
+      controllerVersion: release.controllerVersion,
+      bin: { name: options.outputName, data: new Uint8Array(options.output) },
+      dat: { name: path.basename(companionPath), data: new Uint8Array(companion) },
+      source,
+    };
+  } else {
+    const release = requireRelease(patchFile.release);
+    build = {
+      target: "nrf",
+      version: release.version,
+      kind,
+      nrfVersion: release.nrfVersion,
+      flash: { name: "flash.bin", data: new Uint8Array(options.output) },
+      uicr: { name: "uicr.bin", data: new Uint8Array(companion) },
+      source,
+    };
+  }
+  const built = await buildPackage(build);
+
+  fs.mkdirSync(options.zipDir, { recursive: true });
+  const archivePath = path.join(options.zipDir, built.fileName);
+  fs.writeFileSync(archivePath, built.zip);
+
+  console.log(`\nArchive: ${archivePath}`);
+  console.log(`  ${(built.zip.length / 1024).toFixed(1)} KB, release ${built.manifest.version}`);
+  for (const [role, file] of Object.entries(built.manifest.files)) {
+    console.log(`  ${role}: ${file.name} (${file.sha256})`);
+  }
+
+  console.log("\nContent entry stub:");
+  console.log("---");
+  console.log(`name: ${patchFile.name}`);
+  console.log(`version: "${built.manifest.version}"`);
+  console.log(`target: ${built.manifest.target}`);
+  console.log(`path: /cfw/${built.fileName}`);
+  console.log(`date: ${new Date().toISOString().slice(0, 10)}`);
+  console.log("description: TODO");
+  console.log("compatibility: TODO");
+  console.log("---");
+}
+
+async function patch(patchFilePath: string, options: PatchOptions = {}): Promise<void> {
   if (!fs.existsSync(patchFilePath)) {
     console.error(`Error: Patch file not found: ${patchFilePath}`);
     process.exit(1);
@@ -405,8 +248,11 @@ async function patch(patchFilePath: string): Promise<void> {
   const firmwareDir = path.dirname(firmwarePath);
   const firmwareBasename = path.basename(firmwarePath, ".bin");
   const outputPostfix = patchFile.patches.length > 0 ? ".patched" : "";
-  const outputPath = path.join(firmwareDir, `${firmwareBasename}${outputPostfix}.bin`);
-  if (outputPath === firmwarePath) {
+  const outputName = `${firmwareBasename}${outputPostfix}.bin`;
+  const binDir = options.binDir ? path.resolve(options.binDir) : firmwareDir;
+  const outputPath = path.join(binDir, outputName);
+  const writeBin = options.binDir !== undefined || options.zipDir === undefined;
+  if (writeBin && outputPath === firmwarePath) {
     throw new Error(
       `Refusing to overwrite the pristine input image: ${firmwarePath}\n` +
         `  A descriptor with no patches reproduces its input, so it can only be ` +
@@ -415,200 +261,49 @@ async function patch(patchFilePath: string): Promise<void> {
   }
 
   console.log(`Input:  ${firmwarePath}`);
-  console.log(`Output: ${outputPath}\n`);
+  console.log(`Output: ${writeBin ? outputPath : "(archive only)"}\n`);
 
-  // Read input file
   console.log("Step 2: Reading input file...");
-  let flash = fs.readFileSync(firmwarePath);
-  console.log(`  Size: ${flash.length} bytes (${(flash.length / 1024).toFixed(1)} KB)\n`);
+  const sourceBytes = fs.readFileSync(firmwarePath);
+  console.log(`  Size: ${sourceBytes.length} bytes (${(sourceBytes.length / 1024).toFixed(1)} KB)`);
 
-  if (patchFile.expectedSize !== undefined && flash.length !== patchFile.expectedSize) {
-    throw new Error(
-      `Unexpected input size: ${flash.length} bytes (expected ${patchFile.expectedSize})`,
-    );
-  }
-
-  if (patchFile.expectedSha256) {
-    const hasher = new Bun.CryptoHasher("sha256");
-    hasher.update(flash);
-    const actualSha256 = hasher.digest("hex");
-    if (actualSha256 !== patchFile.expectedSha256) {
-      throw new Error(
-        `Input is already patched or is an unsupported firmware image.\n` +
-          `  Actual SHA-256:   ${actualSha256}\n` +
-          `  Expected SHA-256: ${patchFile.expectedSha256}`,
-      );
-    }
-    console.log(`  SHA-256: ${actualSha256}\n`);
-  }
-
-  const imageBase = patchFile.imageBase ?? 0;
-  if (patchFile.target === "controller") {
-    console.log("Step 3: Verifying original bytes...");
-    let verificationFailed = false;
-    const foundAddresses = new Map<Patch, number>();
-    for (const item of patchFile.patches) {
-      const result = verifyOriginal(flash, item, imageBase);
-      if (result.error) {
-        const location = item.type === "find-replace" ? "" : ` at ${toHex(item.address)}`;
-        console.log(`  FAIL: ${item.description}${location}: ${result.error}`);
-        verificationFailed = true;
-      } else {
-        if (result.foundAddress !== undefined) {
-          foundAddresses.set(item, result.foundAddress);
-        }
-        console.log(`  OK: ${item.description}`);
-      }
-    }
-    if (verificationFailed) {
-      throw new Error(
-        "Original byte verification failed; this patch is for a different firmware version.",
-      );
-    }
-
-    console.log("\nStep 4: Applying patches...");
-    for (const item of patchFile.patches) {
-      applyPatch(flash, item, foundAddresses.get(item), imageBase);
-    }
-
-    console.log("\nStep 5: Writing patched firmware...");
-    fs.writeFileSync(outputPath, flash);
-    const outputHasher = new Bun.CryptoHasher("sha256");
-    outputHasher.update(flash);
-    console.log(`  SHA-256: ${outputHasher.digest("hex")}`);
-    console.log(`  Saved to: ${outputPath}`);
-    console.log(`\nPatching complete: ${patchFile.patches.length} patches applied.`);
-    return;
-  }
-
-  // Read bootloader settings
-  console.log("Step 3: Reading bootloader settings...");
-  const blSettings = readBootloaderSettings(flash);
-
-  console.log(`  Settings Version: ${blSettings.settingsVersion}`);
-  console.log(`  App Version:      ${blSettings.appVersion}`);
-  console.log(`  Bank 0:`);
-  console.log(
-    `    Image Size: ${blSettings.bank0.imageSize} bytes (${(blSettings.bank0.imageSize / 1024).toFixed(1)} KB)`,
+  console.log("\nStep 3: Patching...");
+  const { output, nrf } = buildPatchedImage(patchFile, sourceBytes, (message) =>
+    console.log(`  ${message}`),
   );
-  console.log(`    Image CRC:  ${toHex(blSettings.bank0.imageCrc)}`);
-  console.log(`    Bank Code:  ${toHex(blSettings.bank0.bankCode)}\n`);
 
-  // Clean firmware if cleanRegions is defined
-  const appEnd = APP_START + blSettings.bank0.imageSize;
-  if (patchFile.cleanRegions && patchFile.cleanRegions.length > 0) {
-    console.log("Step 4: Cleaning firmware dump...");
-    console.log("  Preserving regions:");
-    flash = cleanFirmware(flash, patchFile.cleanRegions, appEnd) as typeof flash;
-    console.log();
+  console.log("\nStep 4: Writing output...");
+  const outputHasher = new Bun.CryptoHasher("sha256");
+  outputHasher.update(output);
+  console.log(`  SHA-256: ${outputHasher.digest("hex")}`);
+  if (writeBin) {
+    fs.mkdirSync(binDir, { recursive: true });
+    fs.writeFileSync(outputPath, output);
+    console.log(`  Saved to: ${outputPath}`);
   }
 
-  // Calculate original CRC
-  console.log("Step 5: Calculating original app CRC...");
-  const appData = flash.subarray(APP_START, APP_START + blSettings.bank0.imageSize);
-  const originalCrc = crc32.buf(appData) >>> 0;
-
-  console.log(`  App Start:    ${toHex(APP_START)}`);
-  console.log(`  App Size:     ${blSettings.bank0.imageSize} bytes`);
-  console.log(`  App End:      ${toHex(APP_START + blSettings.bank0.imageSize)}`);
-  console.log(`  Original CRC: ${toHex(originalCrc)}`);
-
-  if (originalCrc !== blSettings.bank0.imageCrc) {
-    console.log(`  Warning: CRC mismatch!`);
-    console.log(`    Expected: ${toHex(blSettings.bank0.imageCrc)}`);
-    console.log(`    Got:      ${toHex(originalCrc)}`);
-  } else {
-    console.log(`  CRC matches bootloader settings\n`);
-  }
-
-  // Verify original bytes before patching
-  console.log("Step 6: Verifying original bytes...");
-  let verificationFailed = false;
-  const foundAddresses: Map<Patch, number> = new Map();
-
-  for (const patch of patchFile.patches) {
-    const result = verifyOriginal(flash, patch, imageBase);
-    if (result.error) {
-      console.log(`  FAIL: ${patch.description}`);
-      if (patch.type === "find-replace") {
-        console.log(`    ${result.error}`);
-      } else {
-        console.log(`    At ${toHex(patch.address)}: ${result.error}`);
-      }
-      verificationFailed = true;
-    } else {
-      if (result.foundAddress !== undefined) {
-        foundAddresses.set(patch, result.foundAddress);
-        console.log(`  OK: ${patch.description} (found at ${toHex(result.foundAddress)})`);
-      } else {
-        console.log(`  OK: ${patch.description}`);
-      }
-    }
-  }
-
-  if (verificationFailed) {
-    console.error("\nError: Original byte verification failed. Aborting patch.");
-    console.error("This patch file may be for a different firmware version.\n");
-    process.exit(1);
-  }
-  console.log();
-
-  // Apply patches
-  console.log("Step 7: Applying patches...");
-  if (patchFile.patches.length === 0) {
-    console.log("  No patches defined.\n");
-  } else {
-    for (const patch of patchFile.patches) {
-      applyPatch(flash, patch, foundAddresses.get(patch), imageBase);
-    }
-    console.log();
-  }
-
-  // Calculate new CRC
-  console.log("Step 8: Calculating new app CRC...");
-  const patchedAppData = flash.subarray(APP_START, APP_START + blSettings.bank0.imageSize);
-  const newCrc = crc32.buf(patchedAppData) >>> 0;
-
-  console.log(`  New CRC: ${toHex(newCrc)}\n`);
-
-  // Update Bank 0 Image CRC in bootloader settings
-  console.log("Step 9: Updating bootloader settings...");
-  const bank0CrcAddr = BL_SETTINGS_ADDR + BANK0_IMAGE_CRC_OFFSET;
-
-  console.log(`  Bank 0 Image CRC address: ${toHex(bank0CrcAddr)}`);
-  console.log(`  Old value: ${toHex(flash.readUInt32LE(bank0CrcAddr))}`);
-
-  flash.writeUInt32LE(newCrc, bank0CrcAddr);
-
-  console.log(`  New value: ${toHex(flash.readUInt32LE(bank0CrcAddr))}\n`);
-
-  // Recalculate bootloader settings CRC
-  console.log("Step 10: Recalculating bootloader settings CRC...");
-  const settingsData = flash.subarray(BL_SETTINGS_ADDR + 4, BL_SETTINGS_ADDR + 92);
-  const settingsCrc = crc32.buf(settingsData) >>> 0;
-
-  console.log(`  Old settings CRC: ${toHex(flash.readUInt32LE(BL_SETTINGS_ADDR))}`);
-  console.log(`  New settings CRC: ${toHex(settingsCrc)}`);
-
-  flash.writeUInt32LE(settingsCrc, BL_SETTINGS_ADDR);
-  console.log(`  Updated\n`);
-
-  // Write output file
-  console.log("Step 11: Writing patched firmware...");
-  fs.writeFileSync(outputPath, flash);
-  console.log(`  Saved to: ${outputPath}\n`);
-
-  // Summary
-  console.log("Summary:");
+  console.log("\nSummary:");
   console.log("========");
-  console.log(`  Patches applied:     ${patchFile.patches.length}`);
-  console.log(`  Original app CRC:    ${toHex(originalCrc)}`);
-  console.log(`  Patched app CRC:     ${toHex(newCrc)}`);
-  console.log(`  Settings CRC:        ${toHex(settingsCrc)}`);
-  console.log(`\nPatching complete!\n`);
-  console.log(`To flash the patched firmware:`);
-  console.log(`  bun apps/nrf-farm/main.ts erase`);
-  console.log(`  bun apps/nrf-farm/main.ts restore ${outputPath} ./patched_backup/uicr.bin`);
+  console.log(`  Patches applied: ${patchFile.patches.length}`);
+  if (nrf) {
+    console.log(`  Original app CRC: ${toHex(nrf.originalCrc)}`);
+    console.log(`  Patched app CRC:  ${toHex(nrf.newCrc)}`);
+    console.log(`  Settings CRC:     ${toHex(nrf.settingsCrc)}`);
+    console.log(`\nTo flash the patched firmware:`);
+    console.log(`  bun apps/nrf-farm/main.ts erase`);
+    console.log(`  bun apps/nrf-farm/main.ts restore ${outputPath} ./patched_backup/uicr.bin`);
+  }
+
+  if (options.zipDir) {
+    await writeArchive(patchFile, {
+      projectRoot,
+      zipDir: options.zipDir,
+      source: sourceBytes,
+      sourceName: patchFile.firmwarePath,
+      output,
+      outputName,
+    });
+  }
 }
 
 // ============================================================================
@@ -616,14 +311,39 @@ async function patch(patchFilePath: string): Promise<void> {
 // ============================================================================
 
 function showUsage(): void {
-  console.log("Kitchen - nRF52 Firmware Tools");
-  console.log("==============================\n");
+  console.log("Kitchen - Firmware Tools");
+  console.log("========================\n");
   console.log("Commands:");
-  console.log("  patch <patch-file.ts>  Apply patches to firmware");
+  console.log("  patch <patch-file.ts> [--bin <dir>] [--zip <dir>]");
+  console.log("                         Apply patches to firmware");
   console.log("  keygen <output-dir>    Generate signing keys for nrfutil\n");
+  console.log("Options:");
+  console.log("  --bin <dir>  Write the loose patched image here");
+  console.log("               (defaults to the source firmware directory)");
+  console.log("  --zip <dir>  Write a firmware archive here; requires a release block.");
+  console.log("               Without --bin, no loose image is written.\n");
   console.log("Examples:");
   console.log("  bun run main.ts patch ./patches/nrf-6-221122-0.ts");
+  console.log("  bun run main.ts patch ./patches/mc-230-bluetooth-ext1-310.ts \\");
+  console.log("    --zip apps/web/public/cfw");
   console.log("  bun run main.ts keygen ./keys");
+}
+
+function parsePatchOptions(args: string[]): PatchOptions {
+  const options: PatchOptions = {};
+  for (let index = 0; index < args.length; index++) {
+    const flag = args[index];
+    if (flag !== "--bin" && flag !== "--zip") {
+      throw new Error(`Unknown option: ${flag}`);
+    }
+    const value = args[++index];
+    if (!value || value.startsWith("-")) {
+      throw new Error(`Missing directory for ${flag}`);
+    }
+    if (flag === "--bin") options.binDir = value;
+    else options.zipDir = value;
+  }
+  return options;
 }
 
 async function main(): Promise<void> {
@@ -634,10 +354,10 @@ async function main(): Promise<void> {
     case "patch":
       if (!args[1]) {
         console.error("Error: Missing patch file argument");
-        console.error("Usage: bun run main.ts patch <patch-file.ts>");
+        console.error("Usage: bun run main.ts patch <patch-file.ts> [--bin <dir>] [--zip <dir>]");
         process.exit(1);
       }
-      await patch(args[1]);
+      await patch(args[1], parsePatchOptions(args.slice(2)));
       break;
 
     case "keygen":

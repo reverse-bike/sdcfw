@@ -17,6 +17,11 @@ const patchFile: NrfPatchFile = {
   target: "nrf",
   firmwarePath: "firmware/nrf/6-221122-0/flash.bin",
   uicrPath: "firmware/nrf/6-221122-0/uicr.bin",
+  // Pins the dump this patch was written against. Without it, a truncated or
+  // garbled DAPLink read would be patched, have its CRCs recomputed to match,
+  // and ship as a bootable-looking archive.
+  expectedSize: 524_288,
+  expectedSha256: "5d0a25e819a20144dcdc4c9e380096d89b462db7b88f66593552907f81859865",
   release: {
     version: "1.0.0",
     nrfVersion: "221122",

@@ -9,6 +9,7 @@
   },
   "type": "module",
   "dependencies": {
+    "@sdcfw/firmware-utils": "workspace:*",
     "crc-32": "catalog:"
   }
 }

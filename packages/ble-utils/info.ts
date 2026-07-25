@@ -77,6 +77,15 @@ export function serialFromManufacturerData(
   return Array.from(bytes.subarray(0, 8), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
+/**
+ * Read whatever the Device Information Service exposes.
+ *
+ * Browsers return less than the CLI does: Chrome's GATT blocklist hides the
+ * serial number characteristic (0x2A25) outright, as a stable device
+ * identifier, so `serialNumber` is always absent over Web Bluetooth. The
+ * advertised serial in manufacturer data is the only browser-side substitute,
+ * and reading that needs an experimental flag.
+ */
 export async function readStandardDeviceInformation(
   server: BluetoothRemoteGATTServer,
 ): Promise<StandardDeviceInformation[]> {

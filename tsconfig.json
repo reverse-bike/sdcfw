@@ -4,6 +4,7 @@
     "paths": {
       "@sdcfw/usb-utils": ["./packages/usb-utils/index.ts"],
       "@sdcfw/ble-utils": ["./packages/ble-utils/index.ts"],
+      "@sdcfw/firmware-utils": ["./packages/firmware-utils/index.ts"],
       "@sdcfw/dapjs": ["./packages/dapjs/index.ts"]
     },
     // Environment setup & latest features

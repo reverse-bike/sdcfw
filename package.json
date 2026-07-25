@@ -10,6 +10,7 @@
       "@types/bun": "^1.2.22",
       "@types/web-bluetooth": "^0.0.21",
       "@astrojs/solid-js": "^7.0.1",
+      "@astrojs/check": "^0.9.9",
       "@tailwindcss/typography": "^0.5.20",
       "@tailwindcss/vite": "^4.3.3",
       "@types/node": "^26.1.1",
@@ -23,7 +24,7 @@
       "node-hid": "^3.3.0",
       "solid-js": "^1.9.14",
       "tailwindcss": "^4.3.3",
-      "typescript": "^7",
+      "typescript": "^6",
       "usb": "^2.18.0",
       "webbluetooth": "^3.7.0"
     }
@@ -36,6 +37,7 @@
     "web": "bun run --cwd apps/web dev",
     "web:build": "bun run --cwd apps/web build",
     "web:preview": "bun run --cwd apps/web preview",
+    "web:check": "bun run --cwd apps/web astro check",
     "typecheck": "tsc --noEmit && tsc --noEmit --project apps/web/tsconfig.json",
     "lint": "oxlint .",
     "lint:fix": "oxlint . --fix",
@@ -52,7 +54,7 @@
     "@types/web-bluetooth": "catalog:",
     "eslint-plugin-solid": "^0.14.5",
     "oxfmt": "^0.59.0",
-    "oxlint": "^1.74.0",
+    "oxlint": "^1.75.0",
     "typescript": "catalog:"
   }
 }

@@ -1,0 +1,10 @@
+{
+  "name": "@sdcfw/firmware-utils",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "fflate": "catalog:"
+  }
+}

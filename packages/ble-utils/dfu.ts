@@ -59,6 +59,8 @@ export interface DfuTransferOptions {
   executeRetryDelayMs?: number;
   expectedOffset?: number;
   expectedCrc?: number;
+  /** Called with the absolute device offset as bytes land */
+  onBytes?: (absoluteOffset: number) => void;
 }
 
 export class DfuClient {
@@ -266,7 +268,11 @@ export class DfuClient {
     }
   }
 
-  private async stream(data: Uint8Array, baseOffset = 0): Promise<void> {
+  private async stream(
+    data: Uint8Array,
+    baseOffset = 0,
+    options: Pick<DfuTransferOptions, "onBytes"> = {},
+  ): Promise<void> {
     let offset = 0;
     let writes = 0;
     let nextCheckpoint = Math.floor(baseOffset / 0x400 + 1) * 0x400;
@@ -286,6 +292,7 @@ export class DfuClient {
         );
         offset += length;
         writes++;
+        options.onBytes?.(baseOffset + offset);
       } catch (error) {
         this.log(
           `packet write failed at 0x${(baseOffset + offset).toString(16)} with chunk ${this.chunkSize}: ${error instanceof Error ? error.message : String(error)}`,
@@ -336,7 +343,9 @@ export class DfuClient {
     const baseOffset = expectedOffset - data.length;
     if (baseOffset < 0) throw new DfuError("invalid DFU transfer offsets");
 
-    await this.stream(data, baseOffset);
+    const streamOptions: Pick<DfuTransferOptions, "onBytes"> = {};
+    if (options.onBytes) streamOptions.onBytes = options.onBytes;
+    await this.stream(data, baseOffset, streamOptions);
     const result = await this.calculateChecksum();
     const expectedCrc = options.expectedCrc ?? crc32Ieee(data);
     if (result.offset !== expectedOffset) {

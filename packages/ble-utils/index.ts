@@ -53,4 +53,5 @@ export {
   validateDfuTransportOptions,
   type DfuTransportOptions,
   type FirmwareTransferOptions,
+  type TransferProgress,
 } from "./update.js";

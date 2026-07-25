@@ -1,4 +1,4 @@
-// Shared Web Bluetooth helpers for the mc-farm tools.
+// Shared Web Bluetooth helpers for the controller tools.
 
 import {
   APP_MANUFACTURER_ID,
@@ -24,7 +24,7 @@ export function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-/** Formats a device as "name [id]", matching the mc-farm CLI. */
+/** Formats a device as "name [id]", matching the CLI. */
 export function describeDevice(device: BluetoothDevice): string {
   const name = device.name ?? "(unnamed)";
   return device.id ? `${name} [${device.id}]` : name;

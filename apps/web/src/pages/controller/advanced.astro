@@ -1,0 +1,25 @@
+---
+import Callout from "../../components/Callout";
+import ControllerDfu from "../../components/ControllerDfu";
+import ControllerRead from "../../components/ControllerRead";
+import ControllerTransfer from "../../components/ControllerTransfer";
+import Page from "../../layouts/Page.astro";
+---
+
+<Page
+  title="Controller tools"
+  lead="The individual Bluetooth operations, without a guide around them."
+  back={{ href: "/controller", label: "Controller guide" }}
+  links={[{ href: "/firmware#controller", label: "Custom firmware" }]}
+>
+  <Callout type="warning" title="For development, not for updating your bike">
+    These run one operation at a time, in whatever order you click them, with none of the checks or
+    ordering the guide applies. They can leave your bike in states it would not otherwise reach, and
+    they may not behave the way you expect. If you came here to install firmware, use the{" "}
+    <a href="/controller" class="underline">controller guide</a> instead.
+  </Callout>
+
+  <ControllerRead client:only="solid-js" />
+  <ControllerDfu client:only="solid-js" />
+  <ControllerTransfer client:only="solid-js" />
+</Page>

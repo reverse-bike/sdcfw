@@ -91,8 +91,8 @@ export interface CleanRegion {
 /**
  * Marks a descriptor as one that ships as a firmware archive.
  *
- * Release metadata describes the *output* image. Provenance — which firmware
- * was patched to produce it — is carried by the patch file's `name`.
+ * Release metadata describes the *output* image. Provenance, meaning which
+ * firmware was patched to produce it, is carried by the patch file's `name`.
  *
  * Kitchen composes the archive filename from these fields and the target; the
  * name is for humans and for linking, and is never parsed to recover them.

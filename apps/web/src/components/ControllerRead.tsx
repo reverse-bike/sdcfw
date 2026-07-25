@@ -1,10 +1,13 @@
 import { For, Show, createSignal } from "solid-js";
 import { connect, hex, readVersionInfo, type ModuleVersionInfo } from "@sdcfw/ble-utils";
-import { describeDevice, errorMessage, requestAppDevice, safeDisconnect } from "./mcFarmBle";
+import Button from "./Button";
+import StatusMessage from "./StatusMessage";
+import ToolCard from "./ToolCard";
+import { describeDevice, errorMessage, requestAppDevice, safeDisconnect } from "./controllerBle";
 
 type ReadState = "idle" | "selecting" | "connecting" | "reading";
 
-export default function McFarmRead() {
+export default function ControllerRead() {
   const [state, setState] = createSignal<ReadState>("idle");
   const [status, setStatus] = createSignal("");
   const [error, setError] = createSignal("");
@@ -63,47 +66,32 @@ export default function McFarmRead() {
 
   return (
     <>
-      <section class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 class="text-xl font-bold">Read firmware info</h2>
-        <p class="mt-2 mb-5 text-gray-600">
-          Connect to your bike over Bluetooth and read its current firmware versions. This does not
-          modify the bike.
-        </p>
-
-        <button
-          type="button"
-          onClick={read}
-          disabled={state() !== "idle"}
-          class="w-full rounded-lg bg-blue-600 px-5 py-2 font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:ring-2 focus:ring-blue-300 focus:outline-none disabled:cursor-wait disabled:bg-blue-300"
-        >
+      <ToolCard
+        title="Read firmware info"
+        description="Connect to your bike over Bluetooth and read its current firmware versions. This does not modify the bike."
+      >
+        <Button onClick={read} disabled={state() !== "idle"}>
           {state() === "idle" ? "Choose a Bluetooth device" : "Reading…"}
-        </button>
+        </Button>
         <p class="mt-2 text-sm text-gray-500">
           Your browser will show discoverable bikes with compatible manufacturer data.
         </p>
 
         <Show when={status()}>
-          <div
-            role="status"
-            class="mt-5 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800"
-          >
-            <span class="font-semibold">Status:</span> {status()}
-          </div>
+          <StatusMessage tone="info" title="Status">
+            {status()}
+          </StatusMessage>
         </Show>
         <Show when={error()}>
-          <div
-            role="alert"
-            class="mt-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
-          >
-            <span class="font-semibold">Could not read the bike:</span> {error()}
-          </div>
+          <StatusMessage tone="error" title="Could not read the bike">
+            {error()}
+          </StatusMessage>
         </Show>
-      </section>
+      </ToolCard>
 
       <Show when={info()}>
         {(value) => (
-          <section class="mt-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 class="mb-4 text-xl font-bold">Firmware and device information</h2>
+          <ToolCard title="Firmware and device information">
             <dl class="divide-y divide-gray-100">
               <For each={details()}>
                 {([label, bytes]) => (
@@ -116,7 +104,7 @@ export default function McFarmRead() {
             </dl>
 
             <Show when={Object.entries(value().additionalDeviceInfo).length > 0}>
-              <h2 class="mt-7 mb-4 text-xl font-bold">Additional BLE information</h2>
+              <h3 class="mt-7 mb-4 text-lg font-bold">Additional BLE information</h3>
               <dl class="divide-y divide-gray-100">
                 <For each={Object.entries(value().additionalDeviceInfo)}>
                   {([label, bytes]) => (
@@ -128,7 +116,7 @@ export default function McFarmRead() {
                 </For>
               </dl>
             </Show>
-          </section>
+          </ToolCard>
         )}
       </Show>
     </>
