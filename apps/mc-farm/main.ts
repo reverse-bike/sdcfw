@@ -20,6 +20,7 @@ import {
   type ModuleVersionInfo,
   type StandardDeviceInformation,
 } from "@sdcfw/ble-utils";
+import { readControllerArchive, type ControllerFirmware } from "./firmware.js";
 import { scanManufacturerDevices, scanServiceDevices, type ScannedDevice } from "./node-ble.js";
 
 interface ParsedArguments {
@@ -60,6 +61,7 @@ mc-farm - Motor-controller firmware tools over BLE
 Usage:
   mc-farm read [device-id]
   mc-farm read-dfu [device-id] [--arm]
+  mc-farm flash [device-id] --zip <firmware.zip> [--execute]
   mc-farm flash [device-id] --bin <firmware.bin> --dat <init.dat> [--execute]
 
 Flash is a dry run unless --execute is supplied. A dry run connects to the
@@ -68,6 +70,7 @@ data.
 
 Options:
   --arm                 Enter DFU mode before read-dfu
+  --zip <firmware.zip>  Read the binary and init packet from a Kitchen archive
   --execute             Send and execute the firmware binary
   --yes, -y             Skip confirmation before a write or DFU reboot
   --scan-time <seconds> BLE discovery window (default: 10)
@@ -83,8 +86,9 @@ Examples:
   mc-farm read-dfu
   mc-farm read-dfu --arm
   mc-farm read-dfu <device-id>
+  mc-farm flash --zip mc-311-patched-v1.0.0.zip
   mc-farm flash --bin controller.patched.bin --dat controller.dat
-  mc-farm flash <device-id> --bin controller.patched.bin --dat controller.dat --execute
+  mc-farm flash <device-id> --zip mc-311-patched-v1.0.0.zip --execute
 `);
 }
 
@@ -304,8 +308,7 @@ async function readDfuInfo(
 
 async function flash(
   requestedId: string | undefined,
-  binPath: string,
-  datPath: string,
+  firmware: ControllerFirmware,
   flags: Map<string, string>,
 ): Promise<void> {
   const execute = flags.has("--execute");
@@ -319,10 +322,9 @@ async function flash(
   } catch (error) {
     throw new CliUsageError(error instanceof Error ? error.message : String(error));
   }
-  const bin = new Uint8Array(await Bun.file(binPath).arrayBuffer());
-  const dat = new Uint8Array(await Bun.file(datPath).arrayBuffer());
-  if (bin.length === 0) throw new Error(`firmware binary is empty: ${binPath}`);
-  if (dat.length === 0) throw new Error(`init packet is empty: ${datPath}`);
+  const { bin, dat } = firmware;
+  if (bin.length === 0) throw new Error(`firmware binary is empty: ${firmware.binLabel}`);
+  if (dat.length === 0) throw new Error(`init packet is empty: ${firmware.datLabel}`);
 
   const pkg = await parseDfuPackage(dat, bin);
   if (pkg.appSize !== bin.length) {
@@ -334,8 +336,9 @@ async function flash(
     );
   }
 
-  console.log(`binary: ${binPath} (${bin.length} bytes)`);
-  console.log(`init:   ${datPath} (${dat.length} bytes)`);
+  if (firmware.description) console.log(`package: ${firmware.description}`);
+  console.log(`binary: ${firmware.binLabel} (${bin.length} bytes)`);
+  console.log(`init:   ${firmware.datLabel} (${dat.length} bytes)`);
   console.log(
     `init payload hash: ${pkg.hashMatches ? "matches binary" : "does not match binary (expected for patched controller firmware)"}`,
   );
@@ -352,7 +355,7 @@ async function flash(
     appDevices,
     requestedId,
     "compatible bikes",
-    "rerun with the intended Device ID: mc-farm flash <device-id> --bin <firmware.bin> --dat <init.dat>",
+    "rerun with the intended Device ID: mc-farm flash <device-id> and the same firmware options",
   );
   console.log(`selected ${describeDevice(device)}`);
 
@@ -447,12 +450,29 @@ async function main(): Promise<void> {
       );
       break;
     case "flash": {
+      const zipPath = flags.get("--zip");
       const binPath = flags.get("--bin");
       const datPath = flags.get("--dat");
-      if (!binPath || !datPath) {
-        throw new CliUsageError("flash requires both --bin and --dat");
+      if (zipPath && (binPath || datPath)) {
+        throw new CliUsageError("flash accepts either --zip or --bin with --dat, not both");
       }
-      await withDeadline(flash(requestedId, binPath, datPath, flags), timeout, "flash");
+      let firmware: ControllerFirmware;
+      if (zipPath) {
+        const zip = new Uint8Array(await Bun.file(zipPath).arrayBuffer());
+        if (zip.length === 0) throw new Error(`firmware archive is empty: ${zipPath}`);
+        firmware = await readControllerArchive(zip, zipPath);
+      } else {
+        if (!binPath || !datPath) {
+          throw new CliUsageError("flash requires --zip or both --bin and --dat");
+        }
+        firmware = {
+          bin: new Uint8Array(await Bun.file(binPath).arrayBuffer()),
+          dat: new Uint8Array(await Bun.file(datPath).arrayBuffer()),
+          binLabel: binPath,
+          datLabel: datPath,
+        };
+      }
+      await withDeadline(flash(requestedId, firmware, flags), timeout, "flash");
       break;
     }
   }

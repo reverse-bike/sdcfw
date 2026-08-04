@@ -55,7 +55,15 @@ No firmware data is sent. Power-cycle the bike afterward to leave DFU mode.
 
 ## Validate the DFU path without sending firmware
 
-Flash is a dry run by default:
+Flash accepts the archives produced by Kitchen's `--zip` option and verifies
+their manifest and file hashes before connecting to a bike. It is a dry run by
+default:
+
+```bash
+bun mc-farm flash --zip apps/web/public/cfw/mc-311-patched-v1.0.0.zip
+```
+
+Loose binary and init-packet files remain supported:
 
 ```bash
 bun mc-farm flash \
@@ -79,10 +87,12 @@ Add `--execute` to send and finalize the firmware:
 
 ```bash
 bun mc-farm flash <bike-device-id> \
-  --bin firmware/mc/230-BLUETOOTH-EXT1-310/GD_S73Rx_H104_S310US_20221020.patched.bin \
-  --dat firmware/mc/230-BLUETOOTH-EXT1-310/GD_S73Rx_H104_S310US_20221020.dat \
+  --zip apps/web/public/cfw/mc-311-patched-v1.0.0.zip \
   --execute
 ```
+
+Display (`nrf`) archives are rejected because `mc-farm` only updates the motor
+controller.
 
 Both modes request interactive confirmation. Use `--yes` for an intentional
 non-interactive run. Run with `--help` for transport tuning and timeout options.
