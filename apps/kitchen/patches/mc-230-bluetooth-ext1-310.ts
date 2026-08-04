@@ -51,6 +51,13 @@ const patchFile: McPatchFile = {
     },
     {
       type: "bytes",
+      address: 0x08006fa8,
+      original: [0xa4, 0xcb, 0xff, 0xff],
+      data: [0x94, 0xc6, 0xff, 0xff],
+      description: "Raise q-axis current-command floor from -13404 to -14700",
+    },
+    {
+      type: "bytes",
       address: 0x0800664e,
       original: [0x6e, 0x22],
       data: [0x96, 0x22],
