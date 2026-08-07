@@ -23,3 +23,23 @@ test("official S310US controller image has the researched staged CRC", async () 
     0xf0, 0xcc, 0x80, 0xb0, 0x27, 0x3e, 0xa1, 0x01, 0x00, 0x00,
   ]);
 });
+
+test("larger controller images use the bootloader's fixed CRC region", () => {
+  const bin = new Uint8Array(0x72d4).fill(0xa5);
+  const staged = stagedImage(bin);
+  expect(staged).toHaveLength(0x7000);
+  expect(staged).toEqual(bin.subarray(0, 0x7000));
+});
+
+test("official ZX controller image uses the fixed staged CRC", async () => {
+  const path = new URL(
+    "../../firmware/mc/SUPER73-ZX-MCU-202-NEW/GD_S73Zxl_H101_S202_2024_1123_FxedUS.bin",
+    import.meta.url,
+  );
+  const bin = new Uint8Array(await Bun.file(path).arrayBuffer());
+  expect(bin.length).toBe(0x72d4);
+  expect(controllerImageCrc(bin)).toBe(0x6fd2765d);
+  expect(Array.from(createArmPacket(controllerImageCrc(bin)))).toEqual([
+    0xf0, 0xcc, 0x80, 0x6f, 0xd2, 0x76, 0x5d, 0x01, 0x00, 0x00,
+  ]);
+});

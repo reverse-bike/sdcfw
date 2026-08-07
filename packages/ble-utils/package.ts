@@ -171,12 +171,7 @@ export async function parseDfuPackage(dat: Uint8Array, bin: Uint8Array): Promise
 export const STAGED_CRC_LEN = 0x7000;
 
 export function stagedImage(bin: Uint8Array): Uint8Array {
-  if (bin.length > STAGED_CRC_LEN) {
-    throw new Error(
-      `payload 0x${bin.length.toString(16)} exceeds staged CRC region 0x${STAGED_CRC_LEN.toString(16)}`,
-    );
-  }
   const staged = new Uint8Array(STAGED_CRC_LEN).fill(0xff);
-  staged.set(bin);
+  staged.set(bin.subarray(0, STAGED_CRC_LEN));
   return staged;
 }
