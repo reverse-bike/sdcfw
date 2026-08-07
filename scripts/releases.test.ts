@@ -25,6 +25,7 @@ interface ContentEntry {
   version: string;
   target: string;
   path: string;
+  downloadOnly?: boolean;
   requires?: { controllerVersion?: string[]; controllerVariant?: number[] };
 }
 
@@ -85,7 +86,7 @@ test("every content entry points at an archive that agrees with it", async () =>
 
 test("controller entries declare what they may be flashed onto", () => {
   for (const entry of contentEntries()) {
-    if (entry.target !== "controller") continue;
+    if (entry.target !== "controller" || entry.downloadOnly) continue;
     const patterns = entry.requires?.controllerVersion ?? [];
     expect(`${entry.file}: ${patterns.length > 0}`).toBe(`${entry.file}: true`);
     for (const pattern of patterns) {

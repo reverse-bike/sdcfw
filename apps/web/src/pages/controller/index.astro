@@ -6,7 +6,8 @@ import Page from "../../layouts/Page.astro";
 
 const entries = await getCollection(
   "firmware",
-  ({ id, data }) => !id.startsWith("_") && data.target === "controller",
+  ({ id, data }) =>
+    !id.startsWith("_") && data.target === "controller" && !data.downloadOnly,
 );
 
 const releases: FirmwareRelease[] = entries

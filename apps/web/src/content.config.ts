@@ -50,6 +50,8 @@ const firmware = defineCollection({
      * it. Listed apart from custom releases rather than competing with them.
      */
     stock: z.boolean().optional().default(false),
+    /** Show this release on the downloads page, but not in the guided flasher. */
+    downloadOnly: z.boolean().optional().default(false),
   }),
 });
 
