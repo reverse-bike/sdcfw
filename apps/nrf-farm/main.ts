@@ -92,7 +92,6 @@ async function runReadInfo() {
     // Variant
     const variantBuf = Buffer.alloc(4);
     variantBuf.writeUInt32BE(deviceInfo.variant);
-    // oxlint-disable-next-line eslint/no-control-regex
     const variantStr = variantBuf.toString("ascii").replace(/\0/g, "");
     console.log(`${"Variant".padEnd(20)}: ${variantStr} (${toHex(deviceInfo.variant)})`);
 
