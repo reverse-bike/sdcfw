@@ -45,7 +45,7 @@ const patchFile: McPatchFile = {
         0x22, 0x79, 0x01, 0x2a, 0x2c, 0xbf, 0x03, 0x22, 0x01, 0x22, 0x02, 0x70, 0x01, 0xf0, 0x78,
         0xbd,
       ],
-      description: "Select mode 1 for assist level 0 and mode 3 for any nonzero CAN 0x300 level",
+      description: "Set mode 1 when CAN 0x300 assist level is 0, otherwise set mode 3",
     },
     {
       type: "bytes",
