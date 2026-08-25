@@ -78,7 +78,7 @@ Options:
   --wait <seconds>      Wait after arming external flash (default: 8)
   --chunk <bytes>       Initial BLE packet size (default: 20)
   --object-size <bytes> DFU object size (default: 4096)
-  --prn <count>         Packet receipt interval (default: 0)
+  --prn <count>         Packet receipt interval (default: 10)
 
 Examples:
   mc-farm read
@@ -317,7 +317,7 @@ async function flash(
     transport = validateDfuTransportOptions({
       chunkSize: numberFlag(flags, "--chunk", 20),
       objectSize: numberFlag(flags, "--object-size", 4_096),
-      prn: numberFlag(flags, "--prn", 0),
+      prn: numberFlag(flags, "--prn", 10),
     });
   } catch (error) {
     throw new CliUsageError(error instanceof Error ? error.message : String(error));

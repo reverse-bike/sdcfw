@@ -49,7 +49,7 @@ export default function ControllerTransfer() {
   const [execute, setExecute] = createSignal(false);
   const [chunk, setChunk] = createSignal(20);
   const [objectSize, setObjectSize] = createSignal(4096);
-  const [prn, setPrn] = createSignal(0);
+  const [prn, setPrn] = createSignal(10);
   const [sent, setSent] = createSignal(0);
   const [total, setTotal] = createSignal(0);
 

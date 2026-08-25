@@ -5,17 +5,16 @@ test("accepts the default DFU transport settings", () => {
   expect(validateDfuTransportOptions()).toEqual({
     chunkSize: 20,
     objectSize: 4_096,
-    prn: 0,
+    prn: 10,
   });
 });
 
-test("requires PRN to be less than chunk size", () => {
+test("requires PRN to fit the DFU command field", () => {
   expect(() =>
     validateDfuTransportOptions({
-      chunkSize: 20,
-      prn: 20,
+      prn: 0x1_0000,
     }),
-  ).toThrow("PRN (20 packets) must be less than chunk size (20 bytes)");
+  ).toThrow("PRN must fit in 16 bits");
 });
 
 test("rejects fractional and non-positive transport settings", () => {

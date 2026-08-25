@@ -309,10 +309,13 @@ export class DfuClient {
         this.log(`PRN receipt: offset=0x${view.getUint32(3, true).toString(16)}`);
       }
 
-      await sleep(30);
       const absoluteOffset = baseOffset + offset;
-      if (absoluteOffset >= nextCheckpoint && offset < data.length) {
-        await sleep(500);
+      if (
+        absoluteOffset >= nextCheckpoint &&
+        offset < data.length &&
+        (receipt || this.prnInterval === 0)
+      ) {
+        if (this.prnInterval === 0) await sleep(100);
         const progress = await this.calculateChecksum();
         if (progress.offset !== absoluteOffset) {
           throw new DfuError(
@@ -322,12 +325,12 @@ export class DfuClient {
         this.log(
           `checkpoint: offset=0x${progress.offset.toString(16)} crc=0x${progress.crc.toString(16)}`,
         );
-        nextCheckpoint += 0x400;
+        while (nextCheckpoint <= absoluteOffset) nextCheckpoint += 0x400;
       }
     }
 
-    this.log(`streamed ${writes} writes; waiting for the receive queue`);
-    await sleep(1_500);
+    this.log(`streamed ${writes} writes; settling the receive queue`);
+    await sleep(100);
   }
 
   async transferObject(
@@ -337,7 +340,6 @@ export class DfuClient {
   ): Promise<void> {
     if (!options.skipCreate) {
       await this.create(objectType, data.length);
-      if (objectType === 0x02) await sleep(2_000);
     }
     const expectedOffset = options.expectedOffset ?? data.length;
     const baseOffset = expectedOffset - data.length;

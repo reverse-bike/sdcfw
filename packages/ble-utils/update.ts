@@ -208,7 +208,7 @@ export function validateDfuTransportOptions(
 ): DfuTransportOptions {
   const chunkSize = options.chunkSize ?? 20;
   const objectSize = options.objectSize ?? 4_096;
-  const prn = options.prn ?? 0;
+  const prn = options.prn ?? 10;
 
   if (!Number.isInteger(chunkSize) || chunkSize <= 0) {
     throw new Error(`chunk size must be a positive integer; received ${chunkSize}`);
@@ -219,11 +219,8 @@ export function validateDfuTransportOptions(
   if (!Number.isInteger(prn) || prn < 0) {
     throw new Error(`PRN must be a non-negative integer; received ${prn}`);
   }
-  if (prn >= chunkSize) {
-    throw new Error(
-      `PRN (${prn} packets) must be less than chunk size (${chunkSize} bytes) ` +
-        "so receipt checkpoints remain more frequent than the configured packet payload boundary",
-    );
+  if (prn > 0xffff) {
+    throw new Error(`PRN must fit in 16 bits; received ${prn}`);
   }
 
   return { chunkSize, objectSize, prn };
