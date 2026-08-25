@@ -1,58 +1,31 @@
 ---
-name: Motor Controller 5.15.13 Display-Speed and Field-Weakening Patch
+name: Motor Controller 5.15.13 Patched
 version: "1.0.3"
 target: controller
 path: /cfw/mc-51513-patched-v1.0.3.zip
 date: 2026-08-25
-description: Experimental 5.15.13 controller configuration with display-driven speed control and high-speed field weakening
+description: Removes the speed cap in mode 4 and improves power at higher speeds
 downloadOnly: true
 experimental: true
 ---
 
-## What this is
+## Features
 
-An experimental patch based on the FTEX 5.15.11 motor-controller firmware. It
-uses the controller's normal configuration and speed-control paths, with baked
-defaults that raise the throttle ceiling to 99 km/h and the vehicle ceiling to
-75 km/h. The live `0x201C:0` value from the display remains authoritative below
-that vehicle ceiling, while Mode 4 is effectively unlimited for this bike.
+- Mode 4 has no speed cap
+- Modes 1–3 keep their normal speed limits
+- Maintains stronger motor power at higher speeds
 
-The baked speed-power minimum and maximum are both 100%, so the original motor
-control code naturally holds the speed-dependent power percentage at 100%.
+## Compatibility
 
-The baked motor electrical-speed limit is raised from 2500 to 3000, and the
-controller's existing field-weakening loop is enabled. Field weakening responds
-to voltage-vector utilization as motor back-EMF rises; it is not enabled by a
-fixed road-speed threshold. Its stock tuning and -20 A d-axis-current bound are
-otherwise unchanged. The controller continues to enforce its total current-vector
-limit, so weakening current reduces the q-axis current available for torque.
+For bikes running motor-controller firmware 5.15.11. This experimental release
+is available as a direct download and is not offered by the guided controller
+flasher.
 
-The patch does not change the controller's executable code or the display's
-separate throttle enable/inhibit command.
+## Warning
 
-## Configuration replacement
-
-Installing this version replaces the controller's persisted user configuration
-once. The package and target-image versions advance to 5.15.13. The controller
-accepts persisted configuration only when its version exactly equals the factory
-configuration version, so this also replaces configuration installed by patch
-v1.0.2 with version 5.15.12. On first boot, the controller installs the patched
-baked defaults and writes a fresh configuration CRC.
-
-Any settings previously installed through the controller's CANopen configuration
-import are replaced by these defaults.
-
-## Version reporting
-
-The outer package header, target-image version, and MCUboot image header all
-identify this image as 5.15.13. After installation, the controller publishes its
-updated factory-configuration version through CANopen `0x2008:0`, which the
-display exposes as controller version 51513 over BLE.
-
-## Availability
-
-This package is available as a direct download for hardware validation. It is
-not offered automatically by the guided controller flasher.
+- Applying this firmware will void your warranty.
+- This firmware applies more power to the motor. It may break or overheat your bike and may wear parts out more quickly.
+- This firmware may interfere with or not work with official and third-party phone apps.
 
 ## Changelog
 
