@@ -195,7 +195,7 @@ export default function ControllerGuide(props: ControllerGuideProps) {
       server = await reconnect(target, append);
       await armControllerUpdate(server, parsed.bin, { log: append });
       setArmed(true);
-      append("The display should now show Updating Firmware.");
+      append("The display should now show Receiving Firmware.");
     } catch (cause) {
       // A fresh gesture is needed for the chooser, so offer it as its own button.
       if (!pick) setNeedsPicker(true);
@@ -422,7 +422,7 @@ export default function ControllerGuide(props: ControllerGuideProps) {
       <Step number={2} title="Enter update mode" locked={!pkg()} done={armed()}>
         <p class="mb-4 text-gray-600">
           Switches your display into update mode, ready to receive the new firmware. Its screen will
-          say <b>Updating Firmware</b> when it is ready for the next step.
+          say <b>Receiving Firmware</b> when it is ready for the next step.
         </p>
         <Show when={alreadyRunning()}>
           <div class="mb-4">
@@ -448,7 +448,7 @@ export default function ControllerGuide(props: ControllerGuideProps) {
       {/* Step 3 */}
       <Step number={3} title="Send the firmware" locked={!armed()} done={outcome() !== "none"}>
         <p class="text-gray-600">
-          When your bike's screen says <b>Updating Firmware</b>, start the transfer and pick the
+          When your bike's screen says <b>Receiving Firmware</b>, start the transfer and pick the
           device named <b>DfuTarg</b> from the list. This takes a minute or two.
         </p>
         <Callout type="warning" title="Let it finish">

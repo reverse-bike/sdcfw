@@ -1,10 +1,10 @@
 ---
-name: Motor Controller 5.15.12 Display-Speed Patch
-version: "1.0.2"
+name: Motor Controller 5.15.13 Display-Speed and Field-Weakening Patch
+version: "1.0.3"
 target: controller
-path: /cfw/mc-51512-patched-v1.0.2.zip
-date: 2026-08-24
-description: Experimental 5.15.12 controller configuration with display-driven speed control and no speed-power rolloff
+path: /cfw/mc-51513-patched-v1.0.3.zip
+date: 2026-08-25
+description: Experimental 5.15.13 controller configuration with display-driven speed control and high-speed field weakening
 downloadOnly: true
 experimental: true
 ---
@@ -20,15 +20,24 @@ that vehicle ceiling, while Mode 4 is effectively unlimited for this bike.
 The baked speed-power minimum and maximum are both 100%, so the original motor
 control code naturally holds the speed-dependent power percentage at 100%.
 
+The baked motor electrical-speed limit is raised from 2500 to 3000, and the
+controller's existing field-weakening loop is enabled. Field weakening responds
+to voltage-vector utilization as motor back-EMF rises; it is not enabled by a
+fixed road-speed threshold. Its stock tuning and -20 A d-axis-current bound are
+otherwise unchanged. The controller continues to enforce its total current-vector
+limit, so weakening current reduces the q-axis current available for torque.
+
 The patch does not change the controller's executable code or the display's
 separate throttle enable/inhibit command.
 
 ## Configuration replacement
 
 Installing this version replaces the controller's persisted user configuration
-once. The package and target-image versions advance to 5.15.12, invalidating the
-5.15.11 configuration stored in external flash. On first boot, the controller
-installs the patched baked defaults and writes a fresh configuration CRC.
+once. The package and target-image versions advance to 5.15.13. The controller
+accepts persisted configuration only when its version exactly equals the factory
+configuration version, so this also replaces configuration installed by patch
+v1.0.2 with version 5.15.12. On first boot, the controller installs the patched
+baked defaults and writes a fresh configuration CRC.
 
 Any settings previously installed through the controller's CANopen configuration
 import are replaced by these defaults.
@@ -36,9 +45,9 @@ import are replaced by these defaults.
 ## Version reporting
 
 The outer package header, target-image version, and MCUboot image header all
-identify this image as 5.15.12. After installation, the controller publishes its
+identify this image as 5.15.13. After installation, the controller publishes its
 updated factory-configuration version through CANopen `0x2008:0`, which the
-display exposes as controller version 51512 over BLE.
+display exposes as controller version 51513 over BLE.
 
 ## Availability
 
@@ -46,6 +55,12 @@ This package is available as a direct download for hardware validation. It is
 not offered automatically by the guided controller flasher.
 
 ## Changelog
+
+### v1.0.3
+
+- Raise all package and configuration version fields to 5.15.13
+- Raise the motor electrical-speed limit from 2500 to 3000
+- Enable the controller's existing field-weakening loop with its stock tuning and current bounds
 
 ### v1.0.2
 

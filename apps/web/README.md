@@ -47,7 +47,7 @@ Two things drive the shape:
   resets the armed state, and closing the tab in that window trips the browser's
   unsaved-changes prompt.
 
-The steps name what the bike's own screen shows, _Updating Firmware_ while it
+The steps name what the bike's own screen shows, _Receiving Firmware_ while it
 waits for the transfer and _Updating Bike_ while it installs, because that is
 how someone knows when to act.
 
