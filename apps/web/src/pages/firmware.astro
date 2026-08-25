@@ -103,7 +103,7 @@ const sections = [
 				{section.entries.length === 0 ? (
 					<p class="text-gray-500">No releases published yet.</p>
 				) : (
-					<div class="space-y-6">
+					<div class="space-y-3">
 						{section.entries.map(async (fw) => {
 							const { Content } = await render(fw);
 							return (
@@ -111,32 +111,32 @@ const sections = [
 									id={fw.id}
 									class="scroll-mt-4 overflow-hidden rounded-lg border border-gray-200 bg-white"
 								>
-									<div class="p-6">
-										<div class="mb-4 flex items-start justify-between gap-4">
-										<div>
-											<div class="flex flex-wrap items-center gap-2">
-												<h3 class="text-xl font-semibold">{fw.data.name}</h3>
-												<a
-													href={`#${fw.id}`}
-													class="font-mono text-sm text-gray-400 hover:text-blue-500"
-													aria-label={`Link to ${fw.data.name}`}
-													title="Link to this release"
-												>
-													<svg
-														viewBox="0 0 24 24"
-														fill="none"
-														stroke="currentColor"
-														stroke-width="2"
-														stroke-linecap="round"
-														stroke-linejoin="round"
-														class="size-4"
-														aria-hidden="true"
+									<div class="p-4">
+										<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+											<div class="min-w-0">
+												<div class="flex flex-wrap items-center gap-2">
+													<h3 class="text-lg font-semibold">{fw.data.name}</h3>
+													<a
+														href={`#${fw.id}`}
+														class="font-mono text-sm text-gray-400 hover:text-blue-500"
+														aria-label={`Link to ${fw.data.name}`}
+														title="Link to this release"
 													>
-														<path d="M10 13a5 5 0 0 0 7.07.07l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-														<path d="M14 11a5 5 0 0 0-7.07-.07l-3 3A5 5 0 0 0 11 21l1.71-1.71" />
-													</svg>
-												</a>
-												<span class="font-mono text-sm text-gray-500">v{fw.data.version}</span>
+														<svg
+															viewBox="0 0 24 24"
+															fill="none"
+															stroke="currentColor"
+															stroke-width="2"
+															stroke-linecap="round"
+															stroke-linejoin="round"
+															class="size-4"
+															aria-hidden="true"
+														>
+															<path d="M10 13a5 5 0 0 0 7.07.07l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+															<path d="M14 11a5 5 0 0 0-7.07-.07l-3 3A5 5 0 0 0 11 21l1.71-1.71" />
+														</svg>
+													</a>
+													<span class="font-mono text-sm text-gray-500">v{fw.data.version}</span>
 													{fw.data.stock && (
 														<span class="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
 															Factory
@@ -148,12 +148,12 @@ const sections = [
 														</span>
 													)}
 												</div>
-												<p class="mt-1 text-gray-600">{fw.data.description}</p>
+												<p class="mt-0.5 text-sm text-gray-600">{fw.data.description}</p>
 											</div>
 											<a
 												href={fw.data.path}
 												download
-												class={`shrink-0 rounded px-4 py-2 transition-colors ${
+												class={`shrink-0 self-start rounded px-3 py-1.5 text-sm transition-colors ${
 													section.id === 'display'
 														? 'bg-blue-500 text-white hover:bg-blue-600'
 														: 'border border-gray-300 text-gray-700 hover:bg-gray-50'
@@ -163,30 +163,48 @@ const sections = [
 											</a>
 										</div>
 
-										<dl class="mb-5 flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-500">
-											<div class="flex gap-1">
-												<dt>Released</dt>
-												<dd class="text-gray-700">{fw.data.date.toLocaleDateString()}</dd>
-											</div>
-											{fw.data.requires && (
-												<div class="flex gap-1">
-													<dt>Fits controller</dt>
-													<dd class="font-mono text-gray-700">
-														{fw.data.requires.controllerVersion.join(', ')}
-													</dd>
-												</div>
-											)}
-											{fw.data.compatibility && fw.data.compatibility.length > 0 && (
-												<div class="flex gap-1">
-													<dt>Models</dt>
-													<dd class="text-gray-700">{fw.data.compatibility.join(', ')}</dd>
-												</div>
-											)}
-										</dl>
+										<details class="group mt-3 border-t border-gray-100 pt-3">
+											<summary class="flex w-fit cursor-pointer list-none items-center gap-1 text-sm font-medium text-gray-600 hover:text-gray-900 [&::-webkit-details-marker]:hidden">
+												<svg
+													viewBox="0 0 20 20"
+													fill="currentColor"
+													class="size-4 transition-transform group-open:rotate-90"
+													aria-hidden="true"
+												>
+													<path
+														fill-rule="evenodd"
+														d="M7.22 14.53a.75.75 0 0 1 0-1.06L10.69 10 7.22 6.53a.75.75 0 0 1 1.06-1.06l4 4a.75.75 0 0 1 0 1.06l-4 4a.75.75 0 0 1-1.06 0Z"
+														clip-rule="evenodd"
+													/>
+												</svg>
+												Release details
+											</summary>
 
-										<div class="prose prose-sm max-w-none prose-headings:text-gray-900 prose-headings:text-base prose-p:text-gray-600 prose-li:text-gray-600 prose-strong:text-gray-900">
-											<Content />
-										</div>
+											<dl class="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-500">
+												<div class="flex gap-1">
+													<dt>Released</dt>
+													<dd class="text-gray-700">{fw.data.date.toLocaleDateString()}</dd>
+												</div>
+												{fw.data.requires && (
+													<div class="flex gap-1">
+														<dt>Fits controller</dt>
+														<dd class="font-mono text-gray-700">
+															{fw.data.requires.controllerVersion.join(', ')}
+														</dd>
+													</div>
+												)}
+												{fw.data.compatibility && fw.data.compatibility.length > 0 && (
+													<div class="flex gap-1">
+														<dt>Models</dt>
+														<dd class="text-gray-700">{fw.data.compatibility.join(', ')}</dd>
+													</div>
+												)}
+											</dl>
+
+											<div class="prose prose-sm mt-4 max-w-none prose-headings:text-base prose-headings:text-gray-900 prose-p:text-gray-600 prose-li:text-gray-600 prose-strong:text-gray-900">
+												<Content />
+											</div>
+										</details>
 									</div>
 								</article>
 							);
