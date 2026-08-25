@@ -1,8 +1,8 @@
 {
-    "manifest": {
-        "application": {
-            "bin_file": "DFU_pack_no_IoT_5.15.11_can_only.bin",
-            "dat_file": "DFU_pack_no_IoT_5.15.11_can_only.dat"
-        }
+  "manifest": {
+    "application": {
+      "bin_file": "DFU_pack_no_IoT_5.15.11_can_only.bin",
+      "dat_file": "DFU_pack_no_IoT_5.15.11_can_only.dat"
     }
+  }
 }
