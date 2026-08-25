@@ -1,8 +1,8 @@
 ---
-name: Motor Controller 5.15.13 Patched
-version: "1.0.3"
+name: Motor Controller 5.15.14 Patched
+version: "1.0.4"
 target: controller
-path: /cfw/mc-51513-patched-v1.0.3.zip
+path: /cfw/mc-51514-patched-v1.0.4.zip
 date: 2026-08-25
 description: Removes the speed cap in mode 4 and improves power at higher speeds
 downloadOnly: true
@@ -28,6 +28,12 @@ flasher.
 - This firmware may interfere with or not work with official and third-party phone apps.
 
 ## Changelog
+
+### v1.0.4
+
+- Keep the raised motor electrical-speed limit of 3000
+- Restore field weakening to the stock disabled setting
+- Raise all package and configuration version fields to 5.15.14 so bikes running v1.0.3 install the corrected defaults
 
 ### v1.0.3
 

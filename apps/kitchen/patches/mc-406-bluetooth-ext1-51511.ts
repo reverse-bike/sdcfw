@@ -9,30 +9,30 @@ const patchFile: McPatchFile = {
   expectedSize: 194_120,
   expectedSha256: "5cc1aeed2f71e8f3cf7c61b73515cc7644b04901a4df20ab463ca44195dfdb37",
   release: {
-    version: "1.0.3",
-    controllerVersion: 51_513,
+    version: "1.0.4",
+    controllerVersion: 51_514,
   },
   patches: [
     {
       type: "bytes",
       address: 0x0000ff64,
       original: [0x05, 0x0f, 0x0b, 0x00],
-      data: [0x05, 0x0f, 0x0d, 0x00],
-      description: "Bump the outer package version from 5.15.11 to 5.15.13",
+      data: [0x05, 0x0f, 0x0e, 0x00],
+      description: "Bump the outer package version from 5.15.11 to 5.15.14",
     },
     {
       type: "bytes",
       address: 0x0000ff70,
       original: [0x05, 0x0f, 0x0b, 0x00],
-      data: [0x05, 0x0f, 0x0d, 0x00],
-      description: "Bump the outer target-image version from 5.15.11 to 5.15.13",
+      data: [0x05, 0x0f, 0x0e, 0x00],
+      description: "Bump the outer target-image version from 5.15.11 to 5.15.14",
     },
     {
       type: "bytes",
       address: 0x00010014,
       original: [0x05, 0x0f, 0x0b, 0x00, 0x05, 0x0f, 0x0b, 0x00],
-      data: [0x05, 0x0f, 0x0d, 0x00, 0x05, 0x0f, 0x0d, 0x00],
-      description: "Bump the MCUboot image version from 5.15.11 to 5.15.13",
+      data: [0x05, 0x0f, 0x0e, 0x00, 0x05, 0x0f, 0x0e, 0x00],
+      description: "Bump the MCUboot image version from 5.15.11 to 5.15.14",
     },
     {
       type: "bytes",
@@ -64,19 +64,12 @@ const patchFile: McPatchFile = {
     },
     {
       type: "bytes",
-      address: 0x0003f27b,
-      original: [0x00],
-      data: [0x01],
-      description: "Enable the baked field-weakening controller",
-    },
-    {
-      type: "bytes",
       address: 0x0003f588,
       original: Array.from(
         Uint8Array.fromHex("374483dce91f9b02d2d234adca6718fdde36fee9a03f1e87d25f5dd520f51d80"),
       ),
       data: Array.from(
-        Uint8Array.fromHex("3c6dc4b187198ab543da414c232c5ccbd053a52a5bd60bdbf1d8b293be049fa3"),
+        Uint8Array.fromHex("8ddf187a0705e9eaab00f47b2ad0d276893584be090c579fa6bb063c4b7a95ec"),
       ),
       description: "Update the MCUboot SHA-256 TLV for the patched image",
     },
@@ -84,7 +77,7 @@ const patchFile: McPatchFile = {
       type: "bytes",
       address: 0x0003f5a8,
       original: [0x1d, 0x50, 0xf2, 0x02],
-      data: [0xcd, 0x18, 0x54, 0x0b],
+      data: [0xd1, 0x6a, 0x9d, 0x99],
       description: "Update the outer CAN-DFU package CRC32",
     },
   ],
