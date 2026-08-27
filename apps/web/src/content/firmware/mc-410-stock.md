@@ -6,18 +6,15 @@ path: /cfw/mc-410-stock-v1.0.0.zip
 date: 2026-08-07
 description: The unmodified factory firmware for controller 410
 stock: true
-downloadOnly: true
+requires:
+  controllerVersion:
+    - "4XX"
 ---
 
 ## What this is
 
 The factory controller 410 image, packaged unchanged with its matching signed
 DFU init packet.
-
-## Availability
-
-This package is available as a direct download only. It is not offered by the
-guided controller flasher.
 
 ## Changelog
 

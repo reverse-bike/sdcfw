@@ -23,7 +23,7 @@ Once installed your bike reports controller as version 311. The bike will start 
 ## Compatibility
 
 Built from the stock controller 310 image, and applies to any bike whose motor controller
-reports a 3XX version.
+reports a 3XX version. This is based on the US firmware.
 
 ## Warning
 

@@ -4,8 +4,10 @@ version: "1.0.6"
 target: controller
 path: /cfw/mc-51516-patched-v1.0.6.zip
 date: 2026-08-25
-description: Uncorks throttle and pedal-assist speed with field weakening disabled
-downloadOnly: true
+description: Uncorks throttle and pedal-assist speed in mode 4
+requires:
+  controllerVersion:
+    - "515XX"
 experimental: true
 ---
 
@@ -14,14 +16,12 @@ experimental: true
 - Mode 4 follows the display-driven speed setting instead of the stock 20 mph ceiling
 - Pedal-assist speed ceilings are raised to match the throttle ceiling
 - Maintains stronger motor power at higher speeds
-- Leaves field weakening disabled
 - Shows 5.15.16 as the version number
 
 ## Compatibility
 
 For bikes running motor-controller firmware 5.15.11 or an earlier release of
-this patch. This experimental release is available as a direct download and is
-not offered by the guided controller flasher.
+this patch.
 
 ## Warning
 
