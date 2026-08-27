@@ -1,5 +1,5 @@
 ---
-name: Motor Controller 5.15.16 Patched
+name: Motor Controller 5.15.11 Patched
 version: "1.0.6"
 target: controller
 path: /cfw/mc-51516-patched-v1.0.6.zip
@@ -15,6 +15,7 @@ experimental: true
 - Pedal-assist speed ceilings are raised to match the throttle ceiling
 - Maintains stronger motor power at higher speeds
 - Leaves field weakening disabled
+- Shows 5.15.16 as the version number
 
 ## Compatibility
 
