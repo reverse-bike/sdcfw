@@ -1,14 +1,10 @@
 ---
-name: Motor Controller 5.15.11 Stock
-version: "1.0.0"
-target: controller
-path: /cfw/mc-51511-stock-v1.0.0.zip
+name: Factory firmware
+path: /cfw/406-BLUETOOTH-EXT1-51511-stock-v1.0.0.zip
+anchor: mc-51511-stock
 date: 2026-08-24
 description: The unmodified factory firmware for the FTEX 5.15.11 controller
 stock: true
-requires:
-  controllerVersion:
-    - "515XX"
 ---
 
 ## What this is

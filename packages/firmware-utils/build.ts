@@ -3,11 +3,12 @@ import { sha256Hex } from "./hash.js";
 import {
   MANIFEST_NAME,
   MANIFEST_SCHEMA,
-  packageFileName,
   type PackageFile,
-  type PackageKind,
   type PackageManifest,
 } from "./manifest.js";
+
+/** Whether an archive carries a modified image or the pristine one. */
+export type PackageKind = "patched" | "stock";
 
 /** A file to place in the archive. */
 export interface NamedBytes {
@@ -43,8 +44,6 @@ export interface DisplayBuild extends BuildBase {
 export type PackageBuild = ControllerBuild | DisplayBuild;
 
 export interface BuiltPackage {
-  /** Composed archive filename */
-  fileName: string;
   manifest: PackageManifest;
   zip: Uint8Array;
 }
@@ -98,12 +97,6 @@ export async function buildPackage(build: PackageBuild): Promise<BuiltPackage> {
   }
 
   return {
-    fileName: packageFileName({
-      target: build.target,
-      reportedVersion: build.target === "controller" ? build.controllerVersion : build.nrfVersion,
-      kind: build.kind,
-      version: build.version,
-    }),
     manifest,
     zip: zipSync(contents, { level: 9 }),
   };

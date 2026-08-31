@@ -10,16 +10,10 @@ const firmware = defineCollection({
   schema: z.object({
     /** Display name for the firmware */
     name: z.string(),
-    /** Version string (e.g., "1.0.0", "beta-1") */
-    version: z.string(),
-    /**
-     * Device this firmware is for, matching the archive manifest's target.
-     * Defaults to the display, which is what every entry was before the
-     * motor-controller flow existed.
-     */
-    target: z.enum(["nrf", "controller"]).optional().default("nrf"),
     /** Path to the ZIP file relative to public folder (e.g., "/cfw/my-firmware.zip") */
     path: z.string(),
+    /** Stable page anchor retained independently of the source directory layout. */
+    anchor: z.string(),
     /** Release date */
     date: z.coerce.date(),
     /** Short description shown in the list */
@@ -55,4 +49,30 @@ const firmware = defineCollection({
   }),
 });
 
-export const collections = { firmware };
+const firmwareFamilies = defineCollection({
+  loader: glob({
+    pattern: "**/_family.{md,mdx}",
+    base: "./src/content/firmware",
+  }),
+  schema: z.object({
+    /** Human name for this factory-image family. */
+    name: z.string(),
+    /** Device class shared by every release in the family. */
+    target: z.enum(["controller", "nrf"]),
+    /** Version reported by the pristine factory image. */
+    factoryVersion: z.union([z.number().int(), z.string()]),
+    /** Short explanation shown above the family's variants. */
+    description: z.string(),
+    /** Optional bike models shared by every release in the family. */
+    compatibility: z.array(z.string()).optional(),
+    /** Which connected controllers may use releases derived from this image. */
+    requires: z
+      .object({
+        controllerVersion: z.array(z.string()).nonempty(),
+        controllerVariant: z.array(z.number()).nonempty().optional(),
+      })
+      .optional(),
+  }),
+});
+
+export const collections = { firmware, firmwareFamilies };

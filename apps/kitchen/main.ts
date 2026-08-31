@@ -7,7 +7,7 @@
  *   keygen <output-dir>    - Generate signing keys for nrfutil
  *
  * Usage:
- *   bun run main.ts patch ./patches/nrf-6-221122-0.ts
+ *   bun run main.ts patch ./patches/6-221122-0/unlocked.ts
  *   bun run main.ts keygen ./keys
  */
 
@@ -15,6 +15,7 @@ import fs from "fs";
 import path from "path";
 import { execSync } from "child_process";
 import { buildPackage, type PackageBuild } from "@sdcfw/firmware-utils";
+import { archiveFileName } from "./archive.js";
 import { buildPatchedImage, toHex } from "./patcher";
 import type { PatchFile } from "./patches/types";
 
@@ -137,6 +138,8 @@ async function writeArchive(
     zipDir: string;
     source: Buffer;
     sourceName: string;
+    descriptorSource: string;
+    descriptorVariant: string;
     output: Buffer;
     outputName: string;
   },
@@ -191,9 +194,27 @@ async function writeArchive(
     };
   }
   const built = await buildPackage(build);
+  const archiveName =
+    kind === "stock"
+      ? archiveFileName({
+          sourceName: options.descriptorSource,
+          variant: options.descriptorVariant,
+          stock: true,
+          version: built.manifest.version,
+        })
+      : archiveFileName({
+          sourceName: options.descriptorSource,
+          variant: options.descriptorVariant,
+          stock: false,
+          reportedVersion:
+            built.manifest.target === "controller"
+              ? built.manifest.provides.controllerVersion
+              : built.manifest.provides.nrfVersion,
+          version: built.manifest.version,
+        });
 
   fs.mkdirSync(options.zipDir, { recursive: true });
-  const archivePath = path.join(options.zipDir, built.fileName);
+  const archivePath = path.join(options.zipDir, archiveName);
   fs.writeFileSync(archivePath, built.zip);
 
   console.log(`\nArchive: ${archivePath}`);
@@ -205,12 +226,10 @@ async function writeArchive(
   console.log("\nContent entry stub:");
   console.log("---");
   console.log(`name: ${patchFile.name}`);
-  console.log(`version: "${built.manifest.version}"`);
-  console.log(`target: ${built.manifest.target}`);
-  console.log(`path: /cfw/${built.fileName}`);
+  console.log(`path: /cfw/${archiveName}`);
+  console.log("anchor: TODO");
   console.log(`date: ${new Date().toISOString().slice(0, 10)}`);
   console.log("description: TODO");
-  console.log("compatibility: TODO");
   console.log("---");
 }
 
@@ -227,11 +246,20 @@ async function patch(patchFilePath: string, options: PatchOptions = {}): Promise
   console.log("Step 1: Loading patch file...");
   const patchModule = await import(path.resolve(patchFilePath));
   const patchFile: PatchFile = patchModule.default;
+  const descriptorPath = path.resolve(patchFilePath);
+  const descriptorSource = path.basename(path.dirname(descriptorPath));
+  const descriptorVariant = path.basename(descriptorPath, path.extname(descriptorPath));
+  const finalizerCount =
+    patchFile.target === "controller" ? (patchFile.finalizers?.length ?? 0) : 0;
 
   console.log(`  Name: ${patchFile.name}`);
   console.log(`  Target: ${patchFile.target}`);
   console.log(`  Firmware: ${patchFile.firmwarePath}`);
-  console.log(`  Patches: ${patchFile.patches.length}\n`);
+  console.log(`  Patches: ${patchFile.patches.length}`);
+  if (finalizerCount > 0) {
+    console.log(`  Finalizers: ${finalizerCount}`);
+  }
+  console.log();
 
   // Resolve firmware path relative to project root
   const currentDir = path.dirname(new URL(import.meta.url).pathname);
@@ -284,7 +312,7 @@ async function patch(patchFilePath: string, options: PatchOptions = {}): Promise
 
   console.log("\nSummary:");
   console.log("========");
-  console.log(`  Patches applied: ${patchFile.patches.length}`);
+  console.log(`  Patches applied: ${patchFile.patches.length + finalizerCount}`);
   if (nrf) {
     console.log(`  Original app CRC: ${toHex(nrf.originalCrc)}`);
     console.log(`  Patched app CRC:  ${toHex(nrf.newCrc)}`);
@@ -300,6 +328,8 @@ async function patch(patchFilePath: string, options: PatchOptions = {}): Promise
       zipDir: options.zipDir,
       source: sourceBytes,
       sourceName: patchFile.firmwarePath,
+      descriptorSource,
+      descriptorVariant,
       output,
       outputName,
     });
@@ -323,8 +353,8 @@ function showUsage(): void {
   console.log("  --zip <dir>  Write a firmware archive here; requires a release block.");
   console.log("               Without --bin, no loose image is written.\n");
   console.log("Examples:");
-  console.log("  bun run main.ts patch ./patches/nrf-6-221122-0.ts");
-  console.log("  bun run main.ts patch ./patches/mc-230-bluetooth-ext1-310.ts \\");
+  console.log("  bun run main.ts patch ./patches/6-221122-0/unlocked.ts");
+  console.log("  bun run main.ts patch ./patches/230-BLUETOOTH-EXT1-310/off-road.ts \\");
   console.log("    --zip apps/web/public/cfw");
   console.log("  bun run main.ts keygen ./keys");
 }

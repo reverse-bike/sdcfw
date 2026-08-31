@@ -3,24 +3,35 @@ import { getCollection } from "astro:content";
 import ControllerGuide from "../../components/ControllerGuide";
 import type { FirmwareRelease } from "../../components/controllerFlash";
 import Page from "../../layouts/Page.astro";
+import {
+  firmwareFamilyId,
+  readPublishedFirmware,
+} from "../../lib/publishedFirmware";
 
-const entries = await getCollection(
-  "firmware",
-  ({ id, data }) =>
-    !id.startsWith("_") && data.target === "controller" && !data.downloadOnly,
+const [content, families] = await Promise.all([
+  getCollection("firmware", ({ data }) => !data.downloadOnly),
+  getCollection("firmwareFamilies"),
+]);
+const familyById = new Map(families.map((family) => [firmwareFamilyId(family), family]));
+const entries = (await Promise.all(content.map(readPublishedFirmware))).filter(
+  (entry) => entry.data.target === "controller",
 );
 
 const releases: FirmwareRelease[] = entries
   .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
-  .map((entry) => ({
-    id: entry.id,
-    name: entry.data.name,
-    version: entry.data.version,
-    description: entry.data.description,
-    path: entry.data.path,
-    experimental: entry.data.experimental,
-    ...(entry.data.requires ? { requires: entry.data.requires } : {}),
-  }));
+  .map((entry) => {
+    const family = familyById.get(entry.data.family);
+    const requires = entry.data.requires ?? family?.data.requires;
+    return {
+      id: entry.data.anchor,
+      name: entry.data.name,
+      version: entry.data.version,
+      description: entry.data.description,
+      path: entry.data.path,
+      experimental: entry.data.experimental,
+      ...(requires ? { requires } : {}),
+    };
+  });
 ---
 
 <Page

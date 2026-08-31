@@ -1,14 +1,9 @@
 ---
-name: NRF 221122 Patched
-version: "1.0.0"
-target: nrf
-path: /cfw/nrf-221122-patched-v1.0.0.zip
+name: Unlocked
+path: /cfw/6-221122-0-unlocked-r221122-v1.0.0.zip
+anchor: nrf-221122
 date: 2025-12-25
 description: Patched version 221122 Firmware
-compatibility:
-  - R
-  - RX
-  - S2
 experimental: true
 ---
 
@@ -30,13 +25,11 @@ This is the first custom firmware for the Diamond Display. It's based on NRF ver
 
 Finally, the word "versions" on the display's settings menu that shows the version numbers has been patched to show "versionz" in order to visually verify the patches have been applied.
 
+This firmware will not accept future official updates from Super73.
+
 ## Compatibility
 
 This firmware should work on any display that is already running NRF version 221122. However, it may work on earlier versions as well. If you try it out, let us know how it goes in the Discord server!
-
-## Warning
-
-Applying this firmware will likely void any warranty. Also, this firmware will not accept future official updates from Super73.
 
 ## Changelog
 

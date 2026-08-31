@@ -1,16 +1,13 @@
-import type { McPatchFile } from "./types.js";
+import type { McPatchFile } from "../types.js";
+import { reportedVersion, source } from "./lib.js";
+
+const version = reportedVersion(311);
 
 const patchFile: McPatchFile = {
-  name: "mc-230-BLUETOOTH-EXT1-310",
-  target: "controller",
-  firmwarePath: "firmware/mc/230-BLUETOOTH-EXT1-310/GD_S73Rx_H104_S310US_20221020.bin",
-  datPath: "firmware/mc/230-BLUETOOTH-EXT1-310/GD_S73Rx_H104_S310US_20221020.dat",
-  imageBase: 0x08003800,
-  expectedSize: 26_200,
-  expectedSha256: "90d8bb178b308900375416f319e59f043b3363c158f2bec4dc6bbdb879f97840",
+  ...source,
   release: {
     version: "1.0.0",
-    controllerVersion: 311,
+    controllerVersion: version.controllerVersion,
   },
   patches: [
     {
@@ -20,13 +17,7 @@ const patchFile: McPatchFile = {
       data: [0x03, 0x24, 0x02, 0xe0],
       description: "Initialize internal operating mode to 3",
     },
-    {
-      type: "bytes",
-      address: 0x08007e02,
-      original: [0x0a, 0x23],
-      data: [0x0b, 0x23],
-      description: "Report controller version 311 on CAN 0x266",
-    },
+    version.patch,
     {
       type: "bytes",
       address: 0x0800937c,

@@ -394,6 +394,14 @@ export function buildPatchedImage(
     for (const patch of patchFile.patches) {
       applyPatch(flash, patch, foundAddresses.get(patch), imageBase, log);
     }
+    if (patchFile.finalizers && patchFile.finalizers.length > 0) {
+      log("Finalizing image...");
+      for (const finalize of patchFile.finalizers) {
+        const patch = finalize(flash);
+        const finalizerAddresses = verifyAll(flash, [patch], imageBase, log);
+        applyPatch(flash, patch, finalizerAddresses.get(patch), imageBase, log);
+      }
+    }
     return { output: flash };
   }
 
