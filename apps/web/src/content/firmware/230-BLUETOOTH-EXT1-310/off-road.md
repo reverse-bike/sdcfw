@@ -1,8 +1,7 @@
 ---
 name: Off-road
 path: /cfw/mc-311-patched-v1.0.0.zip
-family: mc-310
-variant: off-road
+anchor: mc-311-patched
 date: 2026-07-24
 description: Patched motor-controller firmware with off-road mode and throttle tuning
 experimental: true

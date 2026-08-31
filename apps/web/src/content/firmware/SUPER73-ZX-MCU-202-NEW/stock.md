@@ -1,8 +1,7 @@
 ---
 name: Factory firmware
 path: /cfw/mc-202-stock-v1.0.0.zip
-family: mc-202
-variant: stock
+anchor: mc-202-stock
 date: 2026-08-07
 description: The unmodified factory firmware for the SUPER73 ZX controller
 stock: true

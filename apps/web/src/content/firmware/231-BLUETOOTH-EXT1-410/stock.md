@@ -1,8 +1,7 @@
 ---
 name: Factory firmware
 path: /cfw/mc-410-stock-v1.0.0.zip
-family: mc-410
-variant: stock
+anchor: mc-410-stock
 date: 2026-08-07
 description: The unmodified factory firmware for controller 410
 stock: true

@@ -4,6 +4,7 @@ import { getCollection, type CollectionEntry } from "astro:content";
 import Callout from "../components/Callout";
 import FirmwareReleaseCard from "../components/FirmwareReleaseCard.astro";
 import {
+    firmwareFamilyId,
     readPublishedFirmware,
     type PublishedFirmware,
 } from "../lib/publishedFirmware";
@@ -11,11 +12,13 @@ import {
 type FirmwareFamily = CollectionEntry<"firmwareFamilies">;
 
 const [content, families] = await Promise.all([
-    getCollection("firmware", ({ id }) => !id.startsWith("_")),
+    getCollection("firmware"),
     getCollection("firmwareFamilies"),
 ]);
 const all = await Promise.all(content.map(readPublishedFirmware));
-const familyById = new Map(families.map((family) => [family.id, family]));
+const familyById = new Map(
+    families.map((family) => [firmwareFamilyId(family), family]),
+);
 
 /** Compare versions numerically, so 1.10.0 sorts above 1.9.0. */
 function compareVersions(a: string, b: string): number {
@@ -77,13 +80,13 @@ function groupByFamily(entries: PublishedFirmware[]): FirmwareGroup[] {
                 `${entry.entry.id}: ${entry.data.target} archive belongs to ${family.data.target} family ${family.id}`,
             );
         }
-        const group = groups.get(family.id) ?? {
-            id: family.id,
+        const group = groups.get(entry.data.family) ?? {
+            id: entry.data.family,
             family,
             entries: [],
         };
         group.entries.push(entry);
-        groups.set(family.id, group);
+        groups.set(entry.data.family, group);
     }
     return [...groups.values()];
 }

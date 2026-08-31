@@ -12,10 +12,8 @@ const firmware = defineCollection({
     name: z.string(),
     /** Path to the ZIP file relative to public folder (e.g., "/cfw/my-firmware.zip") */
     path: z.string(),
-    /** Factory-image family this release belongs to. */
-    family: z.string(),
-    /** Stable identity within a factory-image family. */
-    variant: z.string(),
+    /** Stable page anchor retained independently of the source directory layout. */
+    anchor: z.string(),
     /** Release date */
     date: z.coerce.date(),
     /** Short description shown in the list */
@@ -53,8 +51,8 @@ const firmware = defineCollection({
 
 const firmwareFamilies = defineCollection({
   loader: glob({
-    pattern: "**/[^_]*.{md,mdx}",
-    base: "./src/content/firmware-families",
+    pattern: "**/_family.{md,mdx}",
+    base: "./src/content/firmware",
   }),
   schema: z.object({
     /** Human name for this factory-image family. */

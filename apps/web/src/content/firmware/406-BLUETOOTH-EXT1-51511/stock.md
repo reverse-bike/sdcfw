@@ -1,8 +1,7 @@
 ---
 name: Factory firmware
 path: /cfw/mc-51511-stock-v1.0.0.zip
-family: mc-51511
-variant: stock
+anchor: mc-51511-stock
 date: 2026-08-24
 description: The unmodified factory firmware for the FTEX 5.15.11 controller
 stock: true

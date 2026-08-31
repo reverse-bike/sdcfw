@@ -18,11 +18,13 @@ import type { PatchFile } from "../apps/kitchen/patches/types";
 const projectRoot = path.resolve(import.meta.dir, "..");
 const archiveDir = path.join(projectRoot, "apps/web/public/cfw");
 const contentDir = path.join(projectRoot, "apps/web/src/content/firmware");
+const descriptorDir = path.join(projectRoot, "apps/kitchen/patches");
 
 interface ContentEntry {
   file: string;
   name: string;
   path: string;
+  anchor: string;
   family: string;
   variant: string;
   downloadOnly?: boolean;
@@ -44,30 +46,37 @@ function archiveFiles(): string[] {
 }
 
 function contentEntries(): ContentEntry[] {
-  return readdirSync(contentDir)
-    .filter((file) => file.endsWith(".md") && !file.startsWith("_"))
+  return [...new Bun.Glob("**/*.md").scanSync({ cwd: contentDir, onlyFiles: true })]
+    .filter((file) => path.posix.basename(file) !== "_family.md")
     .sort()
     .map((file) => {
       const raw = readFileSync(path.join(contentDir, file), "utf8");
       const frontmatter = /^---\n([\s\S]*?)\n---/.exec(raw)?.[1];
       if (!frontmatter) throw new Error(`${file} has no frontmatter`);
-      const data = Bun.YAML.parse(frontmatter) as Omit<ContentEntry, "file">;
-      return { file, ...data };
+      const data = Bun.YAML.parse(frontmatter) as Omit<ContentEntry, "file" | "family" | "variant">;
+      return {
+        file,
+        family: path.posix.dirname(file),
+        variant: path.posix.basename(file, ".md"),
+        ...data,
+      };
     });
 }
 
 function familyEntries(): FamilyEntry[] {
-  const familyDir = path.join(projectRoot, "apps/web/src/content/firmware-families");
-  return readdirSync(familyDir)
-    .filter((file) => file.endsWith(".md") && !file.startsWith("_"))
+  return [...new Bun.Glob("**/_family.md").scanSync({ cwd: contentDir, onlyFiles: true })]
     .sort()
     .map((file) => {
-      const raw = readFileSync(path.join(familyDir, file), "utf8");
+      const raw = readFileSync(path.join(contentDir, file), "utf8");
       const frontmatter = /^---\n([\s\S]*?)\n---/.exec(raw)?.[1];
       if (!frontmatter) throw new Error(`${file} has no frontmatter`);
       const data = Bun.YAML.parse(frontmatter) as Omit<FamilyEntry, "file">;
       return { file, ...data };
     });
+}
+
+function familyId(family: FamilyEntry): string {
+  return path.posix.dirname(family.file);
 }
 
 async function manifestOf(file: string): Promise<PackageManifest> {
@@ -105,9 +114,7 @@ test("every content entry points at a valid archive", async () => {
 });
 
 test("controller entries or their families declare what they may be flashed onto", async () => {
-  const families = new Map(
-    familyEntries().map((family) => [family.file.replace(/\.md$/, ""), family]),
-  );
+  const families = new Map(familyEntries().map((family) => [familyId(family), family]));
   for (const entry of contentEntries()) {
     const file = entry.path.replace("/cfw/", "");
     const manifest = await manifestOf(file);
@@ -124,15 +131,19 @@ test("controller entries or their families declare what they may be flashed onto
 test("firmware families contain uniquely identifiable variants", async () => {
   const families = familyEntries();
   const content = contentEntries();
-  const familyIds = new Set(families.map((family) => family.file.replace(/\.md$/, "")));
+  const familyIds = new Set(families.map(familyId));
+
+  const anchors = content.map((entry) => entry.anchor);
+  expect(anchors.every(Boolean)).toBe(true);
+  expect(new Set(anchors).size).toBe(anchors.length);
 
   for (const entry of content) {
     expect(`${entry.file}: ${familyIds.has(entry.family)}`).toBe(`${entry.file}: true`);
   }
 
   for (const family of families) {
-    const familyId = family.file.replace(/\.md$/, "");
-    const variants = content.filter((entry) => entry.family === familyId);
+    const id = familyId(family);
+    const variants = content.filter((entry) => entry.family === id);
     expect(`${family.file}: ${variants.length > 0}`).toBe(`${family.file}: true`);
 
     const variantIds = variants.map((entry) => entry.variant);
@@ -164,6 +175,20 @@ test("firmware families contain uniquely identifiable variants", async () => {
   }
 });
 
+test("published content mirrors the kitchen patch tree", () => {
+  for (const family of familyEntries()) {
+    const source = familyId(family);
+    expect(`${family.file}: ${existsSync(path.join(descriptorDir, source, "lib.ts"))}`).toBe(
+      `${family.file}: true`,
+    );
+  }
+
+  for (const entry of contentEntries()) {
+    const descriptor = path.join(descriptorDir, entry.family, `${entry.variant}.ts`);
+    expect(`${entry.file}: ${existsSync(descriptor)}`).toBe(`${entry.file}: true`);
+  }
+});
+
 test("no archive is published without a content entry describing it", () => {
   const linked = new Set(contentEntries().map((entry) => entry.path.replace("/cfw/", "")));
   for (const file of archiveFiles()) {
@@ -176,7 +201,6 @@ test("no archive is published without a content entry describing it", () => {
 });
 
 test("every descriptor builds and published outputs still match", async () => {
-  const descriptorDir = path.join(projectRoot, "apps/kitchen/patches");
   const descriptors = [...new Bun.Glob("**/*.ts").scanSync({ cwd: descriptorDir, onlyFiles: true })]
     .filter(
       (file) =>

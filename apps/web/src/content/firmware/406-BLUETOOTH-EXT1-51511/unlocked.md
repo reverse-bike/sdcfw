@@ -1,8 +1,7 @@
 ---
 name: Unlocked
 path: /cfw/mc-51516-patched-v1.0.6.zip
-family: mc-51511
-variant: unlocked
+anchor: mc-51511-patched
 date: 2026-08-25
 description: Uncorks throttle and pedal-assist speed in mode 4
 experimental: true

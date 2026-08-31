@@ -66,11 +66,12 @@ Astro reads every published archive while building the site. Release version,
 target, and reported device version come from its manifest rather than being
 copied into content frontmatter.
 
-Releases that share a factory image name their `family` and `variant` in
-frontmatter. The matching entry in `src/content/firmware-families/` owns the
-factory version and shared compatibility rules. The firmware page renders
-those releases together, and the controller guide inherits the family's
-requirements when deciding what to offer.
+Each directory in `src/content/firmware/` mirrors a factory-image directory in
+the Kitchen. Its `_family.md` owns the factory version and shared compatibility
+rules; every other Markdown filename is that family's stable variant ID. The
+firmware page renders those releases together, and the controller guide
+inherits the family's requirements when deciding what to offer. A release's
+explicit `anchor` preserves links independently of this source-oriented layout.
 
 Compatibility is expressed as version patterns where `X` matches any digit, so
 `3XX` covers 300–399. It has to accept the stock version, the versions our own
