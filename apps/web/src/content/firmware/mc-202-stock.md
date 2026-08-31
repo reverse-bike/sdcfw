@@ -1,8 +1,8 @@
 ---
-name: Motor Controller 202 Stock
-version: "1.0.0"
-target: controller
+name: Factory firmware
 path: /cfw/mc-202-stock-v1.0.0.zip
+family: mc-202
+variant: stock
 date: 2026-08-07
 description: The unmodified factory firmware for the SUPER73 ZX controller
 stock: true

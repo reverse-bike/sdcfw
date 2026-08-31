@@ -75,6 +75,9 @@ export type Patch =
   | PatchBytes
   | PatchFindReplace;
 
+/** Creates an output-dependent patch from the image produced so far. */
+export type PatchFinalizer = (image: Buffer<ArrayBuffer>) => Patch;
+
 /**
  * A region to preserve during cleaning.
  * Everything outside these regions will be filled with 0xFF.
@@ -159,6 +162,8 @@ export interface NrfPatchFile extends PatchFileBase {
  */
 export interface McPatchFile extends PatchFileBase {
   target: "controller";
+  /** Output-dependent patches, calculated and applied in order after ordinary patches. */
+  finalizers?: PatchFinalizer[];
   /** Path to the DFU init packet shipped with this image (relative to project root) */
   datPath: string;
   /** Exact pristine input size */
@@ -169,7 +174,8 @@ export interface McPatchFile extends PatchFileBase {
   release?: ReleaseInfo & {
     /**
      * Version this image reports over BLE once running, used to verify a flash
-     * succeeded. Declared by hand and deliberately not derived from the patches.
+     * succeeded. Source-specific helpers can produce its byte patches from the
+     * same value used here.
      */
     controllerVersion: number;
   };

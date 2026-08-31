@@ -7,7 +7,7 @@
  *   keygen <output-dir>    - Generate signing keys for nrfutil
  *
  * Usage:
- *   bun run main.ts patch ./patches/nrf-6-221122-0.ts
+ *   bun run main.ts patch ./patches/6-221122-0/unlocked.ts
  *   bun run main.ts keygen ./keys
  */
 
@@ -227,11 +227,17 @@ async function patch(patchFilePath: string, options: PatchOptions = {}): Promise
   console.log("Step 1: Loading patch file...");
   const patchModule = await import(path.resolve(patchFilePath));
   const patchFile: PatchFile = patchModule.default;
+  const finalizerCount =
+    patchFile.target === "controller" ? (patchFile.finalizers?.length ?? 0) : 0;
 
   console.log(`  Name: ${patchFile.name}`);
   console.log(`  Target: ${patchFile.target}`);
   console.log(`  Firmware: ${patchFile.firmwarePath}`);
-  console.log(`  Patches: ${patchFile.patches.length}\n`);
+  console.log(`  Patches: ${patchFile.patches.length}`);
+  if (finalizerCount > 0) {
+    console.log(`  Finalizers: ${finalizerCount}`);
+  }
+  console.log();
 
   // Resolve firmware path relative to project root
   const currentDir = path.dirname(new URL(import.meta.url).pathname);
@@ -284,7 +290,7 @@ async function patch(patchFilePath: string, options: PatchOptions = {}): Promise
 
   console.log("\nSummary:");
   console.log("========");
-  console.log(`  Patches applied: ${patchFile.patches.length}`);
+  console.log(`  Patches applied: ${patchFile.patches.length + finalizerCount}`);
   if (nrf) {
     console.log(`  Original app CRC: ${toHex(nrf.originalCrc)}`);
     console.log(`  Patched app CRC:  ${toHex(nrf.newCrc)}`);
@@ -323,8 +329,8 @@ function showUsage(): void {
   console.log("  --zip <dir>  Write a firmware archive here; requires a release block.");
   console.log("               Without --bin, no loose image is written.\n");
   console.log("Examples:");
-  console.log("  bun run main.ts patch ./patches/nrf-6-221122-0.ts");
-  console.log("  bun run main.ts patch ./patches/mc-230-bluetooth-ext1-310.ts \\");
+  console.log("  bun run main.ts patch ./patches/6-221122-0/unlocked.ts");
+  console.log("  bun run main.ts patch ./patches/230-BLUETOOTH-EXT1-310/off-road.ts \\");
   console.log("    --zip apps/web/public/cfw");
   console.log("  bun run main.ts keygen ./keys");
 }

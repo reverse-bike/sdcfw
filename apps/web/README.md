@@ -62,6 +62,16 @@ Split deliberately, and worth preserving:
   onto. Compatibility lives here precisely so it can widen without re-cutting
   and re-hashing an archive.
 
+Astro reads every published archive while building the site. Release version,
+target, and reported device version come from its manifest rather than being
+copied into content frontmatter.
+
+Releases that share a factory image name their `family` and `variant` in
+frontmatter. The matching entry in `src/content/firmware-families/` owns the
+factory version and shared compatibility rules. The firmware page renders
+those releases together, and the controller guide inherits the family's
+requirements when deciding what to offer.
+
 Compatibility is expressed as version patterns where `X` matches any digit, so
 `3XX` covers 300–399. It has to accept the stock version, the versions our own
 releases report, and re-flashing a version the bike already runs.

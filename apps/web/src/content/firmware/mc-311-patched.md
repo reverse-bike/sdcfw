@@ -1,13 +1,10 @@
 ---
-name: Motor Controller 310 Patched
-version: "1.0.0"
-target: controller
+name: Off-road
 path: /cfw/mc-311-patched-v1.0.0.zip
+family: mc-310
+variant: off-road
 date: 2026-07-24
 description: Patched motor-controller firmware with off-road mode and throttle tuning
-requires:
-  controllerVersion:
-    - 3XX
 experimental: true
 ---
 
@@ -24,12 +21,6 @@ Once installed your bike reports controller as version 311. The bike will start 
 
 Built from the stock controller 310 image, and applies to any bike whose motor controller
 reports a 3XX version. This is based on the US firmware.
-
-## Warning
-
-- Applying this firmware will void your warranty.
-- This firmware applies significantly more power to the motor. It may break or overheat your bike. It may wear parts out more quickly.
-- This firmware may interfere or not work with the official and 3rd party phone apps.
 
 ## Changelog
 

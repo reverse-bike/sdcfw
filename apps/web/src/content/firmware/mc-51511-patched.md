@@ -1,13 +1,10 @@
 ---
-name: Motor Controller 5.15.11 Patched
-version: "1.0.6"
-target: controller
+name: Unlocked
 path: /cfw/mc-51516-patched-v1.0.6.zip
+family: mc-51511
+variant: unlocked
 date: 2026-08-25
 description: Uncorks throttle and pedal-assist speed in mode 4
-requires:
-  controllerVersion:
-    - "515XX"
 experimental: true
 ---
 
@@ -22,13 +19,6 @@ experimental: true
 
 For bikes running motor-controller firmware 5.15.11 or an earlier release of
 this patch.
-
-## Warning
-
-- Applying this firmware will void your warranty.
-- This firmware applies more power to the motor. It may break or overheat your bike and may wear parts out more quickly.
-- Test with the driven wheel safely raised before riding, and verify that releasing the throttle and applying either brake reliably stops motor drive.
-- This firmware may interfere with or not work with official and third-party phone apps.
 
 ## Changelog
 

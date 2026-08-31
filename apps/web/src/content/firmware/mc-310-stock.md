@@ -1,14 +1,11 @@
 ---
-name: Motor Controller 310 Stock
-version: "1.0.0"
-target: controller
+name: Factory firmware
 path: /cfw/mc-310-stock-v1.0.0.zip
+family: mc-310
+variant: stock
 date: 2026-07-24
 description: The unmodified factory motor-controller firmware, for going back to stock
 stock: true
-requires:
-  controllerVersion:
-    - 3XX
 ---
 
 ## What this is

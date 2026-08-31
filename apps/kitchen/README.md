@@ -9,7 +9,7 @@ unknown or already-modified image.
 From the repository root:
 
 ```bash
-bun kitchen patch apps/kitchen/patches/mc-230-bluetooth-ext1-310.ts
+bun kitchen patch apps/kitchen/patches/230-BLUETOOTH-EXT1-310/off-road.ts
 ```
 
 This reads
@@ -17,7 +17,7 @@ This reads
 writes `…_20221020.patched.bin` beside it. Display patches work the same way:
 
 ```bash
-bun kitchen patch apps/kitchen/patches/nrf-6-221122-0.ts
+bun kitchen patch apps/kitchen/patches/6-221122-0/unlocked.ts
 ```
 
 Both outputs go to the source firmware directory unless `--bin <dir>` says
@@ -27,7 +27,7 @@ descriptor has patches, `<basename>.bin` when it has none.
 ## Publishing an archive
 
 ```bash
-bun kitchen patch apps/kitchen/patches/mc-230-bluetooth-ext1-310.ts \
+bun kitchen patch apps/kitchen/patches/230-BLUETOOTH-EXT1-310/off-road.ts \
   --zip apps/web/public/cfw
 ```
 
@@ -64,14 +64,40 @@ release: {
 
 The dividing line: a descriptor's `name` identifies the firmware it was derived
 _from_; everything in `release` describes what comes _out_. The reported version
-is declared by hand and deliberately not derived from the patches, because
-patch descriptors are hard enough to get right without coupling the manifest to
-their contents. Keeping it honest is a human responsibility, like the patch
-descriptions themselves.
+is an explicit output fact. When a controller family supports changing it, a
+source-specific helper produces both the byte patches and the value placed in
+the release block.
 
 **A release is not necessarily a patch.** A descriptor with an empty `patches`
 array publishes the pristine image, which is how "go back to stock" works. It
 still verifies `expectedSha256`, applies nothing, and packages the result.
+
+Controller releases derived from the same factory image live under a directory
+whose name matches the source directory under the repository's `firmware/`
+tree. The 5.15.11 family is the reference layout:
+
+```text
+patches/406-BLUETOOTH-EXT1-51511/
+├── lib.ts
+├── lib.test.ts
+├── stock.ts
+└── unlocked.ts
+```
+
+`lib.ts` owns the input path, companion, address base, size, hash, and helpers
+shared by the release descriptors beside it. Release checks discover descriptor
+files recursively and ignore `lib.ts` and `*.test.ts`.
+
+That family also passes its undotted reported version, such as `51516`, to
+`reportedVersion()`. The helper returns both the binary patches and the same
+numeric controller version for the archive manifest. A release therefore cannot
+change one without changing the other.
+
+Output-dependent metadata is expressed as ordered `finalizers`, which run after
+the ordinary patches. For this FTEX image, `sha256TlvPatch` hashes the completed
+MCUboot image and writes its SHA-256 TLV; `outerCrcPatch` then calculates the
+outer CAN-DFU CRC over the image containing that new digest. Patch variants do
+not carry precomputed integrity values.
 
 ## What is checked
 
@@ -83,6 +109,8 @@ still verifies `expectedSha256`, applies nothing, and packages the result.
 - A patch's replacement must be the same width as the bytes it verified.
   `Buffer.copy` truncates silently, so a mismatch would half-apply and still
   report success.
+- Controller finalizers are generated, verified, and applied in declaration
+  order after the ordinary patches.
 - Display images additionally get their bootloader settings and bank-0 CRCs
   recomputed, or the bootloader would reject the app it now holds.
 

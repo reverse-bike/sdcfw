@@ -9,7 +9,7 @@
  * precisely so it can change without re-cutting an archive.
  */
 import { expect, test } from "bun:test";
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { readPackage, type PackageManifest } from "@sdcfw/firmware-utils";
 import { buildPatchedImage } from "../apps/kitchen/patcher";
@@ -22,10 +22,18 @@ const contentDir = path.join(projectRoot, "apps/web/src/content/firmware");
 interface ContentEntry {
   file: string;
   name: string;
-  version: string;
-  target: string;
   path: string;
+  family: string;
+  variant: string;
   downloadOnly?: boolean;
+  requires?: { controllerVersion?: string[]; controllerVariant?: number[] };
+}
+
+interface FamilyEntry {
+  file: string;
+  name: string;
+  target: string;
+  factoryVersion: number | string;
   requires?: { controllerVersion?: string[]; controllerVariant?: number[] };
 }
 
@@ -48,6 +56,20 @@ function contentEntries(): ContentEntry[] {
     });
 }
 
+function familyEntries(): FamilyEntry[] {
+  const familyDir = path.join(projectRoot, "apps/web/src/content/firmware-families");
+  return readdirSync(familyDir)
+    .filter((file) => file.endsWith(".md") && !file.startsWith("_"))
+    .sort()
+    .map((file) => {
+      const raw = readFileSync(path.join(familyDir, file), "utf8");
+      const frontmatter = /^---\n([\s\S]*?)\n---/.exec(raw)?.[1];
+      if (!frontmatter) throw new Error(`${file} has no frontmatter`);
+      const data = Bun.YAML.parse(frontmatter) as Omit<FamilyEntry, "file">;
+      return { file, ...data };
+    });
+}
+
 async function manifestOf(file: string): Promise<PackageManifest> {
   const zip = new Uint8Array(readFileSync(path.join(archiveDir, file)));
   return (await readPackage(zip)).manifest;
@@ -66,7 +88,7 @@ test("every published archive parses and matches its own hashes", async () => {
   }
 });
 
-test("every content entry points at an archive that agrees with it", async () => {
+test("every content entry points at a valid archive", async () => {
   const files = new Set(archiveFiles());
 
   for (const entry of contentEntries()) {
@@ -78,19 +100,66 @@ test("every content entry points at an archive that agrees with it", async () =>
       throw new Error(`${entry.file} points at ${entry.path}, which does not exist`);
     }
 
-    const manifest = await manifestOf(file);
-    expect(`${entry.file}: ${manifest.version}`).toBe(`${entry.file}: ${entry.version}`);
-    expect(`${entry.file}: ${manifest.target}`).toBe(`${entry.file}: ${entry.target}`);
+    await manifestOf(file);
   }
 });
 
-test("controller entries declare what they may be flashed onto", () => {
+test("controller entries or their families declare what they may be flashed onto", async () => {
+  const families = new Map(
+    familyEntries().map((family) => [family.file.replace(/\.md$/, ""), family]),
+  );
   for (const entry of contentEntries()) {
-    if (entry.target !== "controller" || entry.downloadOnly) continue;
-    const patterns = entry.requires?.controllerVersion ?? [];
+    const file = entry.path.replace("/cfw/", "");
+    const manifest = await manifestOf(file);
+    if (manifest.target !== "controller" || entry.downloadOnly) continue;
+    const family = families.get(entry.family);
+    const patterns = entry.requires?.controllerVersion ?? family?.requires?.controllerVersion ?? [];
     expect(`${entry.file}: ${patterns.length > 0}`).toBe(`${entry.file}: true`);
     for (const pattern of patterns) {
       expect(`${entry.file}: ${/^[0-9X]+$/.test(pattern)}`).toBe(`${entry.file}: true`);
+    }
+  }
+});
+
+test("firmware families contain uniquely identifiable variants", async () => {
+  const families = familyEntries();
+  const content = contentEntries();
+  const familyIds = new Set(families.map((family) => family.file.replace(/\.md$/, "")));
+
+  for (const entry of content) {
+    expect(`${entry.file}: ${familyIds.has(entry.family)}`).toBe(`${entry.file}: true`);
+  }
+
+  for (const family of families) {
+    const familyId = family.file.replace(/\.md$/, "");
+    const variants = content.filter((entry) => entry.family === familyId);
+    expect(`${family.file}: ${variants.length > 0}`).toBe(`${family.file}: true`);
+
+    const variantIds = variants.map((entry) => entry.variant);
+    expect(`${family.file}: ${variantIds.every(Boolean)}`).toBe(`${family.file}: true`);
+    expect(`${family.file}: ${new Set(variantIds).size}`).toBe(
+      `${family.file}: ${variantIds.length}`,
+    );
+
+    const reportedVersions = new Set<number>();
+    for (const variant of variants) {
+      const manifest = await manifestOf(variant.path.replace("/cfw/", ""));
+      expect(`${variant.file}: ${manifest.target}`).toBe(`${variant.file}: ${family.target}`);
+      if (manifest.target !== "controller") continue;
+      const reported = manifest.provides.controllerVersion;
+      if (reportedVersions.has(reported)) {
+        throw new Error(`${family.file} has multiple variants that report ${reported}`);
+      }
+      reportedVersions.add(reported);
+    }
+
+    const stock = variants.find((variant) => variant.variant === "stock");
+    if (stock) {
+      const manifest = await manifestOf(stock.path.replace("/cfw/", ""));
+      if (manifest.target !== "controller") throw new Error(`${stock.file} is not a controller`);
+      expect(`${stock.file}: ${manifest.provides.controllerVersion}`).toBe(
+        `${stock.file}: ${family.factoryVersion}`,
+      );
     }
   }
 });
@@ -106,10 +175,15 @@ test("no archive is published without a content entry describing it", () => {
   }
 });
 
-test("published archives still match the descriptors that produced them", async () => {
+test("every descriptor builds and published outputs still match", async () => {
   const descriptorDir = path.join(projectRoot, "apps/kitchen/patches");
-  const descriptors = readdirSync(descriptorDir)
-    .filter((file) => file.endsWith(".ts") && file !== "types.ts")
+  const descriptors = [...new Bun.Glob("**/*.ts").scanSync({ cwd: descriptorDir, onlyFiles: true })]
+    .filter(
+      (file) =>
+        path.basename(file) !== "types.ts" &&
+        path.basename(file) !== "lib.ts" &&
+        !file.endsWith(".test.ts"),
+    )
     .sort();
 
   const archives = archiveFiles();
@@ -118,12 +192,21 @@ test("published archives still match the descriptors that produced them", async 
   for (const file of descriptors) {
     const patchFile = ((await import(path.join(descriptorDir, file))) as { default: PatchFile })
       .default;
-    if (!patchFile.release) continue;
+    const descriptorSource = path.basename(path.dirname(file));
+    const firmwareSource = path.basename(path.dirname(patchFile.firmwarePath));
+    expect(`${file}: ${descriptorSource}`).toBe(`${file}: ${firmwareSource}`);
+    expect(`${file}: ${existsSync(path.join(descriptorDir, descriptorSource, "lib.ts"))}`).toBe(
+      `${file}: true`,
+    );
 
     const source = readFileSync(path.join(projectRoot, patchFile.firmwarePath));
-    // Rebuilding is what catches an edited descriptor drifting away from
-    // firmware people have already installed.
+    // Every descriptor must still recognize and build from its source, whether
+    // or not that output has been published yet.
     const { output } = buildPatchedImage(patchFile, source);
+    if (!patchFile.release) continue;
+
+    // Rebuilding is what catches an edited release drifting away from firmware
+    // people have already installed.
     const companionPath =
       patchFile.target === "controller" ? patchFile.datPath : patchFile.uicrPath;
     const companion = readFileSync(path.join(projectRoot, companionPath));
