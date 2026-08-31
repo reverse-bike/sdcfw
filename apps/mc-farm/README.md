@@ -60,7 +60,7 @@ their manifest and file hashes before connecting to a bike. It is a dry run by
 default:
 
 ```bash
-bun mc-farm flash --zip apps/web/public/cfw/mc-311-patched-v1.0.0.zip
+bun mc-farm flash --zip apps/web/public/cfw/230-BLUETOOTH-EXT1-310-off-road-r311-v1.0.0.zip
 ```
 
 Loose binary and init-packet files remain supported:
@@ -87,7 +87,7 @@ Add `--execute` to send and finalize the firmware:
 
 ```bash
 bun mc-farm flash <bike-device-id> \
-  --zip apps/web/public/cfw/mc-311-patched-v1.0.0.zip \
+  --zip apps/web/public/cfw/230-BLUETOOTH-EXT1-310-off-road-r311-v1.0.0.zip \
   --execute
 ```
 

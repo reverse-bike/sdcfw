@@ -1,6 +1,6 @@
 ---
 name: Factory firmware
-path: /cfw/mc-410-stock-v1.0.0.zip
+path: /cfw/231-BLUETOOTH-EXT1-410-stock-v1.0.0.zip
 anchor: mc-410-stock
 date: 2026-08-07
 description: The unmodified factory firmware for controller 410

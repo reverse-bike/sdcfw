@@ -1,6 +1,6 @@
 ---
 name: Unlocked
-path: /cfw/mc-51516-patched-v1.0.6.zip
+path: /cfw/406-BLUETOOTH-EXT1-51511-unlocked-r51516-v1.0.6.zip
 anchor: mc-51511-patched
 date: 2026-08-25
 description: Uncorks throttle and pedal-assist speed in mode 4

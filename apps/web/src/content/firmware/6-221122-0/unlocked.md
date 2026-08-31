@@ -1,6 +1,6 @@
 ---
 name: Unlocked
-path: /cfw/nrf-221122-patched-v1.0.0.zip
+path: /cfw/6-221122-0-unlocked-r221122-v1.0.0.zip
 anchor: nrf-221122
 date: 2025-12-25
 description: Patched version 221122 Firmware

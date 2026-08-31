@@ -1,6 +1,6 @@
 ---
 name: Off-road
-path: /cfw/mc-311-patched-v1.0.0.zip
+path: /cfw/230-BLUETOOTH-EXT1-310-off-road-r311-v1.0.0.zip
 anchor: mc-311-patched
 date: 2026-07-24
 description: Patched motor-controller firmware with off-road mode and throttle tuning

@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { unzipSync, zipSync } from "fflate";
 import { buildPackage } from "./build.js";
-import { MANIFEST_NAME, packageFileName } from "./manifest.js";
+import { MANIFEST_NAME } from "./manifest.js";
 import { MissingManifestError, PackageError, readPackage } from "./read.js";
 
 const bin = new Uint8Array([1, 2, 3, 4]);
@@ -36,36 +36,8 @@ function controllerBuild(overrides: { kind?: "patched" | "stock"; source?: Uint8
   };
 }
 
-test("composes archive names from target, reported version, and kind", () => {
-  expect(
-    packageFileName({
-      target: "controller",
-      reportedVersion: 311,
-      kind: "patched",
-      version: "1.0.0",
-    }),
-  ).toBe("mc-311-patched-v1.0.0.zip");
-  expect(
-    packageFileName({
-      target: "controller",
-      reportedVersion: 310,
-      kind: "stock",
-      version: "2.1.0",
-    }),
-  ).toBe("mc-310-stock-v2.1.0.zip");
-  expect(
-    packageFileName({
-      target: "nrf",
-      reportedVersion: "221122",
-      kind: "patched",
-      version: "1.0.0",
-    }),
-  ).toBe("nrf-221122-patched-v1.0.0.zip");
-});
-
 test("round-trips a controller package", async () => {
   const built = await buildPackage(controllerBuild());
-  expect(built.fileName).toBe("mc-311-patched-v1.0.0.zip");
 
   const read = await readPackage(built.zip);
   if (read.target !== "controller") throw new Error("expected a controller package");
@@ -109,8 +81,7 @@ test("rejects a stock release whose output differs from its source", async () =>
 });
 
 test("accepts a stock release that reproduces its source", async () => {
-  const built = await buildPackage(controllerBuild({ kind: "stock", source: bin }));
-  expect(built.fileName).toBe("mc-311-stock-v1.0.0.zip");
+  await buildPackage(controllerBuild({ kind: "stock", source: bin }));
 });
 
 test("rejects a tampered file", async () => {

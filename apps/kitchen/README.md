@@ -36,10 +36,13 @@ and prints a content-entry stub to paste into
 `apps/web/src/content/firmware/`. Passing only `--zip` writes no loose binary,
 which is what lets a stock descriptor run at all.
 
-Kitchen composes the archive filename from the target, the version the image
-reports, whether it was patched, and the release version:
-`mc-311-patched-v1.0.0.zip`. Nothing parses that name back; it is for humans and
-for linking.
+Kitchen composes the archive filename from the descriptor's source directory
+and variant filename. Custom variants add the version they report, prefixed by
+`r`, before the package release version:
+`230-BLUETOOTH-EXT1-310-off-road-r311-v1.0.0.zip`. Stock releases omit the
+redundant reported version. These names exist strictly for linking; no code may
+parse one to recover semantic information. That always comes from the archive
+manifest.
 
 Kitchen is the only thing that produces archives, so hashes are never
 hand-maintained. Archives may be overwritten in place, since git holds the

@@ -86,9 +86,9 @@ Examples:
   mc-farm read-dfu
   mc-farm read-dfu --arm
   mc-farm read-dfu <device-id>
-  mc-farm flash --zip mc-311-patched-v1.0.0.zip
+  mc-farm flash --zip 230-BLUETOOTH-EXT1-310-off-road-r311-v1.0.0.zip
   mc-farm flash --bin controller.patched.bin --dat controller.dat
-  mc-farm flash <device-id> --zip mc-311-patched-v1.0.0.zip --execute
+  mc-farm flash <device-id> --zip 230-BLUETOOTH-EXT1-310-off-road-r311-v1.0.0.zip --execute
 `);
 }
 

@@ -1,6 +1,6 @@
 ---
 name: Off-road
-path: /cfw/mc-203-patched-v1.0.0.zip
+path: /cfw/SUPER73-ZX-MCU-202-NEW-off-road-r203-v1.0.0.zip
 anchor: mc-203-patched
 date: 2026-08-10
 description: Patched SUPER73 ZX motor-controller firmware with off-road mode and faster throttle response

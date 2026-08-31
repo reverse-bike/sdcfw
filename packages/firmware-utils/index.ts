@@ -1,15 +1,11 @@
 export {
   MANIFEST_NAME,
   MANIFEST_SCHEMA,
-  TARGET_PREFIX,
   describePackage,
-  packageFileName,
   type ControllerManifest,
   type DisplayManifest,
   type PackageFile,
-  type PackageKind,
   type PackageManifest,
-  type PackageTarget,
 } from "./manifest.js";
 
 export { sha256Hex } from "./hash.js";
@@ -23,6 +19,7 @@ export {
   type DisplayBuild,
   type NamedBytes,
   type PackageBuild,
+  type PackageKind,
 } from "./build.js";
 
 export {

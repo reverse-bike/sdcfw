@@ -10,7 +10,7 @@ An archive is a zip holding the firmware, its companion file, and a manifest
 named `sdcfw.json`:
 
 ```text
-mc-311-patched-v1.0.0.zip
+230-BLUETOOTH-EXT1-310-off-road-r311-v1.0.0.zip
 ├── sdcfw.json
 ├── GD_S73Rx_H104_S310US_20221020.patched.bin
 └── GD_S73Rx_H104_S310US_20221020.dat
@@ -53,13 +53,14 @@ with `shasum -a 256`. `readPackage` verifies every file against them.
 - **Compatibility.** Which bikes a release may be flashed onto is knowledge
   that grows, so it lives in the site's content collection where it can change
   without re-cutting and re-hashing an archive.
-- **An id or slug.** Filenames are composed from the manifest fields and are
-  never parsed back; they exist for humans and for linking.
+- **An id, slug, or archive filename.** Published names exist only in the
+  Kitchen and site content as links to these bytes.
 
 ## Filenames
 
-`packageFileName` composes `<target>-<reported version>-<patched|stock>-v<version>.zip`.
-Kitchen owns this; nothing reads a filename to learn what an archive contains.
+This package neither creates nor interprets archive filenames. A filename is a
+link, not part of the archive format. Callers must read `sdcfw.json` for every
+semantic fact about an archive.
 
 ## Usage
 

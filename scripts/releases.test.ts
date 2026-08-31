@@ -211,6 +211,7 @@ test("every descriptor builds and published outputs still match", async () => {
     .sort();
 
   const archives = archiveFiles();
+  const content = contentEntries();
   let checked = 0;
 
   for (const file of descriptors) {
@@ -235,16 +236,18 @@ test("every descriptor builds and published outputs still match", async () => {
       patchFile.target === "controller" ? patchFile.datPath : patchFile.uicrPath;
     const companion = readFileSync(path.join(projectRoot, companionPath));
 
-    const reported =
-      patchFile.target === "controller"
-        ? patchFile.release.controllerVersion
-        : patchFile.release.nrfVersion;
-    const kind = patchFile.patches.length > 0 ? "patched" : "stock";
-    const prefix = patchFile.target === "controller" ? "mc" : "nrf";
-    const expected = `${prefix}-${reported}-${kind}-v${patchFile.release.version}.zip`;
+    const descriptorVariant = path.basename(file, ".ts");
+    const entry = content.find(
+      (candidate) =>
+        candidate.family === descriptorSource && candidate.variant === descriptorVariant,
+    );
+    if (!entry) {
+      throw new Error(`${file} declares a release, but has no published content entry`);
+    }
+    const expected = entry.path.replace("/cfw/", "");
 
     if (!archives.includes(expected)) {
-      throw new Error(`${file} declares a release, but ${expected} is not published`);
+      throw new Error(`${entry.file} links ${expected}, but it is not published`);
     }
 
     const parsed = await readPackage(new Uint8Array(readFileSync(path.join(archiveDir, expected))));
@@ -266,6 +269,10 @@ test("every descriptor builds and published outputs still match", async () => {
       parsed.target === "controller"
         ? parsed.manifest.provides.controllerVersion
         : parsed.manifest.provides.nrfVersion;
+    const reported =
+      patchFile.target === "controller"
+        ? patchFile.release.controllerVersion
+        : patchFile.release.nrfVersion;
     expect(`${expected} reports: ${publishedReports}`).toBe(`${expected} reports: ${reported}`);
     checked++;
   }
