@@ -68,10 +68,10 @@ export default function ControllerGuide(props: ControllerGuideProps) {
   const idle = () => busy() === false;
 
   const offers = createMemo(() => {
-    const value = info();
-    if (!value) return [];
+    const staticValue = info();
+    if (!staticValue) return [];
     return props.releases
-      .map((release) => ({ release, applicability: checkApplicability(release, value) }))
+      .map((release) => ({ release, applicability: checkApplicability(release, staticValue) }))
       .filter((offer) => offer.applicability.ok);
   });
 

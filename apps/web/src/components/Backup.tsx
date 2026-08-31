@@ -55,16 +55,17 @@ export default function Backup(props: BackupProps) {
 
   // Warn user if they try to leave with an undownloaded backup
   createEffect(() => {
-    const hasUndownloadedBackup = state() === "complete" && backupResult() && !backupDownloaded();
+    const initialHasUndownloadedBackup =
+      state() === "complete" && backupResult() && !backupDownloaded();
 
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (hasUndownloadedBackup) {
+      if (initialHasUndownloadedBackup) {
         e.preventDefault();
         return;
       }
     };
 
-    if (hasUndownloadedBackup) {
+    if (initialHasUndownloadedBackup) {
       window.addEventListener("beforeunload", handleBeforeUnload);
     }
 
