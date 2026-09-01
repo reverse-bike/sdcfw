@@ -1,26 +1,37 @@
 ---
-name: Off-road
-path: /cfw/SUPER73-ZX-MCU-202-NEW-off-road-r203-v1.0.0.zip
+name: Mode 4 Unlock
+path: /cfw/SUPER73-ZX-MCU-202-NEW-off-road-r203-v1.0.1.zip
 anchor: mc-203-patched
-date: 2026-08-10
-description: Patched SUPER73 ZX motor-controller firmware with off-road mode and faster throttle response
+date: 2026-09-01
+description: Reduced high-speed current rolloff and faster throttle response in mode 4
 experimental: true
 ---
 
+Requires setting the bike into mode 4 to activate full power.
+
 ## Features
 
-- Starts in mode 3 and ignores later operating-mode changes from the display
-- Faster low- and high-speed throttle response
-- Smoother q-axis current command filtering
+- Keeps normal display-controlled operating-mode selection
+- Faster low- and high-speed throttle response in mode 4
+- Bypasses speed-dependent current scaling in the primary assist path and the
+  mode 4 throttle path
 
 Once installed, the bike reports controller version 203.
 
 ## Compatibility
 
 Built from the stock controller 202 image for the SUPER73 ZX, and applies to
-bikes whose motor controller reports a 2XX version.
+bikes whose motor controller reports a 201 or 202 versions.
 
 ## Changelog
+
+### v1.0.1
+
+- Restored normal operating-mode selection from the display
+- Added equal low- and high-speed throttle response rates to modes 3 and 7
+- Bypassed speed-dependent current scaling for primary assist and mode 3/7
+  throttle
+- Restored the factory q-axis current-command filter
 
 ### v1.0.0
 
