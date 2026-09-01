@@ -6,7 +6,7 @@ const version = reportedVersion(203);
 const patchFile: McPatchFile = {
   ...source,
   release: {
-    version: "1.0.1",
+    version: "1.0.2",
     controllerVersion: version.controllerVersion,
   },
   patches: [

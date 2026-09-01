@@ -10,22 +10,23 @@ export const source = {
   expectedSha256: "8687af4de77c81682beeaa39af65f1b2536301d917124c43193d72ad63af0f9a",
 } satisfies Omit<McPatchFile, "patches" | "release" | "finalizers">;
 
-/** Build the instruction that reports this source's controller version. */
+/** Build the instructions that report this source's controller version over BLE. */
 export function reportedVersion(controllerVersion: number): {
   controllerVersion: number;
   patch: Patch;
 } {
-  if (!Number.isInteger(controllerVersion) || controllerVersion < 0 || controllerVersion > 0xff) {
-    throw new Error(`controller version ${controllerVersion} does not fit the encoded instruction`);
+  const suffix = controllerVersion - 200;
+  if (!Number.isInteger(controllerVersion) || suffix < 0 || suffix > 99) {
+    throw new Error(`controller version ${controllerVersion} is not a supported 2XX version`);
   }
   return {
     controllerVersion,
     patch: {
       type: "bytes",
-      address: 0x08009ede,
-      original: [0x4f, 0xf0, 0xca, 0x00],
-      data: [0x4f, 0xf0, controllerVersion, 0x00],
-      description: `Report controller version ${controllerVersion} through SDO 0x1F87`,
+      address: 0x08008550,
+      original: [0xa1, 0x71, 0xe6, 0x71],
+      data: [suffix, 0x21, 0xe1, 0x80],
+      description: `Report controller version ${controllerVersion} over BLE through CAN 0x266`,
     },
   };
 }
