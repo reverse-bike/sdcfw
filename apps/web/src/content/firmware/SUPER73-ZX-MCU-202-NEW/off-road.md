@@ -1,18 +1,19 @@
 ---
 name: Mode 4 Unlock
-path: /cfw/SUPER73-ZX-MCU-202-NEW-off-road-r203-v1.0.2.zip
+path: /cfw/SUPER73-ZX-MCU-202-NEW-off-road-r203-v1.0.3.zip
 anchor: mc-203-patched
 date: 2026-09-01
-description: Reduced high-speed current rolloff and faster throttle response in mode 4
+description: Reduced high-speed current rolloff in mode 4
 experimental: true
 ---
 
-Requires setting the bike into mode 4 to activate full power. Works with controllers labeled `SUPER73_ZX_US_V2_H102_F201`.
+Requires setting the bike into mode 4 to activate full power.
 
 ## Features
 
 - Keeps normal display-controlled operating-mode selection
-- Faster low- and high-speed throttle response in mode 4
+- Retains the factory throttle response rates
+- Disables field weakening at all vehicle speeds
 - Bypasses speed-dependent current scaling in the primary assist path and the
   mode 4 throttle path
 
@@ -24,6 +25,13 @@ Built from the stock controller 202 image for the SUPER73 ZX, and applies to
 bikes whose motor controller reports a 201 or 202 versions.
 
 ## Changelog
+
+### v1.0.3
+
+- Restored the factory throttle response rates to avoid excessive current ramp
+  under full throttle
+- Disabled field weakening to test its interaction with full-throttle current
+  demand
 
 ### v1.0.2
 
