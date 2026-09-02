@@ -5,6 +5,10 @@
  * can point at a file that was never cut, or claim a version the archive does
  * not carry. Everything here is checkable without hardware.
  *
+ * An archive may be published without a content entry. Nothing on the site
+ * lists it then, but it is still served by direct link, which is how a release
+ * is handed to a few people before it is offered to everyone.
+ *
  * Compatibility is deliberately not cross-checked. It exists only in content,
  * precisely so it can change without re-cutting an archive.
  */
@@ -12,6 +16,7 @@ import { expect, test } from "bun:test";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { readPackage, type PackageManifest } from "@sdcfw/firmware-utils";
+import { archiveFileName } from "../apps/kitchen/archive";
 import { buildPatchedImage } from "../apps/kitchen/patcher";
 import type { PatchFile } from "../apps/kitchen/patches/types";
 
@@ -189,17 +194,6 @@ test("published content mirrors the kitchen patch tree", () => {
   }
 });
 
-test("no archive is published without a content entry describing it", () => {
-  const linked = new Set(contentEntries().map((entry) => entry.path.replace("/cfw/", "")));
-  for (const file of archiveFiles()) {
-    if (!linked.has(file)) {
-      throw new Error(
-        `${file} is published but no content entry links it, so nothing on the site can offer it`,
-      );
-    }
-  }
-});
-
 test("every descriptor builds and published outputs still match", async () => {
   const descriptors = [...new Bun.Glob("**/*.ts").scanSync({ cwd: descriptorDir, onlyFiles: true })]
     .filter(
@@ -236,18 +230,34 @@ test("every descriptor builds and published outputs still match", async () => {
       patchFile.target === "controller" ? patchFile.datPath : patchFile.uicrPath;
     const companion = readFileSync(path.join(projectRoot, companionPath));
 
+    // A content entry names the archive it links. Without one, the archive is
+    // unlisted and must carry the name Kitchen gives it, or nothing could find it.
     const descriptorVariant = path.basename(file, ".ts");
     const entry = content.find(
       (candidate) =>
         candidate.family === descriptorSource && candidate.variant === descriptorVariant,
     );
-    if (!entry) {
-      throw new Error(`${file} declares a release, but has no published content entry`);
-    }
-    const expected = entry.path.replace("/cfw/", "");
+    const reported =
+      patchFile.target === "controller"
+        ? patchFile.release.controllerVersion
+        : patchFile.release.nrfVersion;
+    const expected = entry
+      ? entry.path.replace("/cfw/", "")
+      : archiveFileName({
+          sourceName: descriptorSource,
+          variant: descriptorVariant,
+          version: patchFile.release.version,
+          ...(patchFile.patches.length > 0
+            ? { stock: false, reportedVersion: reported }
+            : { stock: true }),
+        });
 
     if (!archives.includes(expected)) {
-      throw new Error(`${entry.file} links ${expected}, but it is not published`);
+      throw new Error(
+        entry
+          ? `${entry.file} links ${expected}, but it is not published`
+          : `${file} declares a release, but neither a content entry nor ${expected} is published`,
+      );
     }
 
     const parsed = await readPackage(new Uint8Array(readFileSync(path.join(archiveDir, expected))));
@@ -269,10 +279,6 @@ test("every descriptor builds and published outputs still match", async () => {
       parsed.target === "controller"
         ? parsed.manifest.provides.controllerVersion
         : parsed.manifest.provides.nrfVersion;
-    const reported =
-      patchFile.target === "controller"
-        ? patchFile.release.controllerVersion
-        : patchFile.release.nrfVersion;
     expect(`${expected} reports: ${publishedReports}`).toBe(`${expected} reports: ${reported}`);
     checked++;
   }

@@ -1,5 +1,11 @@
 import { For, Show, createSignal } from "solid-js";
-import { connect, hex, readVersionInfo, type ModuleVersionInfo } from "@sdcfw/ble-utils";
+import {
+  connect,
+  hex,
+  readVersionInfo,
+  withDeadline,
+  type ModuleVersionInfo,
+} from "@sdcfw/ble-utils";
 import Button from "./Button";
 import StatusMessage from "./StatusMessage";
 import ToolCard from "./ToolCard";
@@ -31,7 +37,9 @@ export default function ControllerRead() {
 
       setState("reading");
       setStatus("Reading firmware and device information…");
-      setInfo(await readVersionInfo(server));
+      // Chrome can leave a GATT operation pending forever on a wedged link,
+      // so the read as a whole is bounded rather than trusting each step.
+      setInfo(await withDeadline(readVersionInfo(server), 60_000, "reading firmware information"));
       setStatus("");
     } catch (cause) {
       setError(errorMessage(cause));

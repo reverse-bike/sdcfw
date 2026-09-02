@@ -12,9 +12,21 @@ export async function authenticate(
     10_000,
     "get auth service",
   );
-  const challengeCharacteristic = await service.getCharacteristic(AUTH_CHALLENGE);
-  const responseCharacteristic = await service.getCharacteristic(AUTH_RESPONSE);
-  const stateCharacteristic = await service.getCharacteristic(AUTH_STATE);
+  const challengeCharacteristic = await withTimeout(
+    service.getCharacteristic(AUTH_CHALLENGE),
+    10_000,
+    "get auth challenge characteristic",
+  );
+  const responseCharacteristic = await withTimeout(
+    service.getCharacteristic(AUTH_RESPONSE),
+    10_000,
+    "get auth response characteristic",
+  );
+  const stateCharacteristic = await withTimeout(
+    service.getCharacteristic(AUTH_STATE),
+    10_000,
+    "get auth state characteristic",
+  );
 
   const challenge = bytesOf(
     await withTimeout(challengeCharacteristic.readValue(), 10_000, "read auth challenge"),

@@ -7,7 +7,7 @@ import {
   HISTORY_SELECT_CHAR,
 } from "./constants.js";
 import { authenticate } from "./auth.js";
-import { bytesOf, withTimeout } from "./util.js";
+import { BleTimeoutError, bytesOf, withTimeout } from "./util.js";
 
 const DIS_LABELS: Record<string, string> = {
   "2a23": "System ID",
@@ -95,11 +95,18 @@ export async function readStandardDeviceInformation(
     10_000,
     "get Device Information Service",
   );
-  for (const characteristic of await dis.getCharacteristics()) {
+  const characteristics = await withTimeout(
+    dis.getCharacteristics(),
+    10_000,
+    "list Device Information characteristics",
+  );
+  for (const characteristic of characteristics) {
     if (!characteristic.properties.read) continue;
+    const uuid = shortUuid(characteristic.uuid) ?? characteristic.uuid;
     try {
-      const uuid = shortUuid(characteristic.uuid) ?? characteristic.uuid;
-      const value = bytesOf(await characteristic.readValue());
+      const value = bytesOf(
+        await withTimeout(characteristic.readValue(), 10_000, `read Device Information ${uuid}`),
+      );
       const text = DIS_TEXT_IDS.has(uuid) ? utf8(value) : undefined;
       values.push({
         uuid,
@@ -107,8 +114,10 @@ export async function readStandardDeviceInformation(
         value,
         ...(text === undefined ? {} : { text }),
       });
-    } catch {
-      // Optional DIS characteristics may be present but unreadable.
+    } catch (error) {
+      // Optional DIS characteristics may be present but unreadable. A stall,
+      // though, means the link is wedged and nothing after it will work.
+      if (error instanceof BleTimeoutError) throw error;
     }
   }
   return values;
@@ -129,24 +138,48 @@ export async function readVersionInfo(
     throw new Error("application authentication failed");
   }
 
-  const appService = await server.getPrimaryService(APP_SERVICE);
-  const select = await appService.getCharacteristic(HISTORY_SELECT_CHAR);
-  const tx = await appService.getCharacteristic(APP_TX_CHAR);
-  const rx = await appService.getCharacteristic(APP_RX_CHAR);
+  const appService = await withTimeout(
+    server.getPrimaryService(APP_SERVICE),
+    10_000,
+    "get application service",
+  );
+  const select = await withTimeout(
+    appService.getCharacteristic(HISTORY_SELECT_CHAR),
+    10_000,
+    "get history select characteristic",
+  );
+  const tx = await withTimeout(
+    appService.getCharacteristic(APP_TX_CHAR),
+    10_000,
+    "get application TX characteristic",
+  );
+  const rx = await withTimeout(
+    appService.getCharacteristic(APP_RX_CHAR),
+    10_000,
+    "get application RX characteristic",
+  );
 
   async function readRegistry(id: number): Promise<Uint8Array> {
-    await select.writeValueWithResponse(new Uint8Array([id >>> 8, id & 0xff]));
+    const label = id.toString(16).toUpperCase();
+    await withTimeout(
+      select.writeValueWithResponse(new Uint8Array([id >>> 8, id & 0xff])),
+      10_000,
+      `select registry ${label}`,
+    );
     for (const characteristic of [rx, tx]) {
       try {
-        const bytes = bytesOf(await characteristic.readValue());
+        const bytes = bytesOf(
+          await withTimeout(characteristic.readValue(), 10_000, `read registry ${label}`),
+        );
         if (bytes.length === 10 && bytes[0] === id >>> 8 && bytes[1] === (id & 0xff)) {
           return bytes;
         }
-      } catch {
-        // Try the other characteristic.
+      } catch (error) {
+        // Try the other characteristic, unless the link has stopped answering.
+        if (error instanceof BleTimeoutError) throw error;
       }
     }
-    throw new Error(`registry ${id.toString(16).toUpperCase()} was not returned`);
+    throw new Error(`registry ${label} was not returned`);
   }
 
   const fcfc = await readRegistry(0xfcfc);

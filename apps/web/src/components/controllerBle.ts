@@ -17,10 +17,32 @@ function bluetooth(): Bluetooth {
   return navigator.bluetooth;
 }
 
-export function errorMessage(error: unknown): string {
-  if (error instanceof DOMException && error.name === "NotFoundError") {
-    return "No device was selected.";
+/** The user dismissed the device chooser without picking a device. */
+export class NoDeviceSelectedError extends Error {
+  constructor() {
+    super("No device was selected.");
+    this.name = "NoDeviceSelectedError";
   }
+}
+
+/**
+ * Chrome reports a dismissed chooser as a `NotFoundError`, the same name it
+ * uses for a missing GATT service or characteristic. Only the chooser call
+ * itself can tell the two apart, so it is wrapped here and `errorMessage`
+ * leaves every other error's own text alone.
+ */
+async function choose(request: Promise<BluetoothDevice>): Promise<BluetoothDevice> {
+  try {
+    return await request;
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "NotFoundError") {
+      throw new NoDeviceSelectedError();
+    }
+    throw error;
+  }
+}
+
+export function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
@@ -32,10 +54,12 @@ export function describeDevice(device: BluetoothDevice): string {
 
 /** Prompts for a bike running its normal application firmware. */
 export function requestAppDevice(): Promise<BluetoothDevice> {
-  return bluetooth().requestDevice({
-    filters: [{ manufacturerData: [{ companyIdentifier: APP_MANUFACTURER_ID }] }],
-    optionalServices: [DIS_SERVICE, AUTH_SERVICE, APP_SERVICE, DFU_SERVICE],
-  });
+  return choose(
+    bluetooth().requestDevice({
+      filters: [{ manufacturerData: [{ companyIdentifier: APP_MANUFACTURER_ID }] }],
+      optionalServices: [DIS_SERVICE, AUTH_SERVICE, APP_SERVICE, DFU_SERVICE],
+    }),
+  );
 }
 
 /**
@@ -44,10 +68,12 @@ export function requestAppDevice(): Promise<BluetoothDevice> {
  * advertisement, so its name is offered as a second way to match it.
  */
 export function requestDfuDevice(): Promise<BluetoothDevice> {
-  return bluetooth().requestDevice({
-    filters: [{ services: [DFU_SERVICE] }, { namePrefix: "Dfu" }],
-    optionalServices: [DIS_SERVICE, DFU_SERVICE],
-  });
+  return choose(
+    bluetooth().requestDevice({
+      filters: [{ services: [DFU_SERVICE] }, { namePrefix: "Dfu" }],
+      optionalServices: [DIS_SERVICE, DFU_SERVICE],
+    }),
+  );
 }
 
 export function safeDisconnect(server: BluetoothRemoteGATTServer | undefined): void {
