@@ -79,5 +79,10 @@ and reading one back proves "an image reporting this version is running", not
   `0x2A25` as a stable identifier, so `serialNumber` is always absent over Web
   Bluetooth though the CLI reads it. The blocklist also blocks Nordic's _legacy_
   DFU service (`00001530-…`), but not the Secure DFU service this code uses.
+- **A timed-out `gatt.connect()` is still running.** Chrome has no connect
+  timeout of its own on macOS, and calling `connect()` again while the first is
+  pending fails with "Connection already in progress". `connect` calls
+  `disconnect()` after a timed-out attempt, which cancels the pending connect,
+  before it retries.
 - **`BluetoothDevice.id` is a per-origin salted hash,** not the address the CLI
   prints. It distinguishes devices within a session and nothing more.

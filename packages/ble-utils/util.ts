@@ -70,10 +70,23 @@ export async function connect(
   let lastError: unknown;
 
   for (let attempt = 1; attempt <= attempts; attempt++) {
+    const pending = gatt.connect();
     try {
-      return await withTimeout(gatt.connect(), timeoutMs, `connect attempt ${attempt}`);
+      return await withTimeout(pending, timeoutMs, `connect attempt ${attempt}`);
     } catch (error) {
       lastError = error;
+      if (error instanceof BleTimeoutError) {
+        // Chrome keeps the platform connect running after our timeout, and a
+        // second connect() then fails with "Connection already in progress".
+        // disconnect() cancels the pending connect, which rejects it with an
+        // AbortError nobody is waiting on any more.
+        pending.catch(() => {});
+        try {
+          gatt.disconnect();
+        } catch {
+          // Nothing to cancel.
+        }
+      }
       options.log?.(
         `connect attempt ${attempt}/${attempts} failed: ${error instanceof Error ? error.message : String(error)}`,
       );
