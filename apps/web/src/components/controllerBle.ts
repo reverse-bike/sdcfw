@@ -42,8 +42,34 @@ async function choose(request: Promise<BluetoothDevice>): Promise<BluetoothDevic
   }
 }
 
+/**
+ * Chrome's messages for a failed operating-system pairing. The bike's
+ * application and auth characteristics require an encrypted link, so the
+ * first read of one makes Chrome pair with the bike on the user's behalf (on
+ * Windows and Linux; macOS pairs silently). When that fails, all the user sees
+ * is "Authentication failed.", which reads as if the bike refused them.
+ */
+const PAIRING_ERRORS = [
+  "Authentication failed.",
+  "Authentication rejected.",
+  "Authentication timeout.",
+  "Authentication canceled.",
+  "GATT Error: Not paired.",
+  "GATT operation not authorized.",
+];
+
+const PAIRING_HINT =
+  "This computer could not pair with the bike, which the bike requires before it will share " +
+  "anything. If the bike appears in the computer's Bluetooth settings, remove it, power-cycle " +
+  "the bike, and try again. A phone that already works with the bike can use this site in " +
+  "Chrome instead.";
+
 export function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
+  const message = error instanceof Error ? error.message : String(error);
+  if (PAIRING_ERRORS.includes(message)) {
+    return `${message} ${PAIRING_HINT}`;
+  }
+  return message;
 }
 
 /** Formats a device as "name [id]", matching the CLI. */
