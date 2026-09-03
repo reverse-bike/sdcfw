@@ -14,5 +14,8 @@
       "Bash(ls:*)",
       "Bash(bunx astro check:*)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "binja"
+  ]
 }

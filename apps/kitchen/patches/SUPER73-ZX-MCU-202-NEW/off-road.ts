@@ -6,7 +6,7 @@ const version = reportedVersion(203);
 const patchFile: McPatchFile = {
   ...source,
   release: {
-    version: "1.0.3",
+    version: "1.0.4",
     controllerVersion: version.controllerVersion,
   },
   patches: [
@@ -17,13 +17,6 @@ const patchFile: McPatchFile = {
       original: [0xd9],
       data: [0xe0],
       description: "Disable field weakening at all vehicle speeds",
-    },
-    {
-      type: "bytes",
-      address: 0x08007768,
-      original: [0x1c, 0xd2, 0x00, 0xeb, 0x86, 0x00],
-      data: [0x00, 0xbf, 0x00, 0xbf, 0x00, 0xbf],
-      description: "Bypass speed-dependent current scaling in the mode 3/7 throttle path",
     },
     {
       type: "bytes",
