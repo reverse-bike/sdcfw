@@ -7,5 +7,5 @@ compatibility:
   - SUPER73 ZX
 requires:
   controllerVersion:
-    - "2XX"
+    - "20X"
 ---
