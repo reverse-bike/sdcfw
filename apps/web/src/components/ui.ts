@@ -45,15 +45,15 @@ export interface CalloutStyle {
 
 export const calloutStyles: Record<CalloutType, CalloutStyle> = {
   warning: {
-    bg: "bg-yellow-50",
+    bg: "bg-yellow-50 dark:bg-yellow-950",
     border: "border-yellow-400",
     icon: "text-yellow-400",
-    text: "text-yellow-700",
+    text: "text-yellow-700 dark:text-yellow-300",
   },
   info: {
-    bg: "bg-blue-50",
+    bg: "bg-blue-50 dark:bg-blue-950",
     border: "border-blue-400",
     icon: "text-blue-400",
-    text: "text-blue-700",
+    text: "text-blue-700 dark:text-blue-300",
   },
 };

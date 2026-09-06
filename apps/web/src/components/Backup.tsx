@@ -390,8 +390,8 @@ export default function Backup(props: BackupProps) {
   const content = (
     <>
       <Show when={error()}>
-        <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
-          <p class="text-sm text-red-700">{error()}</p>
+        <div class="bg-red-50 dark:bg-red-950 border-l-4 border-red-400 p-4 mb-4">
+          <p class="text-sm text-red-700 dark:text-red-300">{error()}</p>
         </div>
       </Show>
 
@@ -405,7 +405,7 @@ export default function Backup(props: BackupProps) {
         <button
           onClick={arm}
           disabled={isDisabled()}
-          class="w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+          class="w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed"
         >
           {props.selectedDevice ? "Arm Backup" : "Select a device first"}
         </button>
@@ -421,27 +421,27 @@ export default function Backup(props: BackupProps) {
       </Show>
 
       <Show when={deviceInfo()}>
-        <div class="mt-4 p-4 bg-gray-50 rounded">
+        <div class="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded">
           <h3 class="font-semibold mb-2">Device Information</h3>
           <div class="text-sm space-y-1">
             <div class="flex justify-between">
-              <span class="text-gray-600">Part:</span>
+              <span class="text-gray-600 dark:text-gray-400">Part:</span>
               <span class="font-mono">{formatDeviceInfo(deviceInfo()!).part}</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-gray-600">Variant:</span>
+              <span class="text-gray-600 dark:text-gray-400">Variant:</span>
               <span class="font-mono">{formatDeviceInfo(deviceInfo()!).variant}</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-gray-600">RAM:</span>
+              <span class="text-gray-600 dark:text-gray-400">RAM:</span>
               <span class="font-mono">{formatDeviceInfo(deviceInfo()!).ram}</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-gray-600">Flash:</span>
+              <span class="text-gray-600 dark:text-gray-400">Flash:</span>
               <span class="font-mono">{formatDeviceInfo(deviceInfo()!).flash}</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-gray-600">Device ID:</span>
+              <span class="text-gray-600 dark:text-gray-400">Device ID:</span>
               <span class="font-mono text-xs">{formatDeviceInfo(deviceInfo()!).deviceId}</span>
             </div>
           </div>
@@ -449,26 +449,26 @@ export default function Backup(props: BackupProps) {
       </Show>
 
       <Show when={state() === "complete" && backupResult()}>
-        <div class="mt-4 p-4 bg-green-50 border border-green-200 rounded">
-          <h3 class="font-semibold text-green-800 mb-2">Backup Complete!</h3>
+        <div class="mt-4 p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded">
+          <h3 class="font-semibold text-green-800 dark:text-green-200 mb-2">Backup Complete!</h3>
           <div class="text-sm space-y-1 mb-4">
             <div class="flex justify-between">
-              <span class="text-gray-600">Flash Size:</span>
+              <span class="text-gray-600 dark:text-gray-400">Flash Size:</span>
               <span class="font-mono">
                 {(backupResult()!.flashData.length / 1024).toFixed(1)} kB
               </span>
             </div>
             <div class="flex justify-between">
-              <span class="text-gray-600">UICR Size:</span>
+              <span class="text-gray-600 dark:text-gray-400">UICR Size:</span>
               <span class="font-mono">{backupResult()!.uicrData.length} bytes</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-gray-600">Verification:</span>
+              <span class="text-gray-600 dark:text-gray-400">Verification:</span>
               <span
                 class={
                   verificationPassed()
-                    ? "text-green-600 font-semibold"
-                    : "text-red-600 font-semibold"
+                    ? "text-green-600 dark:text-green-400 font-semibold"
+                    : "text-red-600 dark:text-red-400 font-semibold"
                 }
               >
                 {verificationPassed() ? "Passed ✓" : "Failed ✗"}
@@ -509,17 +509,19 @@ export default function Backup(props: BackupProps) {
     <Show
       when={props.inline}
       fallback={
-        <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-6 mb-6">
           <h2 class="text-2xl font-semibold mb-4">Backup Tool</h2>
 
           <Show when={!props.selectedDevice}>
-            <div class="bg-gray-50 border border-gray-200 rounded p-4 mb-4">
-              <p class="text-sm text-gray-600">Please select a USB probe device first.</p>
+            <div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4 mb-4">
+              <p class="text-sm text-gray-600 dark:text-gray-400">
+                Please select a USB probe device first.
+              </p>
             </div>
           </Show>
 
           <Show when={props.selectedDevice}>
-            <p class="text-sm text-gray-600 mb-3">
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
               Backup the firmware from your device. This will create a complete backup of flash
               memory and UICR configuration.
             </p>

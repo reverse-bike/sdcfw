@@ -32,7 +32,7 @@ const paths = [
                 class="mx-auto mb-6 max-w-xs"
             />
             <h1 class="mb-4 text-4xl font-bold">Reverse.bike Firmware Tools</h1>
-            <p class="mb-6 text-xl text-gray-600">
+            <p class="mb-6 text-xl text-gray-600 dark:text-gray-400">
                 Back up, restore, and customize Super73 ebike firmware, straight
                 from your browser.
             </p>
@@ -58,14 +58,14 @@ const paths = [
         <Callout type="info" title="Browser requirement">
             Both guides need Chrome, Edge, or another Chromium browser, on
             desktop or Android.
-            <span class="text-blue-600"> Neither works on iOS</span>, because
+            <span class="text-blue-600 dark:text-blue-400"> Neither works on iOS</span>, because
             Apple does not allow real Chrome on iPhones or iPads.
         </Callout>
 
         <h2 class="mb-2 text-2xl font-bold mt-10">
             What do you want to change?
         </h2>
-        <p class="mb-6 text-gray-600">
+        <p class="mb-6 text-gray-600 dark:text-gray-400">
             Your bike has two parts you can reflash. They are separate jobs,
             with different requirements. You'll likely want the motor controller
             one.
@@ -76,33 +76,33 @@ const paths = [
                 paths.map((path) => (
                     <a
                         href={path.href}
-                        class={`flex flex-col rounded-xl border bg-white p-6 transition hover:shadow-md ${
+                        class={`flex flex-col rounded-xl border bg-white dark:bg-gray-900 p-6 transition hover:shadow-md ${
                             path.featured
-                                ? "border-blue-300 ring-1 ring-blue-100"
-                                : "border-gray-200"
+                                ? "border-blue-300 dark:border-blue-700 ring-1 ring-blue-100 dark:ring-blue-900"
+                                : "border-gray-200 dark:border-gray-800"
                         }`}
                     >
                         <span
                             class={`text-xs font-semibold tracking-wide uppercase ${
                                 path.featured
-                                    ? "text-blue-600"
+                                    ? "text-blue-600 dark:text-blue-400"
                                     : "text-gray-500"
                             }`}
                         >
                             {path.eyebrow}
                         </span>
                         <h3 class="mt-1 text-xl font-bold">{path.title}</h3>
-                        <p class="mt-1 font-medium text-gray-700">
+                        <p class="mt-1 font-medium text-gray-700 dark:text-gray-300">
                             {path.summary}
                         </p>
-                        <p class="mt-2 grow text-sm text-gray-600">
+                        <p class="mt-2 grow text-sm text-gray-600 dark:text-gray-400">
                             {path.body}
                         </p>
                         <span
                             class={`mt-5 rounded-lg px-4 py-2 text-center font-semibold ${
                                 path.featured
                                     ? "bg-blue-500 text-white"
-                                    : "border border-gray-300 text-gray-700"
+                                    : "border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300"
                             }`}
                         >
                             {path.cta}
@@ -115,7 +115,7 @@ const paths = [
         <section class="mt-12">
             <h2 class="mb-4 text-2xl font-bold">Before you start</h2>
             <div
-                class="rounded-lg border border-gray-200 bg-white p-6 text-gray-600"
+                class="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 text-gray-600 dark:text-gray-400"
             >
                 <p>
                     Custom firmware is made by owners, not by Super73. It will

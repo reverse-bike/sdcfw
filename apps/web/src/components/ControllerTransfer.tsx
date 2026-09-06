@@ -185,14 +185,14 @@ export default function ControllerTransfer() {
     hint: string,
   ) => (
     <label class="block">
-      <span class="text-sm font-medium text-gray-700">{label}</span>
+      <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</span>
       <input
         type="number"
         min="0"
         value={value()}
         disabled={busy() !== false}
         onInput={(event) => set(Number(event.currentTarget.value))}
-        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm"
+        class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm"
       />
       <span class="text-xs text-gray-500">{hint}</span>
     </label>
@@ -209,7 +209,7 @@ export default function ControllerTransfer() {
       </Callout>
 
       <div class="mt-5">
-        <label class="block text-sm font-medium text-gray-700">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Archive, or a .bin and .dat pair
           <input
             type="file"
@@ -220,7 +220,7 @@ export default function ControllerTransfer() {
               const files = event.currentTarget.files;
               if (files && files.length > 0) void loadFiles(files);
             }}
-            class="mt-1 block w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700"
+            class="mt-1 block w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 dark:file:bg-blue-950 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 dark:file:text-blue-300"
           />
         </label>
       </div>
@@ -228,10 +228,12 @@ export default function ControllerTransfer() {
       <Show when={image()}>
         {(loaded) => (
           <>
-            <div class="mt-4 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm">
+            <div class="mt-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-3 text-sm">
               <div class="font-medium">{loaded().label}</div>
               <Show when={loaded().reports !== undefined}>
-                <div class="text-gray-600">Reports controller version {loaded().reports}</div>
+                <div class="text-gray-600 dark:text-gray-400">
+                  Reports controller version {loaded().reports}
+                </div>
               </Show>
             </div>
 
@@ -241,13 +243,13 @@ export default function ControllerTransfer() {
               {numberField("PRN", prn, setPrn, "0 disables receipts")}
             </div>
 
-            <label class="mt-4 flex items-start gap-2 text-sm text-gray-700">
+            <label class="mt-4 flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
               <input
                 type="checkbox"
                 checked={execute()}
                 disabled={busy() !== false}
                 onChange={(event) => setExecute(event.currentTarget.checked)}
-                class="mt-0.5 h-4 w-4 rounded border-gray-300"
+                class="mt-0.5 h-4 w-4 rounded border-gray-300 dark:border-gray-600"
               />
               <span>
                 Actually send the firmware. Left off, this connects and submits the init packet

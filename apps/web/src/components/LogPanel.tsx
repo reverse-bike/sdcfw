@@ -18,10 +18,10 @@ export default function LogPanel(props: LogPanelProps) {
   return (
     <Show when={props.lines.length > 0}>
       <details class="mt-5" open={props.open ?? false}>
-        <summary class="cursor-pointer text-sm text-gray-600 select-none hover:text-gray-800">
+        <summary class="cursor-pointer text-sm text-gray-600 dark:text-gray-400 select-none hover:text-gray-800 dark:hover:text-gray-200">
           {props.label ?? "Details"}
         </summary>
-        <pre class="mt-2 max-h-72 overflow-auto rounded-lg bg-gray-900 p-4 font-mono text-xs whitespace-pre-wrap text-gray-100">
+        <pre class="mt-2 max-h-72 overflow-auto rounded-lg bg-gray-900 dark:bg-black p-4 font-mono text-xs whitespace-pre-wrap text-gray-100">
           <For each={props.lines}>{(line) => <div>{line}</div>}</For>
         </pre>
         <CopyButton text={() => props.lines.join("\n")} label="Copy this log" />

@@ -135,8 +135,8 @@ export default function ReadInfo(props: ReadInfoProps) {
   const content = (
     <>
       <Show when={error()}>
-        <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
-          <p class="text-sm text-red-700">{error()}</p>
+        <div class="bg-red-50 dark:bg-red-950 border-l-4 border-red-400 p-4 mb-4">
+          <p class="text-sm text-red-700 dark:text-red-300">{error()}</p>
         </div>
       </Show>
 
@@ -150,7 +150,7 @@ export default function ReadInfo(props: ReadInfoProps) {
         <button
           onClick={arm}
           disabled={isDisabled()}
-          class="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+          class="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed"
         >
           {props.selectedDevice ? "Arm Read Info" : "Select a device first"}
         </button>
@@ -180,35 +180,35 @@ export default function ReadInfo(props: ReadInfoProps) {
           const uicrDisplay = formatUICR(uicr()!);
           return (
             <div class="space-y-4">
-              <div class="p-4 bg-gray-50 rounded">
+              <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded">
                 <h3 class="font-semibold mb-2">Device Information</h3>
                 <div class="text-sm space-y-1">
                   <div class="flex justify-between">
-                    <span class="text-gray-600">Part:</span>
+                    <span class="text-gray-600 dark:text-gray-400">Part:</span>
                     <span class="font-mono">{info.part}</span>
                   </div>
                   <div class="flex justify-between">
-                    <span class="text-gray-600">Variant:</span>
+                    <span class="text-gray-600 dark:text-gray-400">Variant:</span>
                     <span class="font-mono">{info.variant}</span>
                   </div>
                   <div class="flex justify-between">
-                    <span class="text-gray-600">Package:</span>
+                    <span class="text-gray-600 dark:text-gray-400">Package:</span>
                     <span class="font-mono">{info.package}</span>
                   </div>
                   <div class="flex justify-between">
-                    <span class="text-gray-600">RAM:</span>
+                    <span class="text-gray-600 dark:text-gray-400">RAM:</span>
                     <span class="font-mono">{info.ram}</span>
                   </div>
                   <div class="flex justify-between">
-                    <span class="text-gray-600">Flash:</span>
+                    <span class="text-gray-600 dark:text-gray-400">Flash:</span>
                     <span class="font-mono">{info.flash}</span>
                   </div>
                   <div class="flex justify-between">
-                    <span class="text-gray-600">Device ID:</span>
+                    <span class="text-gray-600 dark:text-gray-400">Device ID:</span>
                     <span class="font-mono text-xs">{info.deviceId}</span>
                   </div>
                   <div class="flex justify-between">
-                    <span class="text-gray-600">MAC Address:</span>
+                    <span class="text-gray-600 dark:text-gray-400">MAC Address:</span>
                     <span class="font-mono text-xs">
                       {info.macAddress} ({info.macType})
                     </span>
@@ -216,15 +216,15 @@ export default function ReadInfo(props: ReadInfoProps) {
                 </div>
               </div>
 
-              <div class="p-4 bg-gray-50 rounded">
+              <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded">
                 <h3 class="font-semibold mb-2">Configuration</h3>
                 <div class="text-sm space-y-1">
                   <div class="flex justify-between">
-                    <span class="text-gray-600">Readout Protection:</span>
+                    <span class="text-gray-600 dark:text-gray-400">Readout Protection:</span>
                     <span class="font-mono">{uicrDisplay.approtect}</span>
                   </div>
                   <div class="flex justify-between">
-                    <span class="text-gray-600">Bootloader Address:</span>
+                    <span class="text-gray-600 dark:text-gray-400">Bootloader Address:</span>
                     <span class="font-mono text-xs">{uicrDisplay.bootloaderAddr}</span>
                   </div>
                 </div>
@@ -247,17 +247,19 @@ export default function ReadInfo(props: ReadInfoProps) {
     <Show
       when={props.inline}
       fallback={
-        <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-6 mb-6">
           <h2 class="text-2xl font-semibold mb-4">Read Device Info</h2>
 
           <Show when={!props.selectedDevice}>
-            <div class="bg-gray-50 border border-gray-200 rounded p-4 mb-4">
-              <p class="text-sm text-gray-600">Please select a USB probe device first.</p>
+            <div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4 mb-4">
+              <p class="text-sm text-gray-600 dark:text-gray-400">
+                Please select a USB probe device first.
+              </p>
             </div>
           </Show>
 
           <Show when={props.selectedDevice}>
-            <p class="text-sm text-gray-600 mb-3">
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
               Read device information from the connected target.
             </p>
             {content}

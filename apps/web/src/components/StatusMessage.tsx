@@ -10,10 +10,13 @@ interface StatusMessageProps {
 }
 
 const TONES: Record<Tone, string> = {
-  info: "border-blue-200 bg-blue-50 text-blue-800",
-  success: "border-green-200 bg-green-50 text-green-800",
-  warning: "border-yellow-200 bg-yellow-50 text-yellow-800",
-  error: "border-red-200 bg-red-50 text-red-800",
+  info: "border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950 text-blue-800 dark:text-blue-200",
+  success:
+    "border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950 text-green-800 dark:text-green-200",
+  warning:
+    "border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-950 text-yellow-800 dark:text-yellow-200",
+  error:
+    "border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950 text-red-800 dark:text-red-200",
 };
 
 /** Inline result of an action, as opposed to Callout's standing advice. */

@@ -14,7 +14,7 @@ const fw = firmware.data;
 
 <article
   id={fw.anchor}
-  class="scroll-mt-4 overflow-hidden rounded-lg border border-gray-200 bg-white"
+  class="scroll-mt-4 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900"
 >
   <div class="p-4">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -53,17 +53,17 @@ const fw = firmware.data;
             </span>
           )}
           {fw.stock && (
-            <span class="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
+            <span class="rounded bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-xs font-medium text-gray-700 dark:text-gray-300">
               Factory
             </span>
           )}
           {fw.experimental && (
-            <span class="rounded bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-800">
+            <span class="rounded bg-orange-100 dark:bg-orange-950 px-2 py-0.5 text-xs font-medium text-orange-800 dark:text-orange-200">
               Experimental
             </span>
           )}
         </div>
-        <p class="mt-0.5 text-sm text-gray-600">{fw.description}</p>
+        <p class="mt-0.5 text-sm text-gray-600 dark:text-gray-400">{fw.description}</p>
       </div>
       <a
         href={fw.path}
@@ -72,15 +72,15 @@ const fw = firmware.data;
           "shrink-0 self-start rounded px-3 py-1.5 text-sm transition-colors",
           prominentDownload
             ? "bg-blue-500 text-white hover:bg-blue-600"
-            : "border border-gray-300 text-gray-700 hover:bg-gray-50",
+            : "border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800",
         ]}
       >
         Download
       </a>
     </div>
 
-    <details class="group mt-3 border-t border-gray-100 pt-3">
-      <summary class="flex w-fit cursor-pointer list-none items-center gap-1 text-sm font-medium text-gray-600 hover:text-gray-900 [&::-webkit-details-marker]:hidden">
+    <details class="group mt-3 border-t border-gray-100 dark:border-gray-800 pt-3">
+      <summary class="flex w-fit cursor-pointer list-none items-center gap-1 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 [&::-webkit-details-marker]:hidden">
         <svg
           viewBox="0 0 20 20"
           fill="currentColor"
@@ -99,12 +99,12 @@ const fw = firmware.data;
       <dl class="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-500">
         <div class="flex gap-1">
           <dt>Released</dt>
-          <dd class="text-gray-700">{fw.date.toLocaleDateString()}</dd>
+          <dd class="text-gray-700 dark:text-gray-300">{fw.date.toLocaleDateString()}</dd>
         </div>
         {fw.requires && (
           <div class="flex gap-1">
             <dt>Fits controller</dt>
-            <dd class="font-mono text-gray-700">
+            <dd class="font-mono text-gray-700 dark:text-gray-300">
               {fw.requires.controllerVersion.join(", ")}
             </dd>
           </div>
@@ -112,12 +112,12 @@ const fw = firmware.data;
         {fw.compatibility && fw.compatibility.length > 0 && (
           <div class="flex gap-1">
             <dt>Models</dt>
-            <dd class="text-gray-700">{fw.compatibility.join(", ")}</dd>
+            <dd class="text-gray-700 dark:text-gray-300">{fw.compatibility.join(", ")}</dd>
           </div>
         )}
       </dl>
 
-      <div class="prose prose-sm mt-4 max-w-none prose-headings:text-base prose-headings:text-gray-900 prose-p:text-gray-600 prose-li:text-gray-600 prose-strong:text-gray-900">
+      <div class="prose prose-sm dark:prose-invert mt-4 max-w-none prose-headings:text-base prose-headings:text-gray-900 dark:prose-headings:text-gray-100 prose-p:text-gray-600 dark:prose-p:text-gray-400 prose-li:text-gray-600 dark:prose-li:text-gray-400 prose-strong:text-gray-900 dark:prose-strong:text-gray-100">
         <Content />
       </div>
     </details>

@@ -295,8 +295,8 @@ export default function Restore(props: RestoreProps) {
   const content = (
     <>
       <Show when={error()}>
-        <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
-          <p class="text-sm text-red-700">{error()}</p>
+        <div class="bg-red-50 dark:bg-red-950 border-l-4 border-red-400 p-4 mb-4">
+          <p class="text-sm text-red-700 dark:text-red-300">{error()}</p>
         </div>
       </Show>
 
@@ -309,21 +309,23 @@ export default function Restore(props: RestoreProps) {
       <Show when={state() === "idle"}>
         <div class="space-y-4">
           <Show when={props.lastBackup}>
-            <div class="p-4 bg-green-50 border border-green-200 rounded">
-              <h3 class="font-semibold text-green-800 mb-2">Previous Backup Available</h3>
+            <div class="p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded">
+              <h3 class="font-semibold text-green-800 dark:text-green-200 mb-2">
+                Previous Backup Available
+              </h3>
               <div class="text-sm space-y-1 mb-3">
                 <div class="flex justify-between">
-                  <span class="text-gray-600">Device:</span>
+                  <span class="text-gray-600 dark:text-gray-400">Device:</span>
                   <span class="font-mono">
                     {formatDeviceInfo(props.lastBackup!.deviceInfo).part}
                   </span>
                 </div>
                 <div class="flex justify-between">
-                  <span class="text-gray-600">Flash Size:</span>
+                  <span class="text-gray-600 dark:text-gray-400">Flash Size:</span>
                   <span class="font-mono">{formatSize(props.lastBackup!.flashData.length)}</span>
                 </div>
                 <div class="flex justify-between">
-                  <span class="text-gray-600">Backup Time:</span>
+                  <span class="text-gray-600 dark:text-gray-400">Backup Time:</span>
                   <span class="font-mono text-xs">
                     {props.lastBackup!.timestamp.toLocaleString()}
                   </span>
@@ -339,14 +341,14 @@ export default function Restore(props: RestoreProps) {
             <div class="text-center text-sm text-gray-500">— or —</div>
           </Show>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Select Backup File (.zip)
             </label>
             <input
               type="file"
               accept=".zip"
               onChange={handleFileSelect}
-              class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 dark:file:bg-blue-950 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900"
             />
           </div>
         </div>
@@ -354,24 +356,24 @@ export default function Restore(props: RestoreProps) {
 
       <Show when={state() === "file-selected" && backupFiles()}>
         <div class="space-y-4">
-          <div class="p-4 bg-gray-50 rounded">
+          <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded">
             <h3 class="font-semibold mb-2">Backup File</h3>
             <div class="text-sm space-y-1">
               <div class="flex justify-between">
-                <span class="text-gray-600">File:</span>
+                <span class="text-gray-600 dark:text-gray-400">File:</span>
                 <span class="font-mono">{fileName()}</span>
               </div>
               <div class="flex justify-between">
-                <span class="text-gray-600">Flash Size:</span>
+                <span class="text-gray-600 dark:text-gray-400">Flash Size:</span>
                 <span class="font-mono">{formatSize(backupFiles()!.flashData.length)}</span>
               </div>
               <div class="flex justify-between">
-                <span class="text-gray-600">UICR Size:</span>
+                <span class="text-gray-600 dark:text-gray-400">UICR Size:</span>
                 <span class="font-mono">{formatSize(backupFiles()!.uicrData.length)}</span>
               </div>
               <Show when={backupFiles()?.metadata?.timestamp}>
                 <div class="flex justify-between">
-                  <span class="text-gray-600">Backup Date:</span>
+                  <span class="text-gray-600 dark:text-gray-400">Backup Date:</span>
                   <span class="font-mono text-xs">
                     {new Date(backupFiles()!.metadata!.timestamp!).toLocaleString()}
                   </span>
@@ -379,7 +381,7 @@ export default function Restore(props: RestoreProps) {
               </Show>
               <Show when={backupFiles()?.metadata?.device?.part}>
                 <div class="flex justify-between">
-                  <span class="text-gray-600">Device:</span>
+                  <span class="text-gray-600 dark:text-gray-400">Device:</span>
                   <span class="font-mono">{backupFiles()!.metadata!.device!.part}</span>
                 </div>
               </Show>
@@ -392,9 +394,9 @@ export default function Restore(props: RestoreProps) {
               id="verify-checkbox"
               checked={verifyEnabled()}
               onChange={(e) => setVerifyEnabled(e.target.checked)}
-              class="h-4 w-4 text-blue-600 rounded border-gray-300"
+              class="h-4 w-4 text-blue-600 dark:text-blue-400 rounded border-gray-300 dark:border-gray-600"
             />
-            <label for="verify-checkbox" class="text-sm text-gray-700">
+            <label for="verify-checkbox" class="text-sm text-gray-700 dark:text-gray-300">
               Verify after writing (recommended)
             </label>
           </div>
@@ -403,7 +405,7 @@ export default function Restore(props: RestoreProps) {
             <button
               onClick={arm}
               disabled={isDisabled()}
-              class="flex-1 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+              class="flex-1 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed"
             >
               Arm Restore
             </button>
@@ -428,9 +430,9 @@ export default function Restore(props: RestoreProps) {
 
       <Show when={state() === "complete"}>
         <div class="space-y-4">
-          <div class="p-4 bg-green-50 border border-green-200 rounded">
-            <h3 class="font-semibold text-green-800 mb-2">Restore Complete!</h3>
-            <p class="text-sm text-green-700">
+          <div class="p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded">
+            <h3 class="font-semibold text-green-800 dark:text-green-200 mb-2">Restore Complete!</h3>
+            <p class="text-sm text-green-700 dark:text-green-300">
               The device has been restored and reset. You can now power cycle the device.
             </p>
           </div>
@@ -460,18 +462,20 @@ export default function Restore(props: RestoreProps) {
     <Show
       when={props.inline}
       fallback={
-        <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-6 mb-6">
           <h2 class="text-2xl font-semibold mb-4">Restore Tool</h2>
 
           <Show when={!props.selectedDevice}>
-            <div class="bg-gray-50 border border-gray-200 rounded p-4 mb-4">
-              <p class="text-sm text-gray-600">Please select a USB probe device first.</p>
+            <div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4 mb-4">
+              <p class="text-sm text-gray-600 dark:text-gray-400">
+                Please select a USB probe device first.
+              </p>
             </div>
           </Show>
 
           <Show when={props.selectedDevice}>
             <div class="mb-4">
-              <p class="text-sm text-gray-600 mb-3">
+              <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
                 Restore firmware from a backup file or flash{" "}
                 <a href="/firmware" class="text-blue-500 hover:underline">
                   custom firmware
@@ -479,8 +483,8 @@ export default function Restore(props: RestoreProps) {
                 . This will overwrite the device's flash and UICR.
               </p>
 
-              <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
-                <p class="text-sm text-yellow-800">
+              <div class="bg-yellow-50 dark:bg-yellow-950 border-l-4 border-yellow-400 p-4 mb-4">
+                <p class="text-sm text-yellow-800 dark:text-yellow-200">
                   <strong>Warning:</strong> This will erase and overwrite all data on the target
                   device. Make sure you have selected the correct file and have a backup of your
                   original firmware.

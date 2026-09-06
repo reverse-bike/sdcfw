@@ -1,6 +1,17 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* Dark mode follows the OS setting (Tailwind's default `dark:` variant uses prefers-color-scheme).
+   `color-scheme` lets native controls, scrollbars and form inputs pick the matching palette. */
+@layer base {
+  html {
+    color-scheme: light dark;
+  }
+  body {
+    @apply bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100;
+  }
+}
+
 /* Indeterminate progress bar animation */
 @keyframes progress-indeterminate {
   0% {

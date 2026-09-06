@@ -35,8 +35,7 @@ const patchFile: McPatchFile = {
       address: 0x08006c72,
       original: [0xc0, 0xf3, 0xcf, 0x0a],
       data: [0xc0, 0xf3, 0x0f, 0x1a],
-      description:
-        "Index the current envelope and pedal torque rolloff by half the vehicle speed",
+      description: "Index the current envelope and pedal torque rolloff by half the vehicle speed",
     },
     {
       type: "bytes",

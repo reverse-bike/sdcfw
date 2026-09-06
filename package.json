@@ -13,7 +13,7 @@
       "@astrojs/check": "^0.9.10",
       "@tailwindcss/typography": "^0.5.20",
       "@tailwindcss/vite": "^4.3.3",
-      "@types/node": "^26.4.0",
+      "@types/node": "^26.4.1",
       "@types/node-hid": "^3.0.0",
       "@types/usb": "^2.0.5",
       "@types/w3c-web-usb": "^1.0.14",
@@ -49,12 +49,12 @@
     "@sdcfw/mc-farm": "workspace:*",
     "@sdcfw/nrf-farm": "workspace:*",
     "@types/bun": "^1.4.0",
-    "@types/node": "^26.4.0",
+    "@types/node": "^26.4.1",
     "@types/w3c-web-usb": "^1.0.14",
     "@types/web-bluetooth": "^0.0.21",
-    "eslint-plugin-solid": "^0.16.1",
-    "oxfmt": "^0.65.0",
-    "oxlint": "^1.80.0",
+    "eslint-plugin-solid": "^0.17.0",
+    "oxfmt": "^0.66.0",
+    "oxlint": "^1.81.0",
     "typescript": "^6.0.3"
   }
 }

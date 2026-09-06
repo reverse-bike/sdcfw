@@ -100,7 +100,7 @@ export default function ControllerRead() {
       <Show when={info()}>
         {(value) => (
           <ToolCard title="Firmware and device information">
-            <dl class="divide-y divide-gray-100">
+            <dl class="divide-y divide-gray-100 dark:divide-gray-800">
               <For each={details()}>
                 {([label, bytes]) => (
                   <div class="grid gap-1 py-3 sm:grid-cols-2 sm:gap-4">
@@ -113,7 +113,7 @@ export default function ControllerRead() {
 
             <Show when={Object.entries(value().additionalDeviceInfo).length > 0}>
               <h3 class="mt-7 mb-4 text-lg font-bold">Additional BLE information</h3>
-              <dl class="divide-y divide-gray-100">
+              <dl class="divide-y divide-gray-100 dark:divide-gray-800">
                 <For each={Object.entries(value().additionalDeviceInfo)}>
                   {([label, bytes]) => (
                     <div class="grid gap-1 py-3 sm:grid-cols-2 sm:gap-4">

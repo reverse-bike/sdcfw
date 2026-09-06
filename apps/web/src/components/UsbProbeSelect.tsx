@@ -167,26 +167,32 @@ export default function UsbProbeSelect(props: UsbProbeSelectProps) {
   const content = (
     <>
       <Show when={!isSupported()}>
-        <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
-          <p class="text-sm text-red-700">{error()}</p>
+        <div class="bg-red-50 dark:bg-red-950 border-l-4 border-red-400 p-4 mb-4">
+          <p class="text-sm text-red-700 dark:text-red-300">{error()}</p>
         </div>
       </Show>
 
       <Show when={isSupported()}>
         <Show when={error()}>
-          <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
-            <p class="text-sm text-red-700">{error()}</p>
+          <div class="bg-red-50 dark:bg-red-950 border-l-4 border-red-400 p-4 mb-4">
+            <p class="text-sm text-red-700 dark:text-red-300">{error()}</p>
           </div>
         </Show>
 
         <Show when={selectedDevice()}>
-          <div class="bg-green-50 border-l-4 border-green-400 p-4">
+          <div class="bg-green-50 dark:bg-green-950 border-l-4 border-green-400 p-4">
             <div class="flex justify-between items-center">
               <div>
-                <p class="text-sm font-medium text-green-800">Connected Device</p>
-                <p class="text-sm text-green-700">{getDeviceName(selectedDevice()!)}</p>
+                <p class="text-sm font-medium text-green-800 dark:text-green-200">
+                  Connected Device
+                </p>
+                <p class="text-sm text-green-700 dark:text-green-300">
+                  {getDeviceName(selectedDevice()!)}
+                </p>
                 <Show when={selectedDevice()!.serialNumber}>
-                  <p class="text-xs text-green-600">Serial: {selectedDevice()!.serialNumber}</p>
+                  <p class="text-xs text-green-600 dark:text-green-400">
+                    Serial: {selectedDevice()!.serialNumber}
+                  </p>
                 </Show>
               </div>
               <button
@@ -209,15 +215,17 @@ export default function UsbProbeSelect(props: UsbProbeSelectProps) {
 
           <Show when={devices().length > 0}>
             <div>
-              <p class="text-sm font-medium text-gray-700 mb-2">Previously Authorized Devices:</p>
+              <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Previously Authorized Devices:
+              </p>
               <div class="space-y-2">
                 <For each={devices()}>
                   {(deviceInfo) => (
                     <button
                       onClick={() => selectDevice(deviceInfo.device)}
-                      class="w-full text-left px-4 py-3 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                      class="w-full text-left px-4 py-3 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                     >
-                      <p class="font-medium text-gray-900">{deviceInfo.name}</p>
+                      <p class="font-medium text-gray-900 dark:text-gray-100">{deviceInfo.name}</p>
                       <Show when={deviceInfo.device.serialNumber}>
                         <p class="text-xs text-gray-500">
                           Serial: {deviceInfo.device.serialNumber}
@@ -244,9 +252,9 @@ export default function UsbProbeSelect(props: UsbProbeSelectProps) {
     <Show
       when={props.inline}
       fallback={
-        <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-6 mb-6">
           <h2 class="text-2xl font-semibold mb-4">USB Probe Select</h2>
-          <p class="text-sm text-gray-600 mb-3">
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
             Select a DAPLink-compatible USB probe device to use for the rest of the tools.
           </p>
           {content}

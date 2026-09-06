@@ -130,7 +130,7 @@ export default function ControllerDfu() {
               when={info().length > 0}
               fallback={<p class="text-sm text-gray-500">No readable characteristics found.</p>}
             >
-              <dl class="divide-y divide-gray-100">
+              <dl class="divide-y divide-gray-100 dark:divide-gray-800">
                 <For each={info()}>
                   {(entry) => (
                     <div class="grid gap-1 py-3 sm:grid-cols-2 sm:gap-4">

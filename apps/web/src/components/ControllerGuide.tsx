@@ -324,7 +324,7 @@ export default function ControllerGuide(props: ControllerGuideProps) {
 
       {/* Step 1 */}
       <Step number={1} title="Read your bike" done={info() !== null}>
-        <p class="mb-4 text-gray-600">
+        <p class="mb-4 text-gray-600 dark:text-gray-400">
           Nothing is written. This tells us which firmware fits your bike, and checks that Bluetooth
           is working.
         </p>
@@ -335,7 +335,7 @@ export default function ControllerGuide(props: ControllerGuideProps) {
         <Show when={info()}>
           {(value) => (
             <>
-              <dl class="mt-5 divide-y divide-gray-100 rounded-lg border border-gray-200">
+              <dl class="mt-5 divide-y divide-gray-100 dark:divide-gray-800 rounded-lg border border-gray-200 dark:border-gray-800">
                 <For each={rows(value())}>
                   {([label, shown]) => (
                     <div class="grid gap-1 px-4 py-2 sm:grid-cols-2">
@@ -351,7 +351,7 @@ export default function ControllerGuide(props: ControllerGuideProps) {
               <Show
                 when={offers().length > 0}
                 fallback={
-                  <p class="mt-2 text-sm text-gray-600">
+                  <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
                     Nothing we publish lists your controller version as supported, so there is
                     nothing to install.
                   </p>
@@ -360,7 +360,7 @@ export default function ControllerGuide(props: ControllerGuideProps) {
                 <ul class="mt-3 space-y-3">
                   <For each={offers()}>
                     {(offer) => (
-                      <li class="rounded-lg border border-gray-200 p-4">
+                      <li class="rounded-lg border border-gray-200 dark:border-gray-800 p-4">
                         <div class="flex flex-wrap items-baseline gap-2">
                           <span class="font-semibold">{offer.release.name}</span>
                           <span class="font-mono text-sm text-gray-500">
@@ -375,7 +375,9 @@ export default function ControllerGuide(props: ControllerGuideProps) {
                             details ↗
                           </a>
                         </div>
-                        <p class="mt-1 text-sm text-gray-600">{offer.release.description}</p>
+                        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                          {offer.release.description}
+                        </p>
                         <div class="mt-3">
                           <Button
                             onClick={() => choose(offer.release)}
@@ -393,10 +395,10 @@ export default function ControllerGuide(props: ControllerGuideProps) {
               </Show>
 
               <details class="mt-4">
-                <summary class="cursor-pointer text-sm text-gray-600 select-none hover:text-gray-800">
+                <summary class="cursor-pointer text-sm text-gray-600 dark:text-gray-400 select-none hover:text-gray-800 dark:hover:text-gray-200">
                   Use my own firmware file
                 </summary>
-                <p class="mt-2 text-sm text-gray-600">
+                <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
                   For firmware you built yourself. We don't check whether it fits your bike.
                 </p>
                 <input
@@ -407,10 +409,10 @@ export default function ControllerGuide(props: ControllerGuideProps) {
                     const file = event.currentTarget.files?.[0];
                     if (file) void upload(file);
                   }}
-                  class="mt-2 block w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700"
+                  class="mt-2 block w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 dark:file:bg-blue-950 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 dark:file:text-blue-300"
                 />
                 <Show when={uploaded()}>
-                  <p class="mt-2 text-sm text-gray-700">Using {uploaded()}</p>
+                  <p class="mt-2 text-sm text-gray-700 dark:text-gray-300">Using {uploaded()}</p>
                 </Show>
               </details>
             </>
@@ -420,7 +422,7 @@ export default function ControllerGuide(props: ControllerGuideProps) {
 
       {/* Step 2 */}
       <Step number={2} title="Enter update mode" locked={!pkg()} done={armed()}>
-        <p class="mb-4 text-gray-600">
+        <p class="mb-4 text-gray-600 dark:text-gray-400">
           Switches your display into update mode, ready to receive the new firmware. Its screen will
           say <b>Receiving Firmware</b> when it is ready for the next step.
         </p>
@@ -447,7 +449,7 @@ export default function ControllerGuide(props: ControllerGuideProps) {
 
       {/* Step 3 */}
       <Step number={3} title="Send the firmware" locked={!armed()} done={outcome() !== "none"}>
-        <p class="text-gray-600">
+        <p class="text-gray-600 dark:text-gray-400">
           When your bike's screen says <b>Receiving Firmware</b>, start the transfer and pick the
           device named <b>DfuTarg</b> from the list. This takes a minute or two.
         </p>
@@ -457,13 +459,13 @@ export default function ControllerGuide(props: ControllerGuideProps) {
           installs. Wait for its normal screen to come back.
         </Callout>
 
-        <label class="mt-4 flex items-start gap-2 text-sm text-gray-700">
+        <label class="mt-4 flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
           <input
             type="checkbox"
             checked={dryRun()}
             disabled={!idle() || !armed()}
             onChange={(event) => setDryRun(event.currentTarget.checked)}
-            class="mt-0.5 h-4 w-4 rounded border-gray-300"
+            class="mt-0.5 h-4 w-4 rounded border-gray-300 dark:border-gray-600"
           />
           <span>
             Practice run: go through the motions without writing firmware. Most people can leave
@@ -496,7 +498,7 @@ export default function ControllerGuide(props: ControllerGuideProps) {
         </Show>
 
         <Show when={busy() === "flashing"}>
-          <div class="mt-4 h-3 overflow-hidden rounded-full bg-gray-100">
+          <div class="mt-4 h-3 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
             <div
               class="h-full bg-blue-500 transition-all duration-300"
               style={{ width: `${percent()}%` }}
@@ -516,7 +518,7 @@ export default function ControllerGuide(props: ControllerGuideProps) {
         locked={outcome() !== "sent" && !flashFailed()}
         done={checked()?.ok === true}
       >
-        <p class="mb-4 text-gray-600">
+        <p class="mb-4 text-gray-600 dark:text-gray-400">
           Once your bike is back on its normal screen, reconnect and check it's running the firmware
           you picked. Your browser may ask you to choose the bike again.
         </p>
@@ -615,15 +617,17 @@ function Step(props: StepProps) {
           state() === "done"
             ? "bg-green-500 text-white"
             : state() === "locked"
-              ? "bg-gray-300 text-white"
+              ? "bg-gray-300 dark:bg-gray-700 text-white"
               : "bg-blue-500 text-white"
         }`}
       >
         {state() === "done" ? "✓" : props.number}
       </div>
       <div
-        class={`rounded-lg border bg-white p-6 ${
-          state() === "locked" ? "border-gray-200 opacity-60" : "border-gray-300"
+        class={`rounded-lg border bg-white dark:bg-gray-900 p-6 ${
+          state() === "locked"
+            ? "border-gray-200 dark:border-gray-800 opacity-60"
+            : "border-gray-300 dark:border-gray-600"
         }`}
       >
         <h3 class="text-lg font-semibold">{props.title}</h3>

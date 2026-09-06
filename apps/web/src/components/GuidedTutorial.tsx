@@ -18,9 +18,9 @@ function StepCard(props: StepCardProps) {
       <div class="absolute -left-3 -top-3 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-sm z-10 shadow-md">
         {props.number}
       </div>
-      <div class="bg-white border border-gray-200 rounded-lg p-6">
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-6">
         <h3 class="font-semibold text-lg">{props.title}</h3>
-        <p class="text-gray-600 mt-1">{props.description}</p>
+        <p class="text-gray-600 dark:text-gray-400 mt-1">{props.description}</p>
       </div>
     </div>
   );
@@ -39,9 +39,9 @@ function ContentStep(props: ContentStepProps) {
       <div class="absolute -left-3 -top-3 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-sm z-10 shadow-md">
         {props.number}
       </div>
-      <div class="bg-white border border-gray-200 rounded-lg p-6">
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-6">
         <h3 class="font-semibold text-lg">{props.title}</h3>
-        <p class="text-gray-600 mt-1 mb-4">{props.description}</p>
+        <p class="text-gray-600 dark:text-gray-400 mt-1 mb-4">{props.description}</p>
         {props.children}
       </div>
     </div>
@@ -63,10 +63,10 @@ function ToolStep(props: ToolStepProps) {
         {props.number}
       </div>
       {/* Tool content with description prepended */}
-      <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
-        <div class="bg-gray-50 border-b border-gray-200 px-6 py-4">
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden">
+        <div class="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
           <h3 class="font-semibold text-lg">{props.title}</h3>
-          <p class="text-gray-600 text-sm mt-1">{props.description}</p>
+          <p class="text-gray-600 dark:text-gray-400 text-sm mt-1">{props.description}</p>
         </div>
         <div class="p-6">{props.children}</div>
       </div>
@@ -108,7 +108,7 @@ export default function GuidedTutorial() {
               href="/dd-dis-01-buttons.webp"
               target="_blank"
               rel="noopener"
-              class="block aspect-4/3 overflow-hidden rounded-lg border border-gray-200"
+              class="block aspect-4/3 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800"
             >
               <img
                 src="/dd-dis-01-buttons.webp"
@@ -117,8 +117,8 @@ export default function GuidedTutorial() {
               />
             </a>
             <figcaption class="text-sm text-gray-500 mt-2">
-              <span class="font-semibold text-gray-700">Step 1:</span> Remove the button cover with
-              your fingers, or a slim piece of sturdy plastic or metal.
+              <span class="font-semibold text-gray-700 dark:text-gray-300">Step 1:</span> Remove the
+              button cover with your fingers, or a slim piece of sturdy plastic or metal.
             </figcaption>
           </figure>
 
@@ -127,7 +127,7 @@ export default function GuidedTutorial() {
               href="/dd-dis-02-screws.webp"
               target="_blank"
               rel="noopener"
-              class="block aspect-4/3 overflow-hidden rounded-lg border border-gray-200"
+              class="block aspect-4/3 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800"
             >
               <img
                 src="/dd-dis-02-screws.webp"
@@ -136,8 +136,8 @@ export default function GuidedTutorial() {
               />
             </a>
             <figcaption class="text-sm text-gray-500 mt-2">
-              <span class="font-semibold text-gray-700">Step 2:</span> Remove the 6 small screws on
-              the inner case.
+              <span class="font-semibold text-gray-700 dark:text-gray-300">Step 2:</span> Remove the
+              6 small screws on the inner case.
             </figcaption>
           </figure>
 
@@ -146,7 +146,7 @@ export default function GuidedTutorial() {
               href="/dd-dis-03-cover.webp"
               target="_blank"
               rel="noopener"
-              class="block aspect-4/3 overflow-hidden rounded-lg border border-gray-200"
+              class="block aspect-4/3 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800"
             >
               <img
                 src="/dd-dis-03-cover.webp"
@@ -155,10 +155,11 @@ export default function GuidedTutorial() {
               />
             </a>
             <figcaption class="text-sm text-gray-500 mt-2">
-              <span class="font-semibold text-gray-700">Step 3:</span> The inner case should come
-              off easily once screws are removed. <span class="font-bold">Warning:</span> The inner
-              case is connected to the PCB with a delicate ribbon cable. The cable does not need to
-              be disconnected, but take care not to tear it.
+              <span class="font-semibold text-gray-700 dark:text-gray-300">Step 3:</span> The inner
+              case should come off easily once screws are removed.{" "}
+              <span class="font-bold">Warning:</span> The inner case is connected to the PCB with a
+              delicate ribbon cable. The cable does not need to be disconnected, but take care not
+              to tear it.
             </figcaption>
           </figure>
 
@@ -167,7 +168,7 @@ export default function GuidedTutorial() {
               href="/dd-dis-04-sticker.webp"
               target="_blank"
               rel="noopener"
-              class="block aspect-4/3 overflow-hidden rounded-lg border border-gray-200"
+              class="block aspect-4/3 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800"
             >
               <img
                 src="/dd-dis-04-sticker.webp"
@@ -176,8 +177,8 @@ export default function GuidedTutorial() {
               />
             </a>
             <figcaption class="text-sm text-gray-500 mt-2">
-              <span class="font-semibold text-gray-700">Step 4:</span> You may need to remove the
-              yellow tape to reveal your golden test points.
+              <span class="font-semibold text-gray-700 dark:text-gray-300">Step 4:</span> You may
+              need to remove the yellow tape to reveal your golden test points.
             </figcaption>
           </figure>
         </div>
@@ -190,38 +191,44 @@ export default function GuidedTutorial() {
         description="Connect your debug probe wires to the test points and read the chip info to verify the connection works."
       >
         <div class="mb-6">
-          <h4 class="font-medium text-gray-900 mb-3">Wire Connections</h4>
-          <div class="bg-gray-50 rounded-lg p-4 mb-4">
+          <h4 class="font-medium text-gray-900 dark:text-gray-100 mb-3">Wire Connections</h4>
+          <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-4">
             <div class="space-y-3">
               <div class="flex items-center">
                 <span
                   class="w-5 h-5 rounded-full bg-yellow-400 border border-yellow-500 mr-3"
                   title="Yellow wire"
                 />
-                <span class="w-20 text-yellow-700 font-medium">Yellow</span>
+                <span class="w-20 text-yellow-700 dark:text-yellow-300 font-medium">Yellow</span>
                 <span class="w-24 font-semibold">SWDIO (SD)</span>
                 <span class="text-gray-400 mx-3">&rarr;</span>
-                <span class="font-mono text-sm bg-gray-200 px-2 py-1 rounded">TP10</span>
+                <span class="font-mono text-sm bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">
+                  TP10
+                </span>
               </div>
               <div class="flex items-center">
                 <span
                   class="w-5 h-5 rounded-full bg-orange-500 border border-orange-600 mr-3"
                   title="Orange wire"
                 />
-                <span class="w-20 text-orange-600 font-medium">Orange</span>
+                <span class="w-20 text-orange-600 dark:text-orange-400 font-medium">Orange</span>
                 <span class="w-24 font-semibold">SWCLK (SC)</span>
                 <span class="text-gray-400 mx-3">&rarr;</span>
-                <span class="font-mono text-sm bg-gray-200 px-2 py-1 rounded">TP11</span>
+                <span class="font-mono text-sm bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">
+                  TP11
+                </span>
               </div>
               <div class="flex items-center">
                 <span
-                  class="w-5 h-5 rounded-full bg-gray-800 border border-gray-900 mr-3"
+                  class="w-5 h-5 rounded-full bg-gray-800 dark:bg-gray-950 border border-gray-900 dark:border-gray-500 mr-3"
                   title="Black wire"
                 />
-                <span class="w-20 text-gray-800 font-medium">Black</span>
+                <span class="w-20 text-gray-800 dark:text-gray-200 font-medium">Black</span>
                 <span class="w-24 font-semibold">GND</span>
                 <span class="text-gray-400 mx-3">&rarr;</span>
-                <span class="font-mono text-sm bg-gray-200 px-2 py-1 rounded">Terminal 8</span>
+                <span class="font-mono text-sm bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">
+                  Terminal 8
+                </span>
               </div>
             </div>
           </div>
@@ -232,13 +239,15 @@ export default function GuidedTutorial() {
                 <img
                   src="/debug-probe-wires.webp"
                   alt="Raspberry Pi Debug Probe showing SWDIO (yellow), SWCLK (orange), and GND (black) wires"
-                  class="w-full rounded-lg border border-gray-200 hover:opacity-90 transition-opacity cursor-zoom-in"
+                  class="w-full rounded-lg border border-gray-200 dark:border-gray-800 hover:opacity-90 transition-opacity cursor-zoom-in"
                 />
               </a>
               <figcaption class="text-sm text-gray-500 mt-2 text-center">
-                Debug probe wires: <span class="text-yellow-600 font-medium">Yellow</span> = SWDIO,{" "}
-                <span class="text-orange-600 font-medium">Orange</span> = SWCLK,{" "}
-                <span class="text-gray-800 font-medium">Black</span> = GND
+                Debug probe wires:{" "}
+                <span class="text-yellow-600 dark:text-yellow-400 font-medium">Yellow</span> =
+                SWDIO, <span class="text-orange-600 dark:text-orange-400 font-medium">Orange</span>{" "}
+                = SWCLK, <span class="text-gray-800 dark:text-gray-200 font-medium">Black</span> =
+                GND
               </figcaption>
             </figure>
             <figure>
@@ -246,7 +255,7 @@ export default function GuidedTutorial() {
                 <img
                   src="/test-points.webp"
                   alt="Test points inside the Diamond display showing TP10 (SWDIO) and TP11 (SWCLK)"
-                  class="w-full rounded-lg border border-gray-200 hover:opacity-90 transition-opacity cursor-zoom-in"
+                  class="w-full rounded-lg border border-gray-200 dark:border-gray-800 hover:opacity-90 transition-opacity cursor-zoom-in"
                 />
               </a>
               <figcaption class="text-sm text-gray-500 mt-2 text-center">
@@ -258,7 +267,7 @@ export default function GuidedTutorial() {
                 <img
                   src="/terminal-8-gnd.webp"
                   alt="White connector showing Terminal 8 for GND connection"
-                  class="w-full rounded-lg border border-gray-200 hover:opacity-90 transition-opacity cursor-zoom-in"
+                  class="w-full rounded-lg border border-gray-200 dark:border-gray-800 hover:opacity-90 transition-opacity cursor-zoom-in"
                 />
               </a>
               <figcaption class="text-sm text-gray-500 mt-2 text-center">
@@ -269,9 +278,9 @@ export default function GuidedTutorial() {
           </div>
         </div>
 
-        <div class="border-t border-gray-200 pt-6">
-          <h4 class="font-medium text-gray-900 mb-3">Test the Connection</h4>
-          <p class="text-gray-600 text-sm mb-4">
+        <div class="border-t border-gray-200 dark:border-gray-800 pt-6">
+          <h4 class="font-medium text-gray-900 dark:text-gray-100 mb-3">Test the Connection</h4>
+          <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">
             First power on the bike. Then click the button to arm the tool, connect the ground wire,
             then press and hold the jumper wires against the test points. The tool will poll for a
             connection and read the chip info once contact is made.{" "}

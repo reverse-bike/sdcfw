@@ -11,9 +11,9 @@ interface ButtonProps {
 
 const VARIANTS = {
   primary:
-    "bg-blue-500 font-semibold text-white hover:bg-blue-600 disabled:bg-gray-300 disabled:hover:bg-gray-300",
+    "bg-blue-500 font-semibold text-white hover:bg-blue-600 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:hover:bg-gray-300 dark:disabled:hover:bg-gray-700",
   secondary:
-    "border border-blue-500 font-semibold text-blue-600 hover:bg-blue-50 disabled:border-gray-300 disabled:text-gray-400 disabled:hover:bg-transparent",
+    "border border-blue-500 font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950 disabled:border-gray-300 dark:disabled:border-gray-700 disabled:text-gray-400 dark:disabled:text-gray-600 disabled:hover:bg-transparent",
 } as const;
 
 const SIZES = {
@@ -28,7 +28,7 @@ export default function Button(props: ButtonProps) {
       type="button"
       onClick={() => props.onClick()}
       disabled={props.disabled ?? false}
-      class={`rounded-lg transition focus:ring-2 focus:ring-blue-300 focus:outline-none disabled:cursor-not-allowed ${
+      class={`rounded-lg transition focus:ring-2 focus:ring-blue-300 dark:focus:ring-blue-800 focus:outline-none disabled:cursor-not-allowed ${
         VARIANTS[props.variant ?? "primary"]
       } ${SIZES[props.size ?? "md"]}`}
     >

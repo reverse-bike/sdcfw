@@ -21,10 +21,9 @@ const patchFile: McPatchFile = {
       // to the signed 16-bit PI target range; preserve signed feedback in r1.
       // movs r2,#12; muls r0,r2,r0; rsbs r0,r0,#0; ssat r0,#16,r0;
       // rsbs r1,r1,#0; sxth r1,r1
-      data: [
-        0x0c, 0x22, 0x50, 0x43, 0x40, 0x42, 0x00, 0xf3, 0x0f, 0x00, 0x49, 0x42, 0x09, 0xb2,
-      ],
-      description: "Raise the shared throttle speed-target multiplier from 9x to 12x without signed wraparound",
+      data: [0x0c, 0x22, 0x50, 0x43, 0x40, 0x42, 0x00, 0xf3, 0x0f, 0x00, 0x49, 0x42, 0x09, 0xb2],
+      description:
+        "Raise the shared throttle speed-target multiplier from 9x to 12x without signed wraparound",
     },
     {
       type: "bytes",

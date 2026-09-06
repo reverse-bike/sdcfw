@@ -15,7 +15,5 @@
       "Bash(bunx astro check:*)"
     ]
   },
-  "enabledMcpjsonServers": [
-    "binja"
-  ]
+  "enabledMcpjsonServers": ["binja"]
 }
