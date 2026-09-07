@@ -1,0 +1,8 @@
+{
+  "manifest": {
+    "application": {
+      "bin_file": "DFU_pack_no_IoT_4.16.9_can_only.bin",
+      "dat_file": "DFU_pack_no_IoT_4.16.9_can_only.dat"
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "manifest": {
+    "application": {
+      "bin_file": "comodule-hw-stm32.bin",
+      "dat_file": "comodule-hw-stm32.dat",
+      "init_packet_data": {
+        "application_version": 65535,
+        "device_revision": 43690,
+        "device_type": 20786,
+        "firmware_crc16": 53714,
+        "softdevice_req": [100]
+      }
+    },
+    "dfu_version": 0.5
+  }
+}

@@ -52,7 +52,7 @@ function archiveFiles(): string[] {
 
 function contentEntries(): ContentEntry[] {
   return [...new Bun.Glob("**/*.md").scanSync({ cwd: contentDir, onlyFiles: true })]
-    .filter((file) => path.posix.basename(file) !== "_family.md")
+    .filter((file) => !path.posix.basename(file).startsWith("_"))
     .sort()
     .map((file) => {
       const raw = readFileSync(path.join(contentDir, file), "utf8");

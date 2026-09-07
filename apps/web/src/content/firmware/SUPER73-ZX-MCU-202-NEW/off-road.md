@@ -7,17 +7,13 @@ description: Reduced high-speed throttle current rolloff in mode 4
 experimental: true
 ---
 
-Requires setting the bike into mode 4 to activate full power.
+Increases acceleration and top speed in mode 4. Once installed, the bike reports controller version `203`.
 
 ## Features
 
-- Keeps normal display-controlled operating-mode selection
-- Retains the factory throttle response rates
-- Raises the throttle speed-target multiplier from 9× to 12×, with signed-range saturation
+- Raises the throttle speed-target multiplier from 9× to 12×
 - Uses factory throttle current scaling below 13 km/h and holds factor 200 at and above it
 - Disables field weakening at all vehicle speeds
-
-Once installed, the bike reports controller version 203.
 
 ## Compatibility
 

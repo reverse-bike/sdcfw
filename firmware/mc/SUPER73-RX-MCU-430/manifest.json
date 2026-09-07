@@ -1,0 +1,8 @@
+{
+  "manifest": {
+    "application": {
+      "bin_file": "GD_S73Rx_H104_S430EU_20241011.bin",
+      "dat_file": "GD_S73Rx_H104_S430EU_20241011.dat"
+    }
+  }
+}

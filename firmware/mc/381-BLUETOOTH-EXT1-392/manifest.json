@@ -1,0 +1,8 @@
+{
+  "manifest": {
+    "application": {
+      "bin_file": "MCU_392.bin",
+      "dat_file": "MCU_392.dat"
+    }
+  }
+}
