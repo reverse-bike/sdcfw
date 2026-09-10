@@ -241,16 +241,20 @@ test("every descriptor builds and published outputs still match", async () => {
       patchFile.target === "controller"
         ? patchFile.release.controllerVersion
         : patchFile.release.nrfVersion;
-    const expected = entry
-      ? entry.path.replace("/cfw/", "")
-      : archiveFileName({
-          sourceName: descriptorSource,
-          variant: descriptorVariant,
-          version: patchFile.release.version,
-          ...(patchFile.patches.length > 0
-            ? { stock: false, reportedVersion: reported }
-            : { stock: true }),
-        });
+    const descriptorArchive = archiveFileName({
+      sourceName: descriptorSource,
+      variant: descriptorVariant,
+      version: patchFile.release.version,
+      ...(patchFile.patches.length > 0
+        ? { stock: false, reportedVersion: reported }
+        : { stock: true }),
+    });
+    // A test release may be newer than the version listed on the site. Verify
+    // the descriptor's own archive; content links are checked independently.
+    // Retain the content filename fallback for archives with legacy names.
+    const expected = archives.includes(descriptorArchive)
+      ? descriptorArchive
+      : (entry?.path.replace("/cfw/", "") ?? descriptorArchive);
 
     if (!archives.includes(expected)) {
       throw new Error(

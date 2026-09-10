@@ -1,6 +1,6 @@
 ---
 name: EU Unlock
-path: /cfw/SUPER73-ZX-MCU-404-EU-20260612-off-road-r405-v1.0.4.zip
+path: /cfw/SUPER73-ZX-MCU-404-EU-20260612-off-road-r405-v1.0.7.zip
 anchor: mc-405-patched
 date: 2026-09-04
 description: Removes the EU speed limits and opens up the current envelope
