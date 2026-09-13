@@ -23,9 +23,10 @@ bun test packages/ble-utils
 
 1. Connect to the bike's application firmware, found by manufacturer data
    `0x020f`.
-2. `armControllerUpdate` writes the F0CC packet carrying the CRC of the staged
-   image, waits ~8s while the display erases its external staging area, then
-   requests a buttonless DFU reboot.
+2. `armControllerUpdate` waits 30s for display startup, writes the F0CC packet
+   carrying the CRC of the staged image, then allows 30s for external staging
+   preparation before requesting a buttonless DFU reboot. These waits do not
+   confirm that preparation succeeded.
 3. The display reboots and advertises as `DfuTarg` with the Nordic Secure DFU
    service (`FE59`). This is a **different device** from the application: it
    must be discovered and connected to again.

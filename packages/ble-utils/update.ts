@@ -146,6 +146,7 @@ export async function armControllerUpdate(
   server: BluetoothRemoteGATTServer,
   bin: Uint8Array,
   options: {
+    startupWaitMs?: number;
     eraseWaitMs?: number;
     enterDfu?: boolean;
     rebootSettleMs?: number;
@@ -156,6 +157,12 @@ export async function armControllerUpdate(
   const crc = controllerImageCrc(bin);
   const packet = createArmPacket(crc);
   log(`controller image CRC: 0x${crc.toString(16).padStart(8, "0")}`);
+
+  // Flash initialization can clear a pending preparation request. Allow it to
+  // settle before arming; completion is not acknowledged over this interface.
+  const startupWaitMs = options.startupWaitMs ?? 30_000;
+  log(`waiting ${startupWaitMs / 1000}s for display startup before arming`);
+  await sleep(startupWaitMs);
   log(`F0CC arm packet: ${hex(packet)}`);
 
   const appService = await withTimeout(
@@ -167,8 +174,8 @@ export async function armControllerUpdate(
   await withTimeout(rx.writeValueWithResponse(packet), 15_000, "write F0CC arm packet");
 
   if (options.enterDfu ?? true) {
-    const eraseWaitMs = options.eraseWaitMs ?? 8_000;
-    log(`external staging area armed; waiting ${eraseWaitMs / 1000}s`);
+    const eraseWaitMs = options.eraseWaitMs ?? 30_000;
+    log(`staging preparation requested; waiting ${eraseWaitMs / 1000}s before DFU reboot`);
     await sleep(eraseWaitMs);
     const rebootOptions =
       options.rebootSettleMs === undefined
