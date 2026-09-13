@@ -113,7 +113,9 @@ export default function BootloaderUpdate() {
         append("Requesting internal nRF DFU. No F0CC controller staging command is sent.");
         await enterDfuMode(server, { log: append });
         setPrepared(true);
-        setStatus("DFU requested. Select this bike's DfuTarg for the dry run.");
+        setStatus(
+          "Update mode requested. Continue with Run dry run and select DfuTarg in the Bluetooth chooser.",
+        );
       } finally {
         safeDisconnect(server);
       }
@@ -154,7 +156,7 @@ export default function BootloaderUpdate() {
           dfuDeviceId = target.id;
           setAccepted(true);
           setStatus(
-            "Dry run accepted. No firmware image was sent. This does not prove installation will succeed.",
+            "Dry run passed. No firmware image was sent. To install, tick the confirmation box and select Install bootloader. A passed dry run does not guarantee installation will succeed.",
           );
         }
       } catch (cause) {
@@ -208,21 +210,31 @@ export default function BootloaderUpdate() {
     <section class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-6 mb-6">
       <h2 class="text-2xl font-semibold mb-4">Update nRF bootloader over Bluetooth</h2>
       <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
-        An advanced, signed bootloader-only update. No USB probe is needed for this tool.
+        Updates the display's nRF bootloader over Bluetooth, not its display application or motor
+        controller firmware. You need a compatible, original bootloader update package. No USB probe
+        is needed to perform the update.
       </p>
       <Callout type="warning" title="A failed bootloader update can require wired recovery">
         Use an original package known to match your display. Package checks do not establish bike
-        compatibility. Keep the bike powered and this tab open throughout installation. Before step
-        1, power-cycle the bike and wait for its normal screen to clear any controller-update mode.
-        Keep other DFU bikes off.
+        compatibility. Keep the bike powered and this tab open and in the foreground throughout
+        installation. Do not turn the bike off while firmware is being sent or installed.
       </Callout>
-      <label class="mt-5 block text-sm">
-        Official Nordic bootloader ZIP, or its .bin and .dat files
+      <div class="mt-5 mb-5 text-sm text-gray-600 dark:text-gray-400">
+        <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">Before you start</h3>
+        <p>
+          Turn the bike off and on, then wait for its normal screen. This clears any previous
+          controller-update mode. Close other apps connected to the bike and keep other bikes in
+          update mode switched off, so you can identify the right Bluetooth device.
+        </p>
+      </div>
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        Choose your bootloader package
         <input
-          class="mt-2 block w-full"
+          class="mt-2 block w-full rounded-lg text-sm text-gray-600 dark:text-gray-400 file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 dark:file:bg-blue-950 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-blue-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:file:cursor-not-allowed"
           type="file"
           multiple
           accept=".zip,.bin,.dat"
+          aria-describedby="bootloader-package-help"
           disabled={busy()}
           onChange={(event) => {
             const files = event.currentTarget.files;
@@ -230,25 +242,51 @@ export default function BootloaderUpdate() {
           }}
         />
       </label>
+      <p id="bootloader-package-help" class="mt-2 text-sm text-gray-500">
+        Select the original Nordic bootloader ZIP, without extracting it. Alternatively, select its
+        .bin and .dat files together. A full display backup or controller firmware ZIP will not
+        work. Choosing files only checks the package; it does not connect to or change the bike.
+      </p>
       <Show when={pkg()}>
-        <p class="mt-3 break-all text-sm">{label()}</p>
-        <div class="mt-5 grid gap-3 sm:grid-cols-2">
+        <p class="mt-3 break-all text-sm">Package loaded: {label()}</p>
+        <div class="mt-5">
+          <h3 class="font-semibold mb-2">1. Put the bike in update mode</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+            Select your bike (usually SUPER73) in the Bluetooth chooser. We read its current
+            version, then restart the display into update mode, also called DFU. No firmware is sent
+            yet.
+          </p>
           <Button disabled={busy()} onClick={prepare}>
-            1. Read bike and enter DFU
+            Enter update mode
           </Button>
+        </div>
+        <div class="mt-5">
+          <h3 class="font-semibold mb-2">2. Check that the bike accepts the package</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+            After the display restarts, select DfuTarg in the next Bluetooth chooser. This is your
+            bike under its update-mode name. The dry run sends only the signed package information
+            for the bike to validate, not the firmware image.
+          </p>
           <Button
             disabled={busy() || !prepared()}
             onClick={() => transfer(false)}
             variant="secondary"
           >
-            2. Connect and dry run
+            Run dry run
           </Button>
         </div>
         <p class="mt-2 text-sm text-gray-500">
-          The dry run submits the signed init packet for validation, but sends no firmware image. It
-          can change DFU state. Power-cycle to exit after a dry run if you are not proceeding.
+          If you stop after the dry run, turn the bike off and on to return to normal operation. To
+          install later, start again at step 1. A passed dry run does not guarantee installation
+          will succeed.
         </p>
-        <label class="mt-5 flex items-start gap-2 text-sm">
+        <h3 class="mt-5 font-semibold mb-2">3. Install the bootloader</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+          Installation becomes available after the dry run passes. Confirm below, then select the
+          same DfuTarg again. This step sends and installs the firmware. Keep power on until the
+          display returns to its normal screen, then check the version below.
+        </p>
+        <label class="flex items-start gap-2 text-sm">
           <input
             type="checkbox"
             checked={confirmed()}
@@ -262,7 +300,7 @@ export default function BootloaderUpdate() {
         </label>
         <div class="mt-3">
           <Button disabled={busy() || !accepted() || !confirmed()} onClick={() => transfer(true)}>
-            3. Install bootloader
+            Install bootloader
           </Button>
         </div>
         <Show when={progress() > 0}>
@@ -274,22 +312,36 @@ export default function BootloaderUpdate() {
           </div>
         </Show>
       </Show>
-      <div class="mt-5 flex flex-wrap items-end gap-3">
-        <label class="block text-sm">
-          Expected reported bootloader version
-          <input
-            class="mt-1 block w-24 rounded border p-2"
-            type="number"
-            min="1"
-            max="31"
-            value={expected()}
-            disabled={busy()}
-            onInput={(event) => setExpected(Number(event.currentTarget.value))}
-          />
-        </label>
-        <Button disabled={busy()} onClick={verify} variant="secondary">
-          4. Read and verify version
-        </Button>
+      <div class="mt-6 border-t border-gray-200 dark:border-gray-800 pt-5">
+        <h3 class="font-semibold mb-2">Check the bootloader version</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          With the bike showing its normal screen, select it by its normal Bluetooth name, not
+          DfuTarg. You can check before or after an update, without loading a package. This reads
+          the current version and compares it with the expected version below; it does not install
+          anything.
+        </p>
+        <p class="mt-2 text-sm text-gray-500">
+          For the NRFBL-6 package, leave the expected version at 6. Its signed package information
+          contains a separate version field of 5; that is not the version the bike should report
+          after installation.
+        </p>
+        <div class="mt-5 flex flex-wrap items-end gap-3">
+          <label class="block text-sm">
+            Expected bootloader version
+            <input
+              class="mt-1 block w-24 rounded border p-2"
+              type="number"
+              min="1"
+              max="31"
+              value={expected()}
+              disabled={busy()}
+              onInput={(event) => setExpected(Number(event.currentTarget.value))}
+            />
+          </label>
+          <Button disabled={busy()} onClick={verify} variant="secondary">
+            Read bootloader version
+          </Button>
+        </div>
       </div>
       <Show when={busy()}>
         <p class="mt-3 text-sm" role="status">
