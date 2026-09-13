@@ -14,7 +14,6 @@ import Callout from "./Callout";
 import LogPanel from "./LogPanel";
 import ProgressBar from "./ProgressBar";
 import StatusMessage from "./StatusMessage";
-import ToolCard from "./ToolCard";
 import {
   describeDevice,
   errorMessage,
@@ -206,10 +205,11 @@ export default function BootloaderUpdate() {
     });
 
   return (
-    <ToolCard
-      title="Update nRF bootloader over Bluetooth"
-      description="An advanced, signed bootloader-only update. No USB probe is needed for this tool."
-    >
+    <section class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-6 mb-6">
+      <h2 class="text-2xl font-semibold mb-4">Update nRF bootloader over Bluetooth</h2>
+      <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+        An advanced, signed bootloader-only update. No USB probe is needed for this tool.
+      </p>
       <Callout type="warning" title="A failed bootloader update can require wired recovery">
         Use an original package known to match your display. Package checks do not establish bike
         compatibility. Keep the bike powered and this tab open throughout installation. Before step
@@ -307,6 +307,6 @@ export default function BootloaderUpdate() {
         </StatusMessage>
       </Show>
       <LogPanel lines={log()} label="Bootloader update log" open />
-    </ToolCard>
+    </section>
   );
 }
