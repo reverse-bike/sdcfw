@@ -4,6 +4,7 @@ target: controller
 factoryVersion: 410
 description: Releases built from the factory EU controller 410 image
 requires:
+  controllerVariant: [231]
   controllerVersion:
     - "4XX"
 ---

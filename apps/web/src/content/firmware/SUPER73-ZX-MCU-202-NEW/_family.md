@@ -6,6 +6,7 @@ description: Releases built from the factory SUPER73 ZX controller 202 image. Co
 compatibility:
   - SUPER73 ZX
 requires:
+  controllerVariant: [232]
   controllerVersion:
     - "20X"
 ---

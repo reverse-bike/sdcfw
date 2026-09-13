@@ -6,6 +6,7 @@ description: Releases built from the factory EU SUPER73 ZX controller 404 image.
 compatibility:
   - SUPER73 ZX
 requires:
+  controllerVariant: [233]
   controllerVersion:
     - "40X"
 ---

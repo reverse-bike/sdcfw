@@ -17,8 +17,8 @@ Increases acceleration and top speed in mode 4. Once installed, the bike reports
 
 ## Compatibility
 
-Built from the stock controller 202 image for the SUPER73 ZX, and applies to
-bikes whose motor controller reports a 201 or 202 versions.
+Built from the stock US controller 202 image for the SUPER73 ZX. Requires a motor
+controller reporting a 20X version and controller variant 232.
 
 ## Changelog
 

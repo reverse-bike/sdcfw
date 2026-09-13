@@ -26,8 +26,8 @@ Once installed, the bike reports controller version 405.
 
 ## Compatibility
 
-Built from the stock EU controller 404 image for the SUPER73 ZX, and applies to
-bikes whose motor controller reports version 404 or 405.
+Built from the stock EU controller 404 image for the SUPER73 ZX. Requires a motor
+controller reporting a 40X version and controller variant 233.
 
 ## Changelog
 
