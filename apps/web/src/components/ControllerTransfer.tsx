@@ -259,7 +259,7 @@ export default function ControllerTransfer() {
 
             <div class="mt-5 grid gap-3 sm:grid-cols-2">
               <Button onClick={arm} disabled={busy() !== false}>
-                {busy() === "arming" ? "Preparing… (about a minute)" : "1. Arm and reboot into DFU"}
+                {busy() === "arming" ? "Preparing…" : "1. Arm and reboot into DFU"}
               </Button>
               <Button onClick={transfer} disabled={busy() !== false} variant="secondary">
                 {busy() === "transferring"

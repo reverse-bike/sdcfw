@@ -6,6 +6,8 @@ export interface DfuPackage {
   sdReq: number[];
   type: number;
   appSize: number;
+  blSize: number;
+  sdSize: number;
   hashType: number;
   hash: Uint8Array;
   signatureType: number;
@@ -94,6 +96,8 @@ export async function parseDfuPackage(dat: Uint8Array, bin: Uint8Array): Promise
   const sdReq: number[] = [];
   let type = 0;
   let appSize = 0;
+  let blSize = 0;
+  let sdSize = 0;
   let hashType = -1;
   let hash: Uint8Array | undefined;
   let vendorExt: Uint8Array | null = null;
@@ -117,8 +121,10 @@ export async function parseDfuPackage(dat: Uint8Array, bin: Uint8Array): Promise
         type = initReader.varint();
         break;
       case 5:
+        sdSize = initReader.varint();
+        break;
       case 6:
-        initReader.varint();
+        blSize = initReader.varint();
         break;
       case 7:
         appSize = initReader.varint();
@@ -159,6 +165,8 @@ export async function parseDfuPackage(dat: Uint8Array, bin: Uint8Array): Promise
     sdReq,
     type,
     appSize,
+    blSize,
+    sdSize,
     hashType,
     hash,
     signatureType,
@@ -166,6 +174,29 @@ export async function parseDfuPackage(dat: Uint8Array, bin: Uint8Array): Promise
     vendorExt,
     hashMatches,
   };
+}
+
+/** Structural checks for the display's stock nRF bootloader update path.
+ * The device verifies the signature; hashMatches alone does not prove authenticity.
+ */
+export function validateBootloaderPackage(pkg: DfuPackage): void {
+  if (pkg.type !== 2 || pkg.appSize !== 0 || pkg.sdSize !== 0) {
+    throw new Error("Select a bootloader-only Nordic DFU package.");
+  }
+  if (pkg.blSize === 0 || pkg.blSize !== pkg.bin.length || pkg.blSize > 0xb000) {
+    throw new Error("Bootloader size does not match the binary or exceeds the display's limit.");
+  }
+  if (pkg.hwVersion !== 52 || !pkg.sdReq.includes(0xa5)) {
+    throw new Error(
+      "This package does not declare the display's hardware and SoftDevice requirements.",
+    );
+  }
+  if (pkg.hashType !== 3 || !pkg.hashMatches) {
+    throw new Error("Bootloader SHA-256 does not match. Use the original, unmodified package.");
+  }
+  if (pkg.signatureType !== 0 || pkg.signature.length !== 64) {
+    throw new Error("A signed ECDSA bootloader package is required.");
+  }
 }
 
 export const STAGED_CRC_LEN = 0x7000;

@@ -424,8 +424,8 @@ export default function ControllerGuide(props: ControllerGuideProps) {
       <Step number={2} title="Enter update mode" locked={!pkg()} done={armed()}>
         <p class="mb-4 text-gray-600 dark:text-gray-400">
           Switches your display into update mode, ready to receive the new firmware. Its screen will
-          say <b>Receiving Firmware</b> when it is ready for the next step. Allow about a minute
-          for preparation before the display restarts.
+          say <b>Receiving Firmware</b> when it is ready for the next step. Preparation includes an
+          8-second wait before the display restarts.
         </p>
         <Show when={alreadyRunning()}>
           <div class="mb-4">

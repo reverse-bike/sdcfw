@@ -146,7 +146,6 @@ export async function armControllerUpdate(
   server: BluetoothRemoteGATTServer,
   bin: Uint8Array,
   options: {
-    startupWaitMs?: number;
     eraseWaitMs?: number;
     enterDfu?: boolean;
     rebootSettleMs?: number;
@@ -158,11 +157,6 @@ export async function armControllerUpdate(
   const packet = createArmPacket(crc);
   log(`controller image CRC: 0x${crc.toString(16).padStart(8, "0")}`);
 
-  // Flash initialization can clear a pending preparation request. Allow it to
-  // settle before arming; completion is not acknowledged over this interface.
-  const startupWaitMs = options.startupWaitMs ?? 30_000;
-  log(`waiting ${startupWaitMs / 1000}s for display startup before arming`);
-  await sleep(startupWaitMs);
   log(`F0CC arm packet: ${hex(packet)}`);
 
   const appService = await withTimeout(
@@ -174,7 +168,7 @@ export async function armControllerUpdate(
   await withTimeout(rx.writeValueWithResponse(packet), 15_000, "write F0CC arm packet");
 
   if (options.enterDfu ?? true) {
-    const eraseWaitMs = options.eraseWaitMs ?? 30_000;
+    const eraseWaitMs = options.eraseWaitMs ?? 8_000;
     log(`staging preparation requested; waiting ${eraseWaitMs / 1000}s before DFU reboot`);
     await sleep(eraseWaitMs);
     const rebootOptions =
@@ -234,6 +228,20 @@ export function validateDfuTransportOptions(
 }
 
 export async function transferControllerFirmware(
+  server: BluetoothRemoteGATTServer,
+  dat: Uint8Array,
+  bin: Uint8Array,
+  options: FirmwareTransferOptions = {},
+): Promise<{ firmwareTransferred: boolean }> {
+  const result = await transferDfuFirmware(server, dat, bin, options);
+  if (result.firmwareTransferred) {
+    options.log?.("controller programming will follow in the display application");
+  }
+  return result;
+}
+
+/** Transfers the signed init packet and optional firmware without selecting an update target. */
+export async function transferDfuFirmware(
   server: BluetoothRemoteGATTServer,
   dat: Uint8Array,
   bin: Uint8Array,
@@ -318,6 +326,5 @@ export async function transferControllerFirmware(
 
   log("firmware transfer complete; waiting for validation and reboot");
   await sleep(options.finalizeSettleMs ?? 1_000);
-  log("controller programming will follow in the display application");
   return { firmwareTransferred: true };
 }

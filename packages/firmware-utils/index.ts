@@ -9,6 +9,7 @@ export {
 } from "./manifest.js";
 
 export { sha256Hex } from "./hash.js";
+export { readNordicBootloaderPackage } from "./nordic.js";
 
 export { versionMatchesAny, versionMatchesPattern } from "./compatibility.js";
 

@@ -2,25 +2,27 @@
 import Page from '../../layouts/Page.astro';
 import AdvancedTools from '../../components/AdvancedTools';
 import Callout from '../../components/Callout';
+import BootloaderUpdate from '../../components/BootloaderUpdate';
 ---
 
 <Page
 	title="Display tools"
-	lead="The individual display tools, without the guide around them."
+	lead="Bluetooth bootloader updates and individual wired display tools."
 	back={{ href: '/display', label: 'Display guide' }}
 	links={[{ href: '/firmware#display', label: 'Custom firmware' }]}
 >
 
 		<div class="mb-6">
-			<Callout type="warning" title="For development, not for updating your bike">
-				These run one operation at a time, in whatever order you click them, with none of the
-				checks or ordering the guide applies, including backing up before anything is
-				overwritten. They may not behave the way you expect. If you came here to install
-				firmware, use the <a href="/display" class="underline">display guide</a> instead.
+			<Callout type="warning" title="Advanced tools: recovery may require a wired probe">
+				These tools do not provide the display guide's backup workflow. The Bluetooth tool
+				updates only the nRF bootloader; the wired tools below perform individual operations.
+				If you came here to install
+				custom display firmware, use the <a href="/display" class="underline">display guide</a> instead.
 			</Callout>
 		</div>
 
 		<div id="tools-container">
+			<BootloaderUpdate client:only="solid-js" />
 			<AdvancedTools client:only="solid-js" />
 		</div>
 	

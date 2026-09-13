@@ -75,7 +75,7 @@ Options:
   --yes, -y             Skip confirmation before a write or DFU reboot
   --scan-time <seconds> BLE discovery window (default: 10)
   --timeout <seconds>   Overall timeout (default: 900)
-  --wait <seconds>      Wait after arming external flash (default: 30)
+  --wait <seconds>      Wait after arming external flash (default: 8)
   --chunk <bytes>       Initial BLE packet size (default: 20)
   --object-size <bytes> DFU object size (default: 4096)
   --prn <count>         Packet receipt interval (default: 10)
@@ -370,7 +370,7 @@ async function flash(
   const appServer = await connect(device, { log: console.log });
   try {
     await armControllerUpdate(appServer, bin, {
-      eraseWaitMs: numberFlag(flags, "--wait", 30) * 1_000,
+      eraseWaitMs: numberFlag(flags, "--wait", 8) * 1_000,
       log: console.log,
     });
   } finally {

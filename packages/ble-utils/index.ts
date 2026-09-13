@@ -30,7 +30,13 @@ export {
 
 export { crc32Ieee, crc32Mpeg2Update, deviceImageCrc } from "./crc.js";
 
-export { parseDfuPackage, stagedImage, STAGED_CRC_LEN, type DfuPackage } from "./package.js";
+export {
+  parseDfuPackage,
+  validateBootloaderPackage,
+  stagedImage,
+  STAGED_CRC_LEN,
+  type DfuPackage,
+} from "./package.js";
 
 export { authenticate, DEFAULT_AUTH_KEY } from "./auth.js";
 
@@ -50,6 +56,7 @@ export {
   createArmPacket,
   enterDfuMode,
   transferControllerFirmware,
+  transferDfuFirmware,
   validateDfuTransportOptions,
   type DfuTransportOptions,
   type FirmwareTransferOptions,

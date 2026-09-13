@@ -7,7 +7,7 @@ selection, filesystem access, or a Node BLE implementation.
 It provides:
 
 - application authentication and module-version registry reads;
-- controller-package parsing and both required CRC algorithms;
+- controller and bootloader init-packet parsing and both required CRC algorithms;
 - the F0CC external-controller update request;
 - Nordic Secure DFU command and data-object transfer with safe resume checks;
 - a dry-run boundary after the signed `.dat` init packet and before `.bin`
@@ -23,9 +23,9 @@ bun test packages/ble-utils
 
 1. Connect to the bike's application firmware, found by manufacturer data
    `0x020f`.
-2. `armControllerUpdate` waits 30s for display startup, writes the F0CC packet
-   carrying the CRC of the staged image, then allows 30s for external staging
-   preparation before requesting a buttonless DFU reboot. These waits do not
+2. `armControllerUpdate` writes the F0CC packet carrying the CRC of the staged
+   image, then allows 8s for external staging preparation before requesting a
+   buttonless DFU reboot. This wait does not
    confirm that preparation succeeded.
 3. The display reboots and advertises as `DfuTarg` with the Nordic Secure DFU
    service (`FE59`). This is a **different device** from the application: it
@@ -34,7 +34,29 @@ bun test packages/ble-utils
    `.bin` in objects, checkpointing as it goes, and executes.
 5. The display programs the controller from external flash and reboots.
 
-## Device behaviour worth knowing
+## Internal nRF bootloader updates
+
+The Bluetooth tool at `/display/advanced/` accepts an original Nordic
+bootloader-only ZIP (`manifest.bootloader`) or its `.bin`/`.dat` pair. It checks
+image type, bootloader size, hardware/SoftDevice requirements, signature format,
+and SHA-256. These are package checks, not proof of compatibility or authenticity;
+the bike verifies the signature during init-packet execution.
+
+Start from a normal application boot after a power cycle. Call `enterDfuMode`
+directly: **do not send F0CC or call `armControllerUpdate`**. Internal nRF updates
+must not select the external controller staging path. After selecting the DFU
+device, use `transferDfuFirmware`, the same transport used by the controller
+wrapper. It defaults to an init-only dry run; actual firmware requires
+`executeFirmware: true`. A dry run can change DFU state but sends no image data.
+
+The tool requires a successful dry run and explicit confirmation before sending
+the bootloader. Keep power on through installation, then reconnect to the same
+bike and read its runtime bootloader version. The signed firmware-version field
+is not necessarily that reported version (the NRFBL-6 package declares 5).
+Transfer completion alone does not verify installation. Bootloader-update
+failure can require a wired probe for recovery.
+
+## Controller behaviour worth knowing
 
 **Buttonless DFU needs indications enabled first.** Nordic's service refuses a
 control-point write with "CCCD improperly configured" unless the client has

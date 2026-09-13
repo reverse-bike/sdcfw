@@ -1,4 +1,4 @@
-// Shared Web Bluetooth helpers for the controller tools.
+// Shared Web Bluetooth helpers for display and controller tools.
 
 import {
   APP_MANUFACTURER_ID,
