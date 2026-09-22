@@ -22,6 +22,7 @@ import {
 } from "./controllerBle";
 import {
   checkApplicability,
+  controllerDfuChunkSize,
   fetchRelease,
   formatVersionInfo,
   reconnect,
@@ -193,6 +194,8 @@ export default function ControllerGuide(props: ControllerGuideProps) {
       setNeedsPicker(false);
       append(`Connecting to ${describeDevice(target)}…`);
       server = await reconnect(target, append);
+      // Read the connected display again in case the chooser selected another bike.
+      setInfo(await readVersionInfo(server));
       await armControllerUpdate(server, parsed.bin, { log: append });
       setArmed(true);
       append("The display should now show Receiving Firmware.");
@@ -220,7 +223,10 @@ export default function ControllerGuide(props: ControllerGuideProps) {
       const target = await requestDfuDevice();
       append(`Connecting to ${describeDevice(target)}…`);
       server = await connect(target, { log: append });
+      const chunkSize = controllerDfuChunkSize(info()?.nrfBootloaderVersion);
+      append(`DFU packet size: ${chunkSize} bytes`);
       const result = await transferControllerFirmware(server, parsed.dat, parsed.bin, {
+        chunkSize,
         executeFirmware: !dryRun(),
         log: append,
         // Only the firmware phase is worth a bar; the init packet is 142 bytes.

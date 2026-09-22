@@ -67,6 +67,7 @@ test("shared transport sends firmware only on opt-in; controller wrapper retains
         },
       );
       expect(result.firmwareTransferred).toBe(true);
+      expect(spy.mock.calls.at(-1)?.[1]?.chunkSize).toBe(20);
       expect(transferred).toEqual([1, 2]);
       expect(log.some((line) => line.includes("controller programming"))).toBe(
         transfer === transferControllerFirmware,

@@ -279,10 +279,7 @@ export class DfuClient {
 
     while (offset < data.length) {
       const length = Math.min(this.chunkSize, data.length - offset);
-      const receipt =
-        this.prnInterval > 0 && (writes + 1) % this.prnInterval === 0
-          ? this.waitForPrn()
-          : undefined;
+      const expectsReceipt = this.prnInterval > 0 && (writes + 1) % this.prnInterval === 0;
       try {
         const chunk = data.slice(offset, offset + length);
         await withTimeout(
@@ -303,8 +300,11 @@ export class DfuClient {
         continue;
       }
 
-      if (receipt) {
-        const response = await receipt;
+      // Notifications arriving during the write are buffered in prnQueue.
+      // Only register a waiter after a successful write so a rejected larger
+      // packet cannot leave a waiter that consumes the retry's receipt.
+      if (expectsReceipt) {
+        const response = await this.waitForPrn();
         const view = new DataView(response.buffer, response.byteOffset, response.byteLength);
         this.log(`PRN receipt: offset=0x${view.getUint32(3, true).toString(16)}`);
       }
@@ -313,7 +313,7 @@ export class DfuClient {
       if (
         absoluteOffset >= nextCheckpoint &&
         offset < data.length &&
-        (receipt || this.prnInterval === 0)
+        (expectsReceipt || this.prnInterval === 0)
       ) {
         if (this.prnInterval === 0) await sleep(100);
         const progress = await this.calculateChecksum();
@@ -329,8 +329,13 @@ export class DfuClient {
       }
     }
 
-    this.log(`streamed ${writes} writes; settling the receive queue`);
-    await sleep(100);
+    this.log(`streamed ${writes} writes`);
+    // PRN transfers use receipt flow control and the final checksum response
+    // to confirm delivery. Unacknowledged transfers need time to drain.
+    if (this.prnInterval === 0) {
+      this.log("settling the receive queue");
+      await sleep(100);
+    }
   }
 
   async transferObject(

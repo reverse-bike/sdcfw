@@ -98,6 +98,11 @@ export function formatBytes(bytes: number): string {
   return bytes < 1024 ? `${bytes} B` : `${(bytes / 1024).toFixed(1)} KB`;
 }
 
+/** NRFBL-8 supports a 247-byte ATT MTU and a 244-byte DFU packet value. */
+export function controllerDfuChunkSize(bootloaderVersion: number | undefined): number {
+  return bootloaderVersion === 8 ? 244 : 20;
+}
+
 /**
  * Reconnect to a bike we already have permission for.
  *

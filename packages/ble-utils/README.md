@@ -34,6 +34,37 @@ bun test packages/ble-utils
    `.bin` in objects, checkpointing as it goes, and executes.
 5. The display programs the controller from external flash and reboots.
 
+Transfers default to 20-byte writes. In the analyzed NRFBL-6
+`comodule_nrf_bl_secure.bin`, the BLE configuration at file offset `0x3298`
+sets ATT MTU to 23, the exchange reply at `0x3270` also supplies 23, and the
+DFU packet characteristic initializer at `0x3b00` sets maximum length to 20.
+The data-object handler at `0x4cd0` additionally rejects writes over 128 bytes.
+Larger browser writes therefore cannot speed up this bootloader. These limits
+have not been verified for every bootloader version.
+
+NRFBL-8 `comodule_nrf_bl_secure.bin` supports larger writes: BLE configuration
+at file offset `0x3344` and the MTU exchange reply in `0x31c4` use 247,
+the packet initializer at `0x3c2c` sets maximum length to 244, and the data
+handler at `0x52a8` accepts up to 512 bytes with 512-byte receive buffers.
+The guided controller uploader selects 244-byte writes for reported bootloader
+version 8 only; other versions retain 20. The browser/OS must also negotiate
+the larger MTU. The advanced transfer tool and CLI allow an explicit chunk size.
+
+Explicitly configured larger writes fall back to 100, 58, then 20 bytes if
+the write rejects. Silent truncation or rejection inside the bootloader does
+not trigger that fallback; object offset and CRC verification must still pass
+before execution.
+
+NRFBL-8 has a separate external-staging CRC check at file offset `0x8d74`.
+It compares the header CRC with a word-reversed MPEG-2 CRC over `0x7000`
+payload bytes (`0x3404`), marking the header invalid on mismatch. For the
+external-file target `0x80`, finalization at `0x5cd0` can nevertheless return
+DFU success. In display firmware 250426, validation at `0x31fca` reads that
+header, and controller programming at `0x329e8` requires its valid type `0xf0`.
+Thus successful transport CRC and execute responses do not prove that a
+controller image was accepted for installation; verify the controller version
+after reboot.
+
 ## Internal nRF bootloader updates
 
 The Bluetooth tool at `/display/advanced/` accepts an original Nordic
