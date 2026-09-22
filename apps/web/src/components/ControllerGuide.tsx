@@ -335,8 +335,20 @@ export default function ControllerGuide(props: ControllerGuideProps) {
           is working.
         </p>
         <Button onClick={read} disabled={!idle() || !supported}>
-          {busy() === "reading" ? "Reading…" : info() ? "Read again" : "Connect to my bike"}
+          {!supported
+            ? "Browser not supported"
+            : busy() === "reading"
+              ? "Reading…"
+              : info()
+                ? "Read again"
+                : "Connect to my bike"}
         </Button>
+        <Show when={!supported}>
+          <p class="mt-2 text-sm text-yellow-800 dark:text-yellow-200">
+            This browser does not support Web Bluetooth. Open this page in Chrome or Edge on a
+            desktop computer or Android device to connect.
+          </p>
+        </Show>
 
         <Show when={info()}>
           {(value) => (
@@ -564,15 +576,33 @@ export default function ControllerGuide(props: ControllerGuideProps) {
       </Step>
 
       <Show when={error()}>
-        <StatusMessage tone="error" title="Something went wrong">
-          {error()}
-          <Show when={flashFailed()}>
-            <p class="mt-2">
-              If your bike restarted and showed <b>Updating Bike</b>, it may have installed the
-              firmware anyway. Wait for its normal screen and check below before trying again.
-            </p>
-          </Show>
-        </StatusMessage>
+        <div class="pointer-events-none fixed inset-x-0 bottom-0 z-50 px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <div class="pointer-events-auto mx-auto max-h-[50dvh] max-w-2xl overflow-y-auto overscroll-contain rounded-lg shadow-lg [&>div]:mt-0">
+            <StatusMessage tone="error">
+              <div class="flex items-start gap-4">
+                <div class="min-w-0 flex-1 break-words">
+                  <p class="font-semibold">Something went wrong</p>
+                  <p class="mt-1">{error()}</p>
+                  <Show when={flashFailed()}>
+                    <p class="mt-2">
+                      If your bike restarted and showed <b>Updating Bike</b>, it may have installed
+                      the firmware anyway. Wait for its normal screen and use step 4 to check before
+                      trying again.
+                    </p>
+                  </Show>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setError("")}
+                  class="shrink-0 rounded px-2 py-1 text-sm font-semibold hover:bg-red-100 dark:hover:bg-red-900 focus-visible:outline-2 focus-visible:outline-offset-2"
+                  aria-label="Dismiss error"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </StatusMessage>
+          </div>
+        </div>
       </Show>
     </div>
   );
