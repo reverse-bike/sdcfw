@@ -72,8 +72,11 @@ source-specific helper produces both the byte patches and the value placed in
 the release block.
 
 **A release is not necessarily a patch.** A descriptor with an empty `patches`
-array publishes the pristine image, which is how "go back to stock" works. It
-still verifies `expectedSha256`, applies nothing, and packages the result.
+array publishes stock firmware, which is how "go back to stock" works. It still
+verifies `expectedSha256` and applies no patches. Controller images are packaged
+unchanged. Display dumps still go through cleaning and CRC calculation; their
+source and packaged image hashes can differ because cleaning clears data outside
+the firmware regions.
 
 Controller releases derived from the same factory image live under a directory
 whose name matches the source directory under the repository's `firmware/`

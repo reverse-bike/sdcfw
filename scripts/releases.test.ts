@@ -172,10 +172,11 @@ test("firmware families contain uniquely identifiable variants", async () => {
     const stock = variants.find((variant) => variant.variant === "stock");
     if (stock) {
       const manifest = await manifestOf(stock.path.replace("/cfw/", ""));
-      if (manifest.target !== "controller") throw new Error(`${stock.file} is not a controller`);
-      expect(`${stock.file}: ${manifest.provides.controllerVersion}`).toBe(
-        `${stock.file}: ${family.factoryVersion}`,
-      );
+      const reported =
+        manifest.target === "controller"
+          ? manifest.provides.controllerVersion
+          : manifest.provides.nrfVersion;
+      expect(`${stock.file}: ${reported}`).toBe(`${stock.file}: ${family.factoryVersion}`);
     }
   }
 });

@@ -7,7 +7,7 @@ import {
   type PackageManifest,
 } from "./manifest.js";
 
-/** Whether an archive carries a modified image or the pristine one. */
+/** Whether firmware code was patched. Stock display dumps may still be cleaned. */
 export type PackageKind = "patched" | "stock";
 
 /** A file to place in the archive. */
@@ -19,7 +19,7 @@ export interface NamedBytes {
 interface BuildBase {
   /** Release version of the archive */
   version: string;
-  /** Whether the primary image was modified */
+  /** Whether firmware code was patched */
   kind: PackageKind;
   /** The pristine image the release was built from */
   source: NamedBytes;
@@ -77,9 +77,10 @@ export async function buildPackage(build: PackageBuild): Promise<BuiltPackage> {
           provides: { nrfVersion: build.nrfVersion },
         };
 
-  if (build.kind === "stock") {
-    const primary = manifest.target === "controller" ? manifest.files.bin : manifest.files.flash;
-    if (primary.sha256 !== source.sha256) {
+  // Display dumps are cleaned by Kitchen even when their firmware is stock.
+  // Controller images have no cleaning step and must reproduce their source exactly.
+  if (build.kind === "stock" && manifest.target === "controller") {
+    if (manifest.files.bin.sha256 !== source.sha256) {
       throw new Error(
         "stock release does not match its source image; a descriptor with no patches must " +
           "reproduce its input exactly",
