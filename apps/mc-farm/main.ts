@@ -398,6 +398,8 @@ async function flash(
       chunkSize: transport.chunkSize,
       objectSize: transport.objectSize,
       prn: transport.prn,
+      // The arm above rebooted the bootloader, which writes staging from the start again.
+      restart: true,
       log: console.log,
     });
     if (!result.firmwareTransferred) {

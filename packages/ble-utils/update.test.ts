@@ -107,8 +107,15 @@ test("rejects fractional and non-positive transport settings", () => {
  * connections, like the display's, and drops the link at chosen packet writes.
  * A dropped write resolves without delivering its bytes, the way a write
  * without response can vanish when the radio link fails.
+ *
+ * `previous` seeds the progress a bootloader remembers from an earlier
+ * session. Creating the init object resets it, as Nordic's does, unless
+ * `keepsProgress` is set.
  */
-function flakyBootloader(dropAtWrites: number[]) {
+function flakyBootloader(
+  dropAtWrites: number[],
+  previous: { init?: Uint8Array; firmware?: Uint8Array; keepsProgress?: boolean } = {},
+) {
   const disconnectListeners = new Set<(event: Event) => void>();
   let notify: (event: Event) => void = () => {};
   let connected = true;
@@ -117,9 +124,10 @@ function flakyBootloader(dropAtWrites: number[]) {
   let writes = 0;
   let writesSincePrn = 0;
   let current = 1;
-  let committed = 0;
-  const init: number[] = [];
-  const firmware: number[] = [];
+  const init: number[] = [...(previous.init ?? [])];
+  const firmware: number[] = [...(previous.firmware ?? [])];
+  let committed = firmware.length;
+  let initCreates = 0;
   const objectOf = (type: number) => (type === 1 ? init : firmware);
   const u32 = (value: number) => [
     value & 0xff,
@@ -168,8 +176,11 @@ function flakyBootloader(dropAtWrites: number[]) {
         ]);
       } else if (op === 0x01) {
         current = bytes[1]!;
-        if (current === 1) init.length = 0;
-        else firmware.length = committed;
+        if (current === 1) {
+          initCreates++;
+          init.length = 0;
+          if (!previous.keepsProgress) firmware.length = committed = 0;
+        } else firmware.length = committed;
         respond([0x60, op, 1]);
       } else if (op === 0x03) {
         respond([0x60, op, 1, ...checksum(objectOf(current))]);
@@ -226,6 +237,9 @@ function flakyBootloader(dropAtWrites: number[]) {
   return {
     server: server as unknown as BluetoothRemoteGATTServer,
     firmware,
+    get initCreates() {
+      return initCreates;
+    },
     get committed() {
       return committed;
     },
@@ -269,4 +283,54 @@ test("stops reconnecting once the device stops gaining data", async () => {
   await expect(transfer).rejects.toThrow("link");
   // One connection that made progress, then three that did not.
   expect(target.connects).toBe(4);
+});
+
+test("a restart discards progress the bootloader remembers from before the arm", async () => {
+  const dat = Uint8Array.from({ length: 0x8e }, (_, i) => i);
+  const bin = Uint8Array.from({ length: 3 * 0x1000 + 100 }, (_, i) => (i * 7) & 0xff);
+  // The arm prepares staging afresh, so this remembered prefix is gone from it.
+  const target = flakyBootloader([], { init: dat, firmware: bin.subarray(0, 0x1800) });
+  const progress: number[] = [];
+  await transferDfuFirmware(target.server, dat, bin, {
+    executeFirmware: true,
+    finalizeSettleMs: 0,
+    restart: true,
+    onProgress: (report) => {
+      if (report.phase === "firmware") progress.push(report.bytesSent);
+    },
+  });
+  expect(target.initCreates).toBe(1);
+  expect(progress[0]).toBe(0);
+  expect(target.firmware).toEqual([...bin]);
+});
+
+test("a restart refuses a bootloader that keeps its progress", async () => {
+  const dat = new Uint8Array(0x8e);
+  const bin = new Uint8Array(0x2000);
+  const target = flakyBootloader([], {
+    init: dat,
+    firmware: bin.subarray(0, 0x1000),
+    keepsProgress: true,
+  });
+  const transfer = transferDfuFirmware(target.server, dat, bin, {
+    executeFirmware: true,
+    finalizeSettleMs: 0,
+    restart: true,
+  });
+  await expect(transfer).rejects.toThrow("did not reset");
+});
+
+test("reconnects after a restart resume rather than restarting again", async () => {
+  const dat = new Uint8Array(0x8e);
+  const bin = Uint8Array.from({ length: 2 * 0x1000 }, (_, i) => i & 0xff);
+  const target = flakyBootloader([300], { init: dat, firmware: bin.subarray(0, 0x1000) });
+  await transferDfuFirmware(target.server, dat, bin, {
+    executeFirmware: true,
+    finalizeSettleMs: 0,
+    linkRetryDelayMs: 0,
+    restart: true,
+  });
+  expect(target.connects).toBe(1);
+  expect(target.initCreates).toBe(1);
+  expect(target.firmware).toEqual([...bin]);
 });

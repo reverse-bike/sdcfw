@@ -52,6 +52,11 @@ export default function ControllerTransfer() {
   const [prn, setPrn] = createSignal(10);
   const [sent, setSent] = createSignal(0);
   const [total, setTotal] = createSignal(0);
+  // Arming reboots the display into a bootloader that writes staging from the
+  // start again, so the first transfer after it must not resume remembered
+  // progress. Once a transfer has reset that progress, a retry on the same
+  // arm resumes safely.
+  const [restart, setRestart] = createSignal(false);
 
   const append = (message: string) => setLog((lines) => [...lines, message]);
 
@@ -124,6 +129,7 @@ export default function ControllerTransfer() {
       append(`Connecting to ${describeDevice(device)}…`);
       server = await connect(device, { log: append });
       await armControllerUpdate(server, loaded.bin, { log: append });
+      setRestart(true);
     } catch (cause) {
       setError(errorMessage(cause));
     } finally {
@@ -155,11 +161,13 @@ export default function ControllerTransfer() {
         chunkSize: transport.chunkSize,
         objectSize: transport.objectSize,
         prn: transport.prn,
+        restart: restart(),
         log: append,
         // The init packet is 142 bytes; showing it fills the bar before the
         // firmware has started, and a dry run then stops there looking done.
         onProgress: (progress) => {
           if (progress.phase !== "firmware") return;
+          setRestart(false);
           setSent(progress.bytesSent);
           setTotal(progress.totalBytes);
         },

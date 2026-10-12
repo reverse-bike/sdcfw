@@ -102,11 +102,30 @@ match the one supplied in the F0CC packet. Recovery is power-cycle, re-arm,
 retry. The sensitive window is the display programming the controller after the
 final execute, which is when power should not be cut.
 
-**Transfers resume.** The bootloader reports how far it got; if the CRC of the
-local prefix matches, only the remainder is sent. Re-running a failed transfer
-is the supported recovery, not a workaround.
+**Transfers resume within one bootloader boot, never across one.** The
+bootloader reports how far it got; if the CRC of the local prefix matches, only
+the remainder is sent. In NRFBL-8 that offset and CRC come from the saved
+progress (select, case 6 of `0x52a8`), not from the staged data. External
+staging is written by `0x81e0` at a RAM pointer that starts at the staging
+header plus 9 on every boot and only advances; it never follows the DFU
+offset. A resume after the bootloader reboots, which every F0CC arm and
+power-cycle causes, is therefore accepted, executed and finalized as a
+success, but stores the remainder at the start of staging. The staging CRC
+check at `0x8d74` then fails and the display skips controller programming
+without saying so.
 
-**A dropped link resumes on its own.** Weak links drop every few kilobytes;
+The first transfer after an arm passes `restart: true`. Re-creating the init
+object zeroes the saved progress (case 1 of `0x50b4` clears `0x20` bytes at
+`0x20003918`), which brings the DFU offset back in line with the freshly booted
+write pointer. The transfer refuses to continue if the bootloader still reports
+a firmware offset. A restart in the same boot as earlier data writes would
+desynchronise them again, so callers clear the flag once the firmware phase
+begins. Data-object create does not move the write pointer either, so a
+partial object is resumed in place, never re-created.
+
+**A dropped link resumes on its own.** NRFBL-8's disconnect handler (event
+`0x11` in `0x31c4`) only restarts advertising, so the transfer state and
+staging write pointer survive. Weak links drop every few kilobytes;
 it's been seen on Macs, where Wi-Fi and Bluetooth share one radio. On a
 drop, `transferDfuFirmware` reconnects to the same bootloader and resumes. It
 gives up after `linkRetries` reconnects in a row that gain no data. It does not

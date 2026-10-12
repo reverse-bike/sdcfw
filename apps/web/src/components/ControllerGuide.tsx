@@ -47,6 +47,11 @@ export default function ControllerGuide(props: ControllerGuideProps) {
   const [pkg, setPkg] = createSignal<ControllerPackage | null>(null);
   const [uploaded, setUploaded] = createSignal("");
   const [armed, setArmed] = createSignal(false);
+  // Arming reboots the display into a bootloader that writes staging from the
+  // start again, so the first transfer after it must not resume remembered
+  // progress. Once a transfer has reset that progress, a retry on the same
+  // arm resumes safely.
+  const [restart, setRestart] = createSignal(false);
   const [dryRun, setDryRun] = createSignal(false);
   const [sent, setSent] = createSignal(0);
   const [outcome, setOutcome] = createSignal<"none" | "dry" | "sent">("none");
@@ -198,6 +203,7 @@ export default function ControllerGuide(props: ControllerGuideProps) {
       setInfo(await readVersionInfo(server));
       await armControllerUpdate(server, parsed.bin, { log: append });
       setArmed(true);
+      setRestart(true);
       append("The display should now show Receiving Firmware.");
     } catch (cause) {
       // A fresh gesture is needed for the chooser, so offer it as its own button.
@@ -228,10 +234,14 @@ export default function ControllerGuide(props: ControllerGuideProps) {
       const result = await transferControllerFirmware(server, parsed.dat, parsed.bin, {
         chunkSize,
         executeFirmware: !dryRun(),
+        restart: restart(),
         log: append,
         // Only the firmware phase is worth a bar; the init packet is 142 bytes.
+        // The firmware phase starts only after any restart has taken effect.
         onProgress: (progress) => {
-          if (progress.phase === "firmware") setSent(progress.bytesSent);
+          if (progress.phase !== "firmware") return;
+          setRestart(false);
+          setSent(progress.bytesSent);
         },
       });
       setOutcome(result.firmwareTransferred ? "sent" : "dry");

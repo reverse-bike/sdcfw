@@ -193,6 +193,15 @@ export interface FirmwareTransferOptions {
   objectSize?: number;
   prn?: number;
   finalizeSettleMs?: number;
+  /**
+   * Discard the transfer progress the bootloader remembers and send from the
+   * start. Required on the first transfer after the bootloader boots, which an
+   * F0CC arm always causes: the bootloader writes external staging at a RAM
+   * pointer that starts over at every boot, while its saved offset and CRC
+   * survive. Resuming then stores the remainder at the start of staging; DFU
+   * still reports success, but the display refuses to install the image.
+   */
+  restart?: boolean;
   /** Reconnects allowed in a row without the device gaining firmware data */
   linkRetries?: number;
   linkRetryDelayMs?: number;
@@ -262,7 +271,12 @@ export async function transferDfuFirmware(
   const log = options.log ?? (() => {});
   const transport = validateDfuTransportOptions(options);
   const linkRetries = options.linkRetries ?? 3;
-  const state: DfuSessionState = { resumedFrom: -1, finalizing: false, retriesLeft: linkRetries };
+  const state: DfuSessionState = {
+    restart: options.restart ?? false,
+    resumedFrom: -1,
+    finalizing: false,
+    retriesLeft: linkRetries,
+  };
 
   for (;;) {
     const resumedFrom = state.resumedFrom;
@@ -288,6 +302,8 @@ export async function transferDfuFirmware(
 }
 
 interface DfuSessionState {
+  /** Progress must still be reset; cleared once it has been, so reconnects resume */
+  restart: boolean;
   /** Highest firmware offset the device reported when a session began */
   resumedFrom: number;
   /** All firmware bytes are sent, so a dropped link is no longer recoverable */
@@ -318,7 +334,9 @@ async function runDfuSession(
     report("init", 0, dat.length);
     const commandSelection = await client.select(0x01);
     const commandCrc = crc32Ieee(dat);
-    if (commandSelection.offset === 0) {
+    // Creating the init object resets all saved progress in Nordic's bootloader.
+    if (commandSelection.offset === 0 || state.restart) {
+      if (state.restart) log("restarting the transfer from the beginning");
       await client.transferObject(0x01, dat, {
         expectedOffset: dat.length,
         expectedCrc: commandCrc,
@@ -343,6 +361,14 @@ async function runDfuSession(
     }
 
     const selection = await client.select(0x02);
+    if (state.restart) {
+      if (selection.offset !== 0) {
+        throw new Error(
+          `the bootloader did not reset its saved progress (offset 0x${selection.offset.toString(16)}); power-cycle the bike and enter update mode again`,
+        );
+      }
+      state.restart = false;
+    }
     const requestedObjectSize = transport.objectSize;
     const objectSize = Math.min(selection.maxSize, requestedObjectSize);
     if (!Number.isInteger(objectSize) || objectSize <= 0) {
