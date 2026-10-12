@@ -1,8 +1,8 @@
 import { APP_RX_CHAR, APP_SERVICE, DFU_BUTTONLESS, DFU_SERVICE } from "./constants.js";
 import { crc32Ieee, deviceImageCrc } from "./crc.js";
-import { DfuClient } from "./dfu.js";
+import { DfuClient, isTransientLinkFailure } from "./dfu.js";
 import { stagedImage } from "./package.js";
-import { hex, sleep, withTimeout, type LogFn } from "./util.js";
+import { connect, hex, sleep, withTimeout, type LogFn } from "./util.js";
 
 export function controllerImageCrc(bin: Uint8Array): number {
   return deviceImageCrc(stagedImage(bin));
@@ -193,6 +193,9 @@ export interface FirmwareTransferOptions {
   objectSize?: number;
   prn?: number;
   finalizeSettleMs?: number;
+  /** Reconnects allowed in a row without the device gaining firmware data */
+  linkRetries?: number;
+  linkRetryDelayMs?: number;
   log?: LogFn;
   /** Reports transfer position, for driving a progress bar */
   onProgress?: (progress: TransferProgress) => void;
@@ -240,7 +243,16 @@ export async function transferControllerFirmware(
   return result;
 }
 
-/** Transfers the signed init packet and optional firmware without selecting an update target. */
+/**
+ * Transfers the signed init packet and optional firmware without selecting an
+ * update target.
+ *
+ * A dropped link reconnects to the same bootloader and resumes. The bootloader
+ * keeps executed objects and the received part of the current one across
+ * connections, and every resume checks the device's CRC against the image
+ * before sending more. Reconnecting stops once all firmware has been sent: the
+ * final execute starts validation and a reboot, so a drop then can mean success.
+ */
 export async function transferDfuFirmware(
   server: BluetoothRemoteGATTServer,
   dat: Uint8Array,
@@ -249,6 +261,49 @@ export async function transferDfuFirmware(
 ): Promise<{ firmwareTransferred: boolean }> {
   const log = options.log ?? (() => {});
   const transport = validateDfuTransportOptions(options);
+  const linkRetries = options.linkRetries ?? 3;
+  const state: DfuSessionState = { resumedFrom: -1, finalizing: false, retriesLeft: linkRetries };
+
+  for (;;) {
+    const resumedFrom = state.resumedFrom;
+    try {
+      return await runDfuSession(server, dat, bin, transport, options, state);
+    } catch (error) {
+      if (state.finalizing || !isTransientLinkFailure(error)) throw error;
+      if (state.resumedFrom > resumedFrom) state.retriesLeft = linkRetries;
+      if (state.retriesLeft <= 0) {
+        log(`giving up after ${linkRetries} reconnects without progress`);
+        throw error;
+      }
+      state.retriesLeft--;
+      log(
+        `link lost: ${error instanceof Error ? error.message : String(error)}; reconnecting (${linkRetries - state.retriesLeft}/${linkRetries})`,
+      );
+      // A timeout can leave a half-dead connection behind; start clean.
+      if (server.connected) server.disconnect();
+      await sleep(options.linkRetryDelayMs ?? 1_000);
+      await connect(server.device, { attempts: 3, timeoutMs: 10_000, retryDelayMs: 1_500, log });
+    }
+  }
+}
+
+interface DfuSessionState {
+  /** Highest firmware offset the device reported when a session began */
+  resumedFrom: number;
+  /** All firmware bytes are sent, so a dropped link is no longer recoverable */
+  finalizing: boolean;
+  retriesLeft: number;
+}
+
+async function runDfuSession(
+  server: BluetoothRemoteGATTServer,
+  dat: Uint8Array,
+  bin: Uint8Array,
+  transport: DfuTransportOptions,
+  options: FirmwareTransferOptions,
+  state: DfuSessionState,
+): Promise<{ firmwareTransferred: boolean }> {
+  const log = options.log ?? (() => {});
   const report = (phase: TransferProgress["phase"], bytesSent: number, totalBytes: number): void =>
     options.onProgress?.({ phase, bytesSent, totalBytes });
 
@@ -256,75 +311,84 @@ export async function transferDfuFirmware(
     chunkSize: transport.chunkSize,
     log,
   });
-  await client.setPrn(transport.prn);
+  try {
+    await client.setPrn(transport.prn);
 
-  log("transferring signed init packet");
-  report("init", 0, dat.length);
-  const commandSelection = await client.select(0x01);
-  const commandCrc = crc32Ieee(dat);
-  if (commandSelection.offset === 0) {
-    await client.transferObject(0x01, dat, {
-      expectedOffset: dat.length,
-      expectedCrc: commandCrc,
-      executeAttempts: 5,
-      executeRetryDelayMs: 2_000,
-      onBytes: (sent) => report("init", sent, dat.length),
-    });
-  } else if (commandSelection.offset === dat.length && commandSelection.crc === commandCrc) {
-    log("init packet already present; retrying execute");
-    await client.executeWithRetries(5, 2_000, 30_000);
-  } else {
-    throw new Error(
-      `cannot safely resume init packet: device offset=0x${commandSelection.offset.toString(16)} crc=0x${commandSelection.crc.toString(16)}`,
-    );
-  }
-  log("init packet accepted");
-  report("init", dat.length, dat.length);
+    log("transferring signed init packet");
+    report("init", 0, dat.length);
+    const commandSelection = await client.select(0x01);
+    const commandCrc = crc32Ieee(dat);
+    if (commandSelection.offset === 0) {
+      await client.transferObject(0x01, dat, {
+        expectedOffset: dat.length,
+        expectedCrc: commandCrc,
+        executeAttempts: 5,
+        executeRetryDelayMs: 2_000,
+        onBytes: (sent) => report("init", sent, dat.length),
+      });
+    } else if (commandSelection.offset === dat.length && commandSelection.crc === commandCrc) {
+      log("init packet already present; retrying execute");
+      await client.executeWithRetries(5, 2_000, 30_000);
+    } else {
+      throw new Error(
+        `cannot safely resume init packet: device offset=0x${commandSelection.offset.toString(16)} crc=0x${commandSelection.crc.toString(16)}`,
+      );
+    }
+    log("init packet accepted");
+    report("init", dat.length, dat.length);
 
-  if (!(options.executeFirmware ?? false)) {
-    log("dry run complete; no firmware data was sent");
-    return { firmwareTransferred: false };
-  }
+    if (!(options.executeFirmware ?? false)) {
+      log("dry run complete; no firmware data was sent");
+      return { firmwareTransferred: false };
+    }
 
-  const selection = await client.select(0x02);
-  const requestedObjectSize = transport.objectSize;
-  const objectSize = Math.min(selection.maxSize, requestedObjectSize);
-  if (!Number.isInteger(objectSize) || objectSize <= 0) {
-    throw new Error(`invalid data object size ${requestedObjectSize}`);
-  }
-  if (selection.offset > bin.length) {
-    throw new Error(
-      `device data offset 0x${selection.offset.toString(16)} exceeds firmware length`,
-    );
-  }
-  const resumeCrc = crc32Ieee(bin.subarray(0, selection.offset));
-  if (selection.crc !== resumeCrc) {
-    throw new Error(
-      `cannot safely resume firmware: device CRC=0x${selection.crc.toString(16)} local CRC=0x${resumeCrc.toString(16)}`,
-    );
-  }
+    const selection = await client.select(0x02);
+    const requestedObjectSize = transport.objectSize;
+    const objectSize = Math.min(selection.maxSize, requestedObjectSize);
+    if (!Number.isInteger(objectSize) || objectSize <= 0) {
+      throw new Error(`invalid data object size ${requestedObjectSize}`);
+    }
+    if (selection.offset > bin.length) {
+      throw new Error(
+        `device data offset 0x${selection.offset.toString(16)} exceeds firmware length`,
+      );
+    }
+    const resumeCrc = crc32Ieee(bin.subarray(0, selection.offset));
+    if (selection.crc !== resumeCrc) {
+      throw new Error(
+        `cannot safely resume firmware: device CRC=0x${selection.crc.toString(16)} local CRC=0x${resumeCrc.toString(16)}`,
+      );
+    }
 
-  let offset = selection.offset;
-  report("firmware", offset, bin.length);
-  while (offset < bin.length) {
-    const objectBase = Math.floor(offset / objectSize) * objectSize;
-    const end = Math.min(objectBase + objectSize, bin.length);
-    const data = bin.subarray(offset, end);
-    const isLast = end === bin.length;
-    log(
-      `firmware object: 0x${offset.toString(16)}..0x${end.toString(16)}${isLast ? " (last)" : ""}`,
-    );
-    await client.transferObject(0x02, data, {
-      skipCreate: offset !== objectBase,
-      expectedOffset: end,
-      expectedCrc: crc32Ieee(bin.subarray(0, end)),
-      executeTimeoutMs: isLast ? 120_000 : 15_000,
-      onBytes: (sent) => report("firmware", sent, bin.length),
-    });
-    offset = end;
-  }
+    state.resumedFrom = Math.max(state.resumedFrom, selection.offset);
 
-  log("firmware transfer complete; waiting for validation and reboot");
-  await sleep(options.finalizeSettleMs ?? 1_000);
-  return { firmwareTransferred: true };
+    let offset = selection.offset;
+    report("firmware", offset, bin.length);
+    while (offset < bin.length) {
+      const objectBase = Math.floor(offset / objectSize) * objectSize;
+      const end = Math.min(objectBase + objectSize, bin.length);
+      const data = bin.subarray(offset, end);
+      const isLast = end === bin.length;
+      log(
+        `firmware object: 0x${offset.toString(16)}..0x${end.toString(16)}${isLast ? " (last)" : ""}`,
+      );
+      await client.transferObject(0x02, data, {
+        skipCreate: offset !== objectBase,
+        expectedOffset: end,
+        expectedCrc: crc32Ieee(bin.subarray(0, end)),
+        executeTimeoutMs: isLast ? 120_000 : 15_000,
+        onBytes: (sent) => {
+          if (sent === bin.length) state.finalizing = true;
+          report("firmware", sent, bin.length);
+        },
+      });
+      offset = end;
+    }
+
+    log("firmware transfer complete; waiting for validation and reboot");
+    await sleep(options.finalizeSettleMs ?? 1_000);
+    return { firmwareTransferred: true };
+  } finally {
+    client.close();
+  }
 }

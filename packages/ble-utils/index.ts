@@ -48,7 +48,14 @@ export {
   type StandardDeviceInformation,
 } from "./info.js";
 
-export { DfuClient, DfuError, type DfuTransferOptions } from "./dfu.js";
+export {
+  DfuClient,
+  DfuError,
+  DfuLinkLostError,
+  DfuTimeoutError,
+  isTransientLinkFailure,
+  type DfuTransferOptions,
+} from "./dfu.js";
 
 export {
   armControllerUpdate,

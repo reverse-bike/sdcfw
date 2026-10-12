@@ -1,6 +1,6 @@
 import { DFU_CONTROL_POINT, DFU_PACKET, DFU_SERVICE } from "./constants.js";
 import { crc32Ieee } from "./crc.js";
-import { hex, sleep, withTimeout, type LogFn } from "./util.js";
+import { BleTimeoutError, hex, sleep, withTimeout, type LogFn } from "./util.js";
 
 const OP = {
   CREATE: 0x01,
@@ -51,6 +51,29 @@ export class DfuError extends Error {
   }
 }
 
+/** The device stopped answering; it may still be connected. */
+export class DfuTimeoutError extends DfuError {}
+
+/** The Bluetooth link to the device dropped. */
+export class DfuLinkLostError extends DfuError {
+  constructor() {
+    super("Bluetooth link lost");
+  }
+}
+
+/**
+ * True when a failure came from the link rather than the device refusing
+ * something, so reconnecting and resuming the transfer may succeed.
+ */
+export function isTransientLinkFailure(error: unknown): boolean {
+  return (
+    error instanceof DfuLinkLostError ||
+    error instanceof DfuTimeoutError ||
+    error instanceof BleTimeoutError ||
+    (error as { name?: string } | null)?.name === "NetworkError"
+  );
+}
+
 export interface DfuTransferOptions {
   skipCreate?: boolean;
   skipExecute?: boolean;
@@ -67,18 +90,27 @@ export class DfuClient {
   private readonly queue: Array<{
     op: number;
     resolve: (value: Uint8Array) => void;
+    reject: (error: Error) => void;
   }> = [];
   private readonly prnQueue: Uint8Array[] = [];
-  private readonly prnWaiters: Array<(value: Uint8Array) => void> = [];
+  private readonly prnWaiters: Array<{
+    resolve: (value: Uint8Array) => void;
+    reject: (error: Error) => void;
+  }> = [];
   private prnInterval = 0;
+  private linkLost = false;
 
   private constructor(
+    private readonly server: BluetoothRemoteGATTServer,
     private readonly controlPoint: BluetoothRemoteGATTCharacteristic,
     private readonly packet: BluetoothRemoteGATTCharacteristic,
     private chunkSize: number,
     private readonly log: LogFn,
   ) {
     this.controlPoint.addEventListener("characteristicvaluechanged", this.onNotification);
+    // Without this, a dropped link only surfaces when a receipt or response
+    // times out, long after the bootloader has gone back to advertising.
+    this.server.device?.addEventListener("gattserverdisconnected", this.onDisconnect);
   }
 
   static async connect(
@@ -101,6 +133,7 @@ export class DfuClient {
       "get DFU packet characteristic",
     );
     const client = new DfuClient(
+      server,
       controlPoint,
       packet,
       options.chunkSize ?? 20,
@@ -109,6 +142,18 @@ export class DfuClient {
     await withTimeout(controlPoint.startNotifications(), 10_000, "enable DFU notifications");
     return client;
   }
+
+  /** Stops listening to the device; the client is unusable afterwards. */
+  close(): void {
+    this.controlPoint.removeEventListener("characteristicvaluechanged", this.onNotification);
+    this.server.device?.removeEventListener("gattserverdisconnected", this.onDisconnect);
+  }
+
+  private readonly onDisconnect = (): void => {
+    this.linkLost = true;
+    for (const entry of this.queue.splice(0)) entry.reject(new DfuLinkLostError());
+    for (const waiter of this.prnWaiters.splice(0)) waiter.reject(new DfuLinkLostError());
+  };
 
   private readonly onNotification = (event: Event): void => {
     const value = (event.target as BluetoothRemoteGATTCharacteristic).value;
@@ -126,7 +171,7 @@ export class DfuClient {
       entry!.resolve(bytes);
     } else if (op === OP.CALC && this.prnInterval > 0) {
       const waiter = this.prnWaiters.shift();
-      if (waiter) waiter(bytes);
+      if (waiter) waiter.resolve(bytes);
       else this.prnQueue.push(bytes);
     } else {
       this.log(`unsolicited DFU response for 0x${op.toString(16)}: ${hex(bytes)}`);
@@ -138,17 +183,22 @@ export class DfuClient {
     parameters: readonly number[] = [],
     timeoutMs = 15_000,
   ): Promise<Uint8Array> {
+    if (this.linkLost) return Promise.reject(new DfuLinkLostError());
     return new Promise<Uint8Array>((resolve, reject) => {
       const timer = setTimeout(() => {
         const index = this.queue.findIndex((entry) => entry.op === op);
         if (index >= 0) this.queue.splice(index, 1);
-        reject(new DfuError(`timeout waiting for response to DFU op 0x${op.toString(16)}`));
+        reject(new DfuTimeoutError(`timeout waiting for response to DFU op 0x${op.toString(16)}`));
       }, timeoutMs);
       this.queue.push({
         op,
         resolve: (value) => {
           clearTimeout(timer);
           resolve(value);
+        },
+        reject: (error) => {
+          clearTimeout(timer);
+          reject(error);
         },
       });
 
@@ -161,7 +211,7 @@ export class DfuClient {
             "DFU control point write",
           );
         } catch (error) {
-          if (retries > 0) {
+          if (retries > 0 && !this.linkLost) {
             await sleep(800);
             return write(retries - 1);
           }
@@ -207,17 +257,24 @@ export class DfuClient {
   private waitForPrn(timeoutMs = 10_000): Promise<Uint8Array> {
     const queued = this.prnQueue.shift();
     if (queued) return Promise.resolve(queued);
+    if (this.linkLost) return Promise.reject(new DfuLinkLostError());
     return new Promise<Uint8Array>((resolve, reject) => {
-      const receive = (value: Uint8Array): void => {
-        clearTimeout(timer);
-        resolve(value);
+      const waiter = {
+        resolve: (value: Uint8Array): void => {
+          clearTimeout(timer);
+          resolve(value);
+        },
+        reject: (error: Error): void => {
+          clearTimeout(timer);
+          reject(error);
+        },
       };
       const timer = setTimeout(() => {
-        const index = this.prnWaiters.indexOf(receive);
+        const index = this.prnWaiters.indexOf(waiter);
         if (index >= 0) this.prnWaiters.splice(index, 1);
-        reject(new DfuError("timeout waiting for packet receipt notification"));
+        reject(new DfuTimeoutError("timeout waiting for packet receipt notification"));
       }, timeoutMs);
-      this.prnWaiters.push(receive);
+      this.prnWaiters.push(waiter);
     });
   }
 
@@ -291,6 +348,9 @@ export class DfuClient {
         writes++;
         options.onBytes?.(baseOffset + offset);
       } catch (error) {
+        // A write rejected because the link dropped says nothing about the
+        // packet size the device accepts.
+        if (this.linkLost) throw new DfuLinkLostError();
         this.log(
           `packet write failed at 0x${(baseOffset + offset).toString(16)} with chunk ${this.chunkSize}: ${error instanceof Error ? error.message : String(error)}`,
         );

@@ -106,6 +106,13 @@ final execute, which is when power should not be cut.
 local prefix matches, only the remainder is sent. Re-running a failed transfer
 is the supported recovery, not a workaround.
 
+**A dropped link resumes on its own.** Weak links drop every few kilobytes;
+it's been seen on Macs, where Wi-Fi and Bluetooth share one radio. On a
+drop, `transferDfuFirmware` reconnects to the same bootloader and resumes. It
+gives up after `linkRetries` reconnects in a row that gain no data. It does not
+reconnect once all firmware has been sent, because a drop during the final
+execute can mean the display is already rebooting into the update.
+
 **Re-flashing what is already installed appears to do nothing.** The transfer
 completes and the bike reboots, but the display never shows its updating
 screen. Harmless, and worth saying before the fact so it does not read as a
